@@ -1,48 +1,74 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 import { compare } from 'bcryptjs'
-import { db } from './db'
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   pages: {
-    signIn: '/admin/login',
-    error: '/admin/login',
+    signIn: '/login',
+    error: '/login',
   },
   providers: [
+    // ─── Google OAuth ────────────────────────────────────────────
+    GoogleProvider({
+      clientId:     process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          // Force account picker every time — prevents wrong account slipping through
+          prompt: 'select_account',
+          access_type: 'online',
+          response_type: 'code',
+        },
+      },
+    }),
+
+    // ─── Email + Password (fallback) ─────────────────────────────
     CredentialsProvider({
       name: 'credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        email:    { label: 'Email',    type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const adminEmail = process.env.ADMIN_EMAIL
         const adminHash = process.env.ADMIN_PASSWORD_HASH
-
-        if (!adminEmail || !adminHash) return null
-        if (credentials.email !== adminEmail) return null
+        if (!adminHash) return null
+        if (credentials.email !== ADMIN_EMAIL) return null
 
         const isValid = await compare(credentials.password, adminHash)
         if (!isValid) return null
 
-        return {
-          id: 'admin',
-          email: adminEmail,
-          name: 'CBC Admin',
-        }
+        return { id: 'admin', email: ADMIN_EMAIL, name: 'CBC Admin' }
       },
     }),
   ],
+
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) token.role = 'admin'
+    // ─── Block any Google account that isn't the admin email ─────
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        if (user.email !== ADMIN_EMAIL) {
+          // Reject — redirect to login with error
+          return `/login?error=AccessDenied`
+        }
+      }
+      return true
+    },
+
+    async jwt({ token, user, account }) {
+      if (user)    token.role = 'admin'
+      if (account) token.provider = account.provider
       return token
     },
+
     async session({ session, token }) {
-      if (token) session.user.role = token.role as string
+      session.user.role     = token.role     as string
+      session.user.provider = token.provider as string
       return session
     },
   },

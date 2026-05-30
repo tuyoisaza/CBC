@@ -43,6 +43,12 @@ This auto-injects the connection string. Do not copy-paste manually.
 ### Need to collect — paste values once you have them
 
 ```
+# Google OAuth (console.cloud.google.com → APIs & Services → Credentials)
+# Create an OAuth 2.0 Client ID → Web application
+# Authorized redirect URI: https://admin.coffeebunncafe.com/api/auth/callback/google
+GOOGLE_CLIENT_ID=            # Client ID from Google Cloud Console
+GOOGLE_CLIENT_SECRET=        # Client secret from Google Cloud Console
+
 # Stripe (stripe.com/dashboard → Developers → API Keys)
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_PUBLISHABLE_KEY=pk_live_...
