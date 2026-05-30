@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ─── Light mode ─────────────────────────────────────────────── */
+  :root {
+    --background:         43 100% 97%;   /* #fffaf3 cream white */
+    --foreground:         0 0% 15%;      /* #262626 deep black */
+    --card:               0 0% 100%;
+    --card-foreground:    0 0% 15%;
+    --popover:            0 0% 100%;
+    --popover-foreground: 0 0% 15%;
+    --primary:            38 91% 64%;    /* #f7b84e energy yellow */
+    --primary-foreground: 0 0% 10%;
+    --secondary:          0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
+    --muted:              0 0% 94%;
+    --muted-foreground:   0 0% 39%;      /* #636363 */
+    --accent:             38 91% 64%;
+    --accent-foreground:  0 0% 10%;
+    --destructive:        0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border:             0 0% 90%;
+    --input:              0 0% 90%;
+    --ring:               38 91% 64%;
+    --radius:             0.5rem;
+  }
+
+  /* ─── Dark mode ──────────────────────────────────────────────── */
+  .dark {
+    --background:         0 0% 15%;      /* #262626 deep black */
+    --foreground:         43 100% 97%;   /* #fffaf3 cream white */
+    --card:               0 0% 20%;      /* #333 */
+    --card-foreground:    43 100% 97%;
+    --popover:            0 0% 20%;
+    --popover-foreground: 43 100% 97%;
+    --primary:            38 91% 64%;    /* #f7b84e — same in both modes */
+    --primary-foreground: 0 0% 10%;
+    --secondary:          0 0% 26%;      /* #444 */
+    --secondary-foreground: 43 100% 97%;
+    --muted:              0 0% 26%;
+    --muted-foreground:   0 0% 63%;      /* #a0a0a0 */
+    --accent:             38 91% 64%;
+    --accent-foreground:  0 0% 10%;
+    --destructive:        0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border:             0 0% 27%;      /* #444 */
+    --input:              0 0% 27%;
+    --ring:               38 91% 64%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus rings — visible, brand colored */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-primary/30 text-foreground;
+  }
+}
+
+@layer utilities {
+  /* CBC brand gradient */
+  .cbc-gradient {
+    background: linear-gradient(135deg, #262626 0%, #3a3018 100%);
+  }
+
+  /* Yellow glow for hero elements */
+  .cbc-glow {
+    box-shadow: 0 0 40px rgba(247, 184, 78, 0.15);
+  }
+
+  /* Text balance for headlines */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* WhatsApp sticky CTA on mobile */
+  .wa-sticky {
+    @apply fixed bottom-4 left-4 right-4 z-50 md:hidden;
+  }
+}

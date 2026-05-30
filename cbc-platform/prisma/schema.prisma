@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── CRM ──────────────────────────────────────────────────────────────────────
+
+model Customer {
+  id                  String   @id @default(cuid())
+  companyName         String
+  contactName         String
+  email               String?
+  whatsapp            String?
+  city                String?
+  industry            String?
+  notes               String?
+  tags                String[]
+  // SAT / Fiscal data
+  rfc                 String?
+  razonSocial         String?
+  codigoPostalFiscal  String?
+  regimenFiscal       String?  @default("601")
+  usoCfdi             String?  @default("G03")
+  emailFacturacion    String?
+  // Stripe
+  stripeCustomerId    String?  @unique
+  leads               Lead[]
+  orders              Order[]
+  quotes              Quote[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Lead {
+  id          String    @id @default(cuid())
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  customerId  String
+  source      String    @default("quote-form") // quote-form | whatsapp | linkedin | referral | direct
+  message     String?
+  boxType     String?   // prensa | moka | mix
+  quantity    Int?
+  occasion    String?   // fin-de-ano | dia-del-amor | dia-del-trabajo | onboarding | otro
+  status      String    @default("new") // new | contacted | quoted | confirmed | lost
+  quotes      Quote[]
+  messages    Message[]
+  notes       String?
+  assignedTo  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ─── Sales ────────────────────────────────────────────────────────────────────
+
+model Quote {
+  id          String    @id @default(cuid())
+  quoteCode   String    @unique @default(cuid()) // CBC-Q-2025-001
+  lead        Lead      @relation(fields: [leadId], references: [id])
+  leadId      String
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  customerId  String
+  items       Json      // [{type:'prensa'|'moka', qty:20, unitPrice:799, subtotal:15980}]
+  subtotal    Float
+  iva         Float     // 16%
+  total       Float
+  logoUrl     String?   // R2 URL
+  messageCard String?
+  status      String    @default("draft") // draft | sent | accepted | rejected | expired
+  pdfUrl      String?
+  sentAt      DateTime?
+  expiresAt   DateTime?
+  order       Order?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Order {
+  id             String    @id @default(cuid())
+  orderCode      String    @unique // CBC-2025-001 — used for public tracking
+  quote          Quote     @relation(fields: [quoteId], references: [id])
+  quoteId        String    @unique
+  customer       Customer  @relation(fields: [customerId], references: [id])
+  customerId     String
+  status         String    @default("confirmed")
+  // confirmed | in_production | ready | shipped | delivered | cancelled
+  trackingNumber String?
+  carrier        String?
+  coffee         Coffee?   @relation(fields: [coffeeId], references: [id])
+  coffeeId       String?
+  estimatedDate  DateTime?
+  deliveredAt    DateTime?
+  notes          String?
+  checklist      Json?     // production checklist items
+  payments       Payment[]
+  invoices       Invoice[]
+  cfdis          Cfdi[]
+  messages       Message[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// ─── Payments ─────────────────────────────────────────────────────────────────
+
+model Payment {
+  id               String    @id @default(cuid())
+  order            Order     @relation(fields: [orderId], references: [id])
+  orderId          String
+  stripePaymentId  String?   @unique
+  stripeCustomerId String?
+  paymentLinkId    String?
+  paymentLinkUrl   String?
+  amount           Float
+  currency         String    @default("MXN")
+  method           String    @default("card") // card | oxxo | spei | manual
+  type             String    // deposit | balance
+  status           String    @default("pending") // pending | paid | failed | refunded
+  paidAt           DateTime?
+  createdAt        DateTime  @default(now())
+}
+
+model Invoice {
+  id          String    @id @default(cuid())
+  invoiceCode String    @unique // CBC-INV-2025-001
+  order       Order     @relation(fields: [orderId], references: [id])
+  orderId     String
+  amount      Float
+  currency    String    @default("MXN")
+  status      String    @default("pending") // pending | paid | overdue | cancelled
+  pdfUrl      String?
+  dueDate     DateTime?
+  paidAt      DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ─── SAT / CFDI ───────────────────────────────────────────────────────────────
+
+model Cfdi {
+  id                 String    @id @default(cuid())
+  order              Order     @relation(fields: [orderId], references: [id])
+  orderId            String
+  facturApiId        String?   @unique // Facturapi's invoice ID
+  folio              String?            // CBC-F-001
+  serie              String?   @default("CBC")
+  uuid               String?   @unique  // SAT UUID from timbre fiscal digital
+  rfcEmisor          String?            // CBC's RFC
+  rfcReceptor        String?            // Client's RFC
+  razonSocialReceptor String?
+  subtotal           Float
+  iva                Float
+  total              Float
+  xmlUrl             String?            // R2 URL — signed CFDI XML
+  pdfUrl             String?            // R2 URL — branded PDF
+  status             String    @default("draft") // draft | valid | cancelled
+  issuedAt           DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?   // SAT cancellation motive code
+  cancellationUuid   String?            // Replacement CFDI UUID if applicable
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+// ─── Coffee ───────────────────────────────────────────────────────────────────
+
+model Coffee {
+  id            String    @id @default(cuid())
+  name          String
+  originCountry String    @default("México")
+  originRegion  String
+  originFarm    String?
+  variety       String?
+  process       String?   // washed | natural | honey
+  roast         String?   @default("medio")
+  tastingNotes  String[]
+  story         String?
+  brewGuide     Json?     // {prensa: "...", moka: "..."}
+  active        Boolean   @default(false)
+  orders        Order[]
+  posts         Post[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ─── Marketing / Content ──────────────────────────────────────────────────────
+
+model Post {
+  id           String    @id @default(cuid())
+  platform     String    // instagram | facebook | linkedin
+  contentType  String    // product-post | coffee-story | linkedin-post | seasonal | social-proof
+  caption      String
+  imageUrl     String?
+  imagePrompt  String?
+  status       String    @default("draft") // draft | scheduled | published | failed
+  publishedAt  DateTime?
+  scheduledFor DateTime?
+  errorMsg     String?
+  coffee       Coffee?   @relation(fields: [coffeeId], references: [id])
+  coffeeId     String?
+  platformPostId String? // ID returned from IG/FB/LinkedIn after publishing
+  createdAt    DateTime  @default(now())
+}
+
+// ─── Customer Service ─────────────────────────────────────────────────────────
+
+model Message {
+  id        String   @id @default(cuid())
+  from      String   // phone number, email, or "form"
+  to        String?
+  body      String
+  direction String   // inbound | outbound
+  platform  String   // whatsapp | email | form
+  status    String   @default("unread") // unread | read | replied
+  lead      Lead?    @relation(fields: [leadId], references: [id])
+  leadId    String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  orderId   String?
+  aiDraft   String?  // Claude-generated reply suggestion
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+// ─── Settings & i18n ──────────────────────────────────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     String   @db.Text
+  encrypted Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
+model Translation {
+  id        String   @id @default(cuid())
+  locale    String   // es | en
+  namespace String   // common | landing | admin | emails
+  key       String
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@unique([locale, namespace, key])
+}

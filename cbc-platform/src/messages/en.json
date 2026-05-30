@@ -1,0 +1,167 @@
+{
+  "nav": {
+    "home": "Home",
+    "quote": "Get a quote",
+    "tracking": "Track order",
+    "toggleDark": "Dark mode",
+    "toggleLight": "Light mode"
+  },
+  "hero": {
+    "tag": "Corporate Gifts · Specialty Coffee",
+    "headline": "The gift they'll remember.",
+    "sub": "Specialty coffee gift boxes with a story — curated by an expert, with your company branding included.",
+    "detail": "French press or Italian moka · Micro-lot curated by Lorena Luna · From 10 units",
+    "cta": "Get a quote on WhatsApp",
+    "ctaSub": "Reply within 2 hours · Monday to Friday"
+  },
+  "boxes": {
+    "tag": "The boxes",
+    "headline": "Two boxes. One easy choice.",
+    "sub": "Choose based on how your team likes their coffee. Everything else — coffee, curation, branding — is included.",
+    "prensa": {
+      "name": "French Press Box",
+      "price": "$799 MXN per box",
+      "feature1": "Specialty coffee 250g — Lorena's current selection",
+      "feature2": "350cc French press",
+      "feature3": "Curation card",
+      "feature4": "Box with your company logo",
+      "ideal": "Ideal for: offices, remote workers, people who enjoy a full-body cup.",
+      "cta": "Quote French Press Box"
+    },
+    "moka": {
+      "name": "Moka Box",
+      "price": "$799 MXN per box",
+      "feature1": "Specialty coffee 250g — Lorena's current selection",
+      "feature2": "Mini Italian moka pot",
+      "feature3": "Curation card",
+      "feature4": "Box with your company logo",
+      "ideal": "Ideal for: espresso lovers, home kitchens, a gift with personality.",
+      "cta": "Quote Moka Box"
+    },
+    "footnote": "Minimum order: 10 boxes. Production time: 7–10 business days."
+  },
+  "threshold": {
+    "label": "For orders of 15 boxes or more",
+    "headline": "Every box includes a live class with Lorena.",
+    "body": "Orders of 15 boxes or more include a QR card in every box that unlocks a personalized online session for your whole team. Lorena teaches them how to prepare the coffee they received — its origin, its story, and the right method step by step. One session per order.",
+    "quote": "\"It's not just a gift. It's an experience your team will remember.\"",
+    "cta": "I want 15 boxes or more"
+  },
+  "coffee": {
+    "tag": "The coffee",
+    "headline": "Every box has the best coffee available at that moment.",
+    "body": "The coffee in each box is not a fixed product. It's a specialty micro-lot — a small batch from a specific farm, from a specific harvest — selected by Lorena at the time of your order. Micro-lots change with the season, the producer, and the region. That means every box is unrepeatable.",
+    "f1title": "Traceable origin",
+    "f1body": "We know which farm it came from, who grew it, and how it was processed.",
+    "f2title": "Variety and process",
+    "f2body": "Typica, Bourbon, Geisha, natural, washed, honey — specialty coffee has an identity.",
+    "f3title": "Curation card",
+    "f3body": "Every box includes a card written by Lorena with the origin, tasting notes, and brew guide."
+  },
+  "branding": {
+    "headline": "Your brand, on every box.",
+    "body": "Your company logo and branding go on the box as standard — no extra cost, no minimum increase. Not a sticker on a generic box.",
+    "req1": "Your logo file (PNG or SVG, high resolution)",
+    "req2": "Optional: message for your team or clients (max 80 words)",
+    "cta": "Start a quote"
+  },
+  "lorena": {
+    "tag": "Who chooses the coffee",
+    "headline": "Lorena Luna, barista and specialty coffee expert.",
+    "body": "Lorena is a professional barista, coffee taster, and expert across the entire coffee production chain — from farm to cup. She selects the micro-lot in every box, writes the curation card, and leads the live classes for corporate teams.",
+    "quote": "\"My commitment is that whoever receives this box understands that the coffee has a story — and that story is worth knowing.\"",
+    "credit": "Lorena Luna"
+  },
+  "proof": {
+    "tag": "Companies already gifting with CBC",
+    "empty": "The first stories are on their way."
+  },
+  "faq": {
+    "headline": "Frequently asked questions",
+    "q1": "What is the minimum order?",
+    "a1": "10 boxes per order.",
+    "q2": "Is the coffee always the same?",
+    "a2": "No — and that's intentional. Lorena selects the best available specialty micro-lot at the time of your order. The coffee changes with the season and the producers.",
+    "q3": "How does the branding work?",
+    "a3": "Your company logo goes on the box as standard — no extra cost. We just need your logo file in high resolution.",
+    "q4": "What does the class with Lorena include?",
+    "a4": "A 45–60 minute online session for your team. Covers the coffee they received: origin, story, tasting notes, and how to prepare it. Available for orders of 15 boxes or more.",
+    "q5": "How long does delivery take?",
+    "a5": "7–10 business days for branded orders. We deliver in CDMX and ship nationwide in Mexico.",
+    "q6": "Can I mix box types in one order?",
+    "a6": "Yes — you can mix French Press and Moka boxes in the same order, as long as the total is 10 boxes or more.",
+    "q7": "Do you issue invoices?",
+    "a7": "Yes. We are a legally registered company in Mexico. Upon order confirmation we request your RFC and fiscal data to issue a SAT-compliant CFDI invoice."
+  },
+  "finalCta": {
+    "headline": "Ready to give a gift they'll remember?",
+    "sub": "Message us on WhatsApp. We'll send a quote in under 2 hours.",
+    "cta": "Get a quote on WhatsApp",
+    "detail": "contact@coffeebunncafe.com · +52 55 72293512",
+    "detail2": "Minimum 10 boxes · Delivery in CDMX and nationwide Mexico"
+  },
+  "footer": {
+    "rights": "All rights reserved",
+    "address": "Av. José Martí 300, Escandón II, Miguel Hidalgo, CDMX 11800, Mexico"
+  },
+  "quote": {
+    "headline": "Request a quote",
+    "sub": "Tell us what you need. We'll get back to you in under 2 hours.",
+    "company": "Company name",
+    "contact": "Contact name",
+    "email": "Email address",
+    "whatsapp": "WhatsApp (with country code)",
+    "boxType": "Box type",
+    "boxPrens": "French Press Box",
+    "boxMoka": "Moka Box",
+    "boxMix": "Mixed (French Press + Moka)",
+    "quantity": "Number of boxes",
+    "occasion": "Occasion",
+    "occasionFin": "Year-end / Christmas",
+    "occasionAmor": "Valentine's Day",
+    "occasionTrab": "Labor Day",
+    "occasionOnb": "Welcome / Onboarding",
+    "occasionClient": "Client gift",
+    "occasionOtro": "Other",
+    "logo": "Your company logo (PNG or SVG)",
+    "message": "Message for your team (optional, max 80 words)",
+    "rfcSection": "Billing information (CFDI invoice)",
+    "rfc": "RFC",
+    "razonSocial": "Legal company name",
+    "cpFiscal": "Fiscal postal code",
+    "regimenFiscal": "Tax regime",
+    "usoCfdi": "CFDI use",
+    "emailFacturacion": "Invoice email",
+    "submit": "Send request",
+    "submitting": "Sending...",
+    "successTitle": "We received your request!",
+    "successBody": "We'll contact you on WhatsApp within 2 hours on business days.",
+    "errorTitle": "Something went wrong",
+    "errorBody": "Please try again or message us directly on WhatsApp."
+  },
+  "tracking": {
+    "headline": "Track your order",
+    "sub": "Enter your order code to see the current status.",
+    "placeholder": "CBC-2025-001",
+    "search": "Search",
+    "notFound": "We couldn't find an order with that code.",
+    "statusConfirmed": "Confirmed",
+    "statusProduction": "In production",
+    "statusReady": "Ready",
+    "statusShipped": "On its way",
+    "statusDelivered": "Delivered",
+    "downloadCfdi": "Download invoice (CFDI)",
+    "downloadPdf": "Download PDF"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "sales": "Sales",
+    "marketing": "Marketing",
+    "service": "Service",
+    "settings": "Settings",
+    "signOut": "Sign out",
+    "welcome": "Welcome, Lorena",
+    "newLead": "New lead",
+    "newOrder": "New order"
+  }
+}
