@@ -1,0 +1,18 @@
+{
+  "_note": "Lorena updates this by sending a WhatsApp to +52 55 72293512. The system parses the message and updates this file automatically.",
+  "_lastUpdated": "2025-05-29",
+  "current": {
+    "name": "Café de Especialidad CBC",
+    "origin": {
+      "country": "México",
+      "region": "Chiapas",
+      "farm": "Por confirmar"
+    },
+    "variety": "Por confirmar",
+    "process": "Por confirmar",
+    "roast": "Medio",
+    "tastingNotes": ["Por confirmar"],
+    "brewingMethods": ["prensa francesa", "moka"],
+    "story": "Lorena selecciona el mejor micro-lote disponible para cada pedido. El café cambia con la temporada y el productor."
+  }
+}

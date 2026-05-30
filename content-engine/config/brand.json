@@ -1,0 +1,43 @@
+{
+  "name": "Coffee Bunn Café",
+  "handle": "coffeebunncafe",
+  "tagline": "Nuestra Casa para los Coffee Lovers",
+  "website": "https://www.coffeebunncafe.com",
+  "contact": {
+    "whatsapp": "+5215572293512",
+    "email": "contact@coffeebunncafe.com"
+  },
+  "colors": {
+    "deepBlack": "#262626",
+    "energyYellow": "#f7b84e",
+    "creamWhite": "#fffaf3",
+    "yellow10": "#ffe0ab",
+    "yellow30": "#ffd17f",
+    "black50": "#636363",
+    "black80": "#444444"
+  },
+  "typography": {
+    "primary": "Raleway",
+    "logo": "Best Wishes"
+  },
+  "voice": {
+    "language": "es-MX",
+    "tone": "warm, expert, approachable — Lorena speaks as a knowledgeable friend, not a brand. Confident about coffee, never pretentious. Uses 'tú' (informal). Occasionally mixes Spanish with English words naturally (spanglish). Always honest about what makes the coffee special.",
+    "doNot": "Do not use generic marketing language. Do not use excessive emojis. Do not mention Colombia or Lorena's origin. Do not sound corporate. Do not use más de 2 hashtags por post.",
+    "hashtags": ["#CoffeeBunnCafe", "#CoffeeLovers", "#CaféDeEspecialidad"],
+    "cta_whatsapp": "https://wa.me/5215572293512?text=Hola%2C%20quiero%20cotizar%20cajas%20de%20regalo%20CBC"
+  },
+  "imageStyle": {
+    "background": "deep black (#262626), dark and moody coffee photography aesthetic",
+    "accent": "warm yellow (#f7b84e) highlights and details",
+    "elements": "coffee plants, coffee leaves, coffee beans, specialty brewing equipment",
+    "style": "minimalist, premium, high-end product photography, dark studio lighting, shallow depth of field",
+    "avoid": "white backgrounds, cluttered compositions, generic stock photo look, excessive text overlays",
+    "logoPlacement": "bottom right corner, small, white"
+  },
+  "accounts": {
+    "instagram": "coffeebunncafe",
+    "facebook_page": "CoffeeBunnCafe",
+    "linkedin_page": "coffee-bunn-cafe"
+  }
+}

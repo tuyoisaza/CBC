@@ -1,0 +1,46 @@
+{
+  "timezone": "America/Mexico_City",
+  "posts": {
+    "productPost": {
+      "cron": "0 10 * * 1",
+      "description": "Weekly product post — every Monday at 10am CDMX",
+      "platforms": ["instagram", "facebook"],
+      "active": true
+    },
+    "coffeeStory": {
+      "cron": "0 10 * * 3",
+      "description": "Weekly coffee story post — every Wednesday at 10am CDMX",
+      "platforms": ["instagram", "facebook"],
+      "active": true
+    },
+    "linkedinPost": {
+      "cron": "0 9 1,15 * *",
+      "description": "Bi-weekly LinkedIn post — 1st and 15th of each month at 9am CDMX",
+      "platforms": ["linkedin"],
+      "active": true
+    }
+  },
+  "seasons": [
+    {
+      "name": "Fin de año",
+      "campaignStartDate": "10-15",
+      "peakDate": "12-15",
+      "platforms": ["instagram", "facebook", "linkedin"],
+      "active": true
+    },
+    {
+      "name": "Día del Amor",
+      "campaignStartDate": "01-02",
+      "peakDate": "02-14",
+      "platforms": ["instagram", "facebook", "linkedin"],
+      "active": true
+    },
+    {
+      "name": "Día del Trabajo",
+      "campaignStartDate": "03-20",
+      "peakDate": "05-01",
+      "platforms": ["instagram", "facebook", "linkedin"],
+      "active": true
+    }
+  ]
+}
