@@ -249,7 +249,8 @@ const envSchema = z.object({
 | Database | PostgreSQL (Railway add-on) | Relational data, order tracking, CRM |
 | ORM | Prisma | Type-safe queries, easy migrations |
 | Auth | NextAuth.js (credentials) | Simple email+password for admin, no login for public |
-| Payments | Stripe | Cards, OXXO (MXN), payment links, webhooks, invoice generation |
+| Payments | Stripe | Cards, OXXO (MXN), payment links, webhooks |
+| SAT Billing | Facturapi | CFDI 4.0 generation, PAC timbrado, XML + PDF, cancellation |
 | AI | Anthropic SDK (Claude) | Copy generation, WhatsApp parsing, customer service drafts |
 | Images | OpenAI (DALL-E 3) | Branded social media image generation |
 | Email | Resend | Order confirmations, quote delivery, payment receipts |
@@ -361,6 +362,14 @@ Each card shows: company, quantity, box type, value, days in stage
 - Order history (total orders, total value, last order date)
 - Tags: VIP, repeat, referral source
 - Notes
+
+#### SAT / CFDI Billing
+- Collect RFC + fiscal data from client on quote form (required)
+- RFC format validation (regex + checksum, client and server side)
+- Auto-generate CFDI via Facturapi when payment is confirmed
+- Cancel CFDI with SAT reason code when needed
+- Download XML + PDF from order detail and client tracking page
+- CBC fiscal config stored encrypted in settings
 
 #### Revenue Dashboard
 - Monthly revenue
@@ -694,6 +703,17 @@ STRIPE_SECRET_KEY=sk_live_...
 STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+
+# ─── SAT / Facturapi ──────────────────────────────
+FACTURAPI_KEY=sk_live_...
+FACTURAPI_KEY_TEST=sk_test_...
+CBC_RFC=CBC######XXX
+CBC_RAZON_SOCIAL=COFFEE BUNN CAFE SA DE CV
+CBC_REGIMEN_FISCAL=601
+CBC_CODIGO_POSTAL_FISCAL=11800
+CBC_CSD_CERT_BASE64=...            # .cer file base64 encoded
+CBC_CSD_KEY_BASE64=...             # .key file base64 encoded
+CBC_CSD_PASSWORD=...               # CSD password (encrypted at rest)
 
 # ─── AI ───────────────────────────────────────────
 ANTHROPIC_API_KEY=sk-ant-...
