@@ -23,13 +23,13 @@ export function PublicFooter() {
             <p className="text-sm font-semibold text-foreground mb-3">Navegación</p>
             <ul className="space-y-2">
               {[
-                { href: '/cotizar' as const, label: 'Cotizar' },
-                { href: '/tracking/search' as const, label: 'Rastrear pedido' },
+                { href: '/cotizar', label: 'Cotizar' },
+                { href: '/tracking/search', label: 'Rastrear pedido' },
               ].map(({ href, label }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <a href={href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                     {label}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>

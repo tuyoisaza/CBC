@@ -10,7 +10,8 @@ export function LocaleSwitcher() {
   const pathname = usePathname()
 
   const toggle = () => {
-    router.replace(pathname, { locale: locale === 'es' ? 'en' : 'es' })
+    // pathname is always the current route; cast required for dynamic segments
+    router.replace(pathname as '/', { locale: locale === 'es' ? 'en' : 'es' })
   }
 
   return (

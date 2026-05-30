@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
   const quote = await db.quote.findUnique({
     where: { id: quoteId },
-    include: { customer: true, lead: true },
+    include: { customer: true, lead: true, order: true },
   })
   if (!quote) return NextResponse.json({ error: 'Quote not found' }, { status: 404 })
   if (quote.order) return NextResponse.json({ error: 'Order already exists' }, { status: 409 })

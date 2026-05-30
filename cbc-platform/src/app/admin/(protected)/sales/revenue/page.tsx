@@ -11,7 +11,6 @@ async function getRevenue() {
     monthOrders,
     allOrders,
     customers,
-    topCustomers,
   ] = await Promise.all([
     db.order.findMany({
       where: { createdAt: { gte: start }, status: { not: 'cancelled' } },
@@ -24,14 +23,6 @@ async function getRevenue() {
       take: 20,
     }),
     db.customer.count(),
-    db.order.groupBy({
-      by: ['customerId'],
-      _count: { id: true },
-      _sum:   { id: true },
-      orderBy: { _count: { id: 'desc' } },
-      take: 5,
-      where: { status: { not: 'cancelled' } },
-    }),
   ])
 
   const monthRevenue = monthOrders.reduce((sum, o) => sum + o.quote.total, 0)

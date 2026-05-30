@@ -54,20 +54,19 @@ export async function POST(req: NextRequest) {
   // Generate PDF
   let pdfUrl: string | undefined
   try {
-    const pdfBuffer = await renderToBuffer(
-      createElement(QuotePDF, {
-        quoteCode,
-        companyName: customer.companyName,
-        contactName: customer.contactName,
-        email: customer.email || '',
-        items,
-        subtotal,
-        iva,
-        total,
-        validUntil,
-        notes: data.notes,
-      })
-    )
+    const pdfElement = createElement(QuotePDF, {
+      quoteCode,
+      companyName: customer.companyName,
+      contactName: customer.contactName,
+      email: customer.email || '',
+      items,
+      subtotal,
+      iva,
+      total,
+      validUntil,
+      notes: data.notes,
+    })
+    const pdfBuffer = await renderToBuffer(pdfElement as unknown as Parameters<typeof renderToBuffer>[0])
     pdfUrl = await uploadBuffer(
       quoteKey(quoteCode),
       Buffer.from(pdfBuffer),

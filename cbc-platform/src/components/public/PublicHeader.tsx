@@ -34,12 +34,12 @@ export function PublicHeader() {
             >
               {t('quote')}
             </Link>
-            <Link
+            <a
               href="/tracking/search"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               {t('tracking')}
-            </Link>
+            </a>
             <LocaleSwitcher />
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -74,9 +74,9 @@ export function PublicHeader() {
             <Link href="/cotizar" className="block px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground">
               {t('quote')}
             </Link>
-            <Link href="/tracking/search" className="block px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground">
+            <a href="/tracking/search" className="block px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground">
               {t('tracking')}
-            </Link>
+            </a>
             <div className="flex items-center gap-3 px-2 pt-2">
               <LocaleSwitcher />
               <button
