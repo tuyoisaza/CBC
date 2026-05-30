@@ -57,21 +57,208 @@ One Next.js app. One Railway service. One PostgreSQL database.
 
 ---
 
+## Platform-Wide Requirements
+
+These are non-negotiable constraints that apply to every page, every module, every phase.
+
+---
+
+### 1. Bilingual — Spanish & English (ES / EN)
+
+The platform serves Mexican companies (primary) and can serve English-speaking buyers.
+Every user-facing string is translated. No hardcoded text in components.
+
+**Implementation: `next-intl`**
+- Default locale: `es` → `coffeebunncafe.com/`
+- English locale: `en` → `coffeebunncafe.com/en/`
+- Admin: locale toggle in the header (stored in cookie, not URL)
+- Translation files: `messages/es.json` and `messages/en.json`
+- Type-safe: all translation keys are typed — missing keys are caught at build time
+
+**Scope:**
+| Area | ES | EN |
+|------|----|----|
+| Public site (landing, tracking, quote form) | ✓ | ✓ |
+| Admin UI (labels, navigation, notifications) | ✓ | ✓ |
+| System emails (order confirmations, quotes) | ✓ | ✓ |
+| AI-generated social content | ES only | — |
+| Curation Card | ES only | — |
+
+---
+
+### 2. Dark Mode & Light Mode
+
+The brand is dark-first (deep black + energy yellow). The admin platform is light-first (easier for long working sessions). Both modes exist on both faces.
+
+**Implementation: `next-themes` + Tailwind CSS dark mode**
+- Default (public site): **dark** — matches brand identity
+- Default (admin): **light** — better for productivity
+- System preference respected on first visit
+- Manual toggle available on all pages
+- Zero flash on load (SSR-safe)
+- Theme stored in cookie and localStorage
+
+**Color mapping:**
+
+| Token | Light mode | Dark mode |
+|-------|-----------|-----------|
+| Background | `#fffaf3` (cream white) | `#262626` (deep black) |
+| Surface / card | `#ffffff` | `#333333` |
+| Border | `#e5e5e5` | `#444444` |
+| Primary text | `#262626` | `#fffaf3` |
+| Secondary text | `#636363` | `#a0a0a0` |
+| Accent | `#f7b84e` | `#f7b84e` (same — yellow works on both) |
+| Accent hover | `#ffd17f` | `#ffd17f` |
+| Destructive | `#ef4444` | `#f87171` |
+
+---
+
+### 3. Payments
+
+CBC collects payment from corporate buyers: deposit on order confirmation, balance before delivery.
+
+**Implementation: Stripe**
+
+| Payment method | Use case | Notes |
+|---------------|----------|-------|
+| Credit / debit card | Primary — fast, universal | Visa, Mastercard, Amex |
+| OXXO | Mexican cash payment | Common for SME buyers without corporate card |
+| SPEI (bank transfer) | Mexican bank transfer | Most common for B2B corporate; manual confirmation |
+| Stripe Payment Link | Send via WhatsApp | No checkout page needed — just a link |
+
+**Payment flow:**
+```
+Quote accepted
+     ↓
+Lorena generates Payment Link (50% deposit) in admin
+     ↓
+Sends link via WhatsApp
+     ↓
+Buyer pays → Stripe webhook fires → Order status updates to "confirmed"
+     ↓
+Production begins
+     ↓
+Lorena sends remaining 50% payment link before delivery
+     ↓
+Buyer pays → Order status updates to "ready to ship"
+```
+
+**Stripe features to use:**
+- Payment Links (no custom checkout needed for launch)
+- Webhooks (auto-update order status on payment)
+- Customer records (link to our Customer model)
+- Invoice PDF (Stripe generates; we can also use React-PDF for branded version)
+- OXXO payment method (enabled in Stripe dashboard for MXN)
+
+**What we do NOT build at launch:** A custom checkout flow on the public site. Payment is always initiated by Lorena after a quote is accepted — not self-serve. This keeps CBC in control of every order and avoids payment UX complexity at launch.
+
+---
+
+### 4. Best Practices — Full Checklist
+
+#### Performance
+- [ ] Core Web Vitals: LCP < 2.5s, CLS < 0.1, FID < 100ms
+- [ ] Images: Next.js `<Image>` component everywhere — auto-format (WebP/AVIF), lazy load, responsive sizes
+- [ ] Fonts: self-hosted Raleway (already on coffeebunncafe.com) — no Google Fonts in production
+- [ ] Code splitting: automatic via Next.js App Router
+- [ ] No render-blocking resources
+- [ ] Static generation for landing page (ISR with 1h revalidation for social proof section)
+
+#### SEO (public site)
+- [ ] `next/metadata` for all pages — title, description, OG tags, Twitter cards
+- [ ] Structured data (JSON-LD): `Organization`, `Product`, `BreadcrumbList`
+- [ ] `sitemap.xml` — auto-generated, includes both locales
+- [ ] `robots.txt` — public site indexed, `/admin/*` disallowed
+- [ ] Canonical URLs — hreflang for ES/EN alternates
+- [ ] OpenGraph image — 1200×630 branded image per page
+
+#### Accessibility (WCAG 2.1 AA)
+- [ ] All interactive elements keyboard-navigable
+- [ ] Focus rings visible (Tailwind `focus-visible:ring`)
+- [ ] Color contrast: AA minimum (4.5:1 for text, 3:1 for large text)
+- [ ] All images have meaningful `alt` text
+- [ ] Form fields have associated `<label>` elements
+- [ ] Error messages are descriptive and linked to the field
+- [ ] ARIA roles only where semantic HTML is insufficient
+- [ ] Skip-to-content link on every page
+
+#### Security
+- [ ] HTTPS enforced — Railway provides this automatically
+- [ ] Content Security Policy (CSP) headers via `next.config.js`
+- [ ] Rate limiting on all API routes (especially quote form and auth)
+- [ ] Input validation: Zod schemas on all form submissions, server-side
+- [ ] File upload validation: type whitelist (PNG, SVG, JPG only), max size 5MB
+- [ ] Admin routes: middleware enforces auth on every `/admin/*` request
+- [ ] Stripe webhook signature verification
+- [ ] WhatsApp webhook signature verification (Meta's `X-Hub-Signature-256`)
+- [ ] Environment variables: never exposed to client, validated at startup with Zod
+- [ ] No sensitive data in logs (mask phone numbers, emails)
+- [ ] CSRF protection: built-in via NextAuth
+
+#### Reliability
+- [ ] Error boundaries on all major UI sections
+- [ ] Sentry for error monitoring (client + server)
+- [ ] API routes: try/catch + structured error responses
+- [ ] Content engine failures: logged, do not crash the platform
+- [ ] Database: connection pooling via Prisma
+- [ ] Graceful degradation: if AI generation fails, alert in admin — don't silently skip
+
+#### Mobile
+- [ ] Mobile-first CSS — all layouts designed for 375px first, scaled up
+- [ ] Admin is fully operable on a phone — Lorena runs the business from hers
+- [ ] Touch targets minimum 44×44px
+- [ ] WhatsApp CTA button: fixed bottom on mobile (public site)
+- [ ] Swipeable Kanban cards on mobile (sales pipeline)
+
+#### Analytics
+- [ ] PostHog (self-hosted on Railway or cloud): page views, funnel tracking, session recordings
+- [ ] Conversion events: quote form submit, WhatsApp CTA click, tracking page visit
+- [ ] Admin excluded from analytics
+- [ ] No PII sent to analytics (anonymize phone, email)
+
+---
+
+### 5. Environment Variable Validation
+
+All environment variables validated at startup. App does not start with missing required vars.
+
+```typescript
+// lib/env.ts — validated with Zod at startup
+const envSchema = z.object({
+  DATABASE_URL: z.string().url(),
+  NEXTAUTH_SECRET: z.string().min(32),
+  ANTHROPIC_API_KEY: z.string().startsWith('sk-ant-'),
+  OPENAI_API_KEY: z.string().startsWith('sk-'),
+  STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
+  STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_'),
+  META_ACCESS_TOKEN: z.string().min(1),
+  // ... etc
+})
+```
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
 | Framework | Next.js 14 (App Router) | Public + admin + API in one, Railway-native |
-| Styling | Tailwind CSS + Shadcn/ui | Fast, brand-compatible, production-quality components |
+| Styling | Tailwind CSS + Shadcn/ui | Dark/light mode built-in, brand-compatible, production-quality |
+| Theming | `next-themes` | System-aware dark/light toggle, zero flash on load |
+| i18n | `next-intl` | App Router–native ES/EN routing, type-safe translations |
 | Database | PostgreSQL (Railway add-on) | Relational data, order tracking, CRM |
 | ORM | Prisma | Type-safe queries, easy migrations |
 | Auth | NextAuth.js (credentials) | Simple email+password for admin, no login for public |
+| Payments | Stripe | Cards, OXXO (MXN), payment links, webhooks, invoice generation |
 | AI | Anthropic SDK (Claude) | Copy generation, WhatsApp parsing, customer service drafts |
 | Images | OpenAI (DALL-E 3) | Branded social media image generation |
-| Email | Resend | Order confirmations, quote delivery |
-| File storage | Cloudflare R2 | Client logo uploads, generated images |
-| Background jobs | Custom scheduler (node-cron) | Automated posting, no external queue needed |
-| Realtime | Server-Sent Events (SSE) | Live order status updates, no extra service |
+| Email | Resend | Order confirmations, quote delivery, payment receipts |
+| File storage | Cloudflare R2 + presigned URLs | Client logo uploads, generated images, PDF quotes |
+| PDF generation | React-PDF | Branded quote and invoice PDFs, Railway-safe (no headless browser) |
+| Background jobs | cbc-engine (separate Railway service) | Cron scheduler — Next.js is not suitable for long-running jobs |
+| Realtime | Server-Sent Events (SSE) | Live order status, admin notifications |
+| Analytics | Vercel Analytics / PostHog | Page views, conversion funnel, zero PII exposure |
+| Error monitoring | Sentry | Client + server errors, production visibility |
 
 ---
 
@@ -331,6 +518,61 @@ model Post {
   createdAt   DateTime @default(now())
 }
 
+model Payment {
+  id                String   @id @default(cuid())
+  order             Order    @relation(fields: [orderId], references: [id])
+  orderId           String
+  stripePaymentId   String?  @unique
+  stripeCustomerId  String?
+  amount            Float
+  currency          String   @default("MXN")
+  method            String   // card | oxxo | spei | manual
+  type              String   // deposit | balance
+  status            String   @default("pending") // pending | paid | failed
+  paymentLinkUrl    String?
+  paidAt            DateTime?
+  createdAt         DateTime @default(now())
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  invoiceCode String   @unique // CBC-INV-2025-001
+  order       Order    @relation(fields: [orderId], references: [id])
+  orderId     String   @unique
+  amount      Float
+  currency    String   @default("MXN")
+  status      String   @default("pending") // pending | paid | overdue | cancelled
+  pdfUrl      String?
+  dueDate     DateTime?
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  from       String   // phone number or email
+  to         String?
+  body       String
+  direction  String   // inbound | outbound
+  platform   String   // whatsapp | email | form
+  status     String   @default("unread") // unread | read | replied
+  lead       Lead?    @relation(fields: [leadId], references: [id])
+  leadId     String?
+  aiDraft    String?  // Claude-generated reply draft
+  createdAt  DateTime @default(now())
+}
+
+model Translation {
+  id        String   @id @default(cuid())
+  locale    String   // es | en
+  namespace String   // common | landing | admin | emails
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@unique([locale, namespace, key])
+}
+
 model Setting {
   key       String   @id
   value     String
@@ -343,48 +585,72 @@ model Setting {
 ## Build Roadmap
 
 ### Phase 1 — Foundation (Week 1–2)
-- [ ] Next.js app scaffold (Railway-ready)
-- [ ] PostgreSQL + Prisma setup
-- [ ] Auth (NextAuth — admin login)
-- [ ] Public landing page (using copy from landing-page-copy.md)
-- [ ] Quote request form → creates Lead in DB
-- [ ] Admin dashboard shell (layout, nav)
-- [ ] Deploy to Railway
+**Constraints:** Mobile-first from day one. Dark/light mode wired from day one. i18n scaffolded from day one. All three are harder to retrofit than to build in.
 
-**Deliverable:** Public landing page live. Quote form working. Admin accessible.
+- [ ] Next.js 14 app scaffold (Railway-ready, App Router)
+- [ ] `next-intl` setup — ES/EN routing, `messages/es.json` + `messages/en.json`
+- [ ] `next-themes` setup — dark/light toggle, system preference, zero flash
+- [ ] Tailwind config — CBC design tokens (colors, fonts, dark mode mapping)
+- [ ] Shadcn/ui — component library initialized with CBC theme
+- [ ] PostgreSQL + Prisma setup — full schema including Payment, Invoice, Message, Translation
+- [ ] Env variable validation (Zod schema at startup)
+- [ ] Sentry integration (error monitoring from day one)
+- [ ] Auth (NextAuth — admin login, middleware protecting `/admin/*`)
+- [ ] Public landing page — ES + EN, dark mode default, mobile-first
+- [ ] Quote request form — with logo upload (R2 presigned URL), Zod validation
+- [ ] Form submit → Lead created in DB + WhatsApp notification to Lorena
+- [ ] Admin shell — layout, nav, dark/light toggle, locale switcher
+- [ ] Deploy to Railway — both domains live
 
-### Phase 2 — Sales Engine (Week 2–3)
-- [ ] Lead pipeline (Kanban view)
-- [ ] Lead detail + notes
-- [ ] Quote builder + PDF generation
-- [ ] Order management + status updates
-- [ ] Customer tracking page (`/tracking/[orderCode]`)
-- [ ] WhatsApp notifications on order status change
-- [ ] Customer database
+**Deliverable:** Public landing page live in ES + EN, dark and light mode. Quote form working. Admin shell accessible. Monitoring live.
 
-**Deliverable:** Lorena can receive a lead, build a quote, convert to order, and update status. Customer can track their order.
+---
 
-### Phase 3 — Marketing Engine (Week 3–4)
-- [ ] Absorb content engine code into Next.js API routes
-- [ ] Coffee manager (form + history)
-- [ ] Post scheduler (view + toggle)
-- [ ] Manual content trigger + preview
-- [ ] Post history feed
-- [ ] WhatsApp webhook for coffee updates
-- [ ] Fire-and-forget mode
+### Phase 2 — Sales Engine + Payments (Week 3–4)
+- [ ] Lead pipeline — Kanban view, swipeable on mobile
+- [ ] Lead detail — company info, notes, conversation history, quick actions
+- [ ] Quote builder — items, logo upload, message card, auto-total
+- [ ] Quote PDF — React-PDF, branded, ES + EN versions
+- [ ] Stripe integration — Payment Links, OXXO, webhook handler
+- [ ] Payment flow — deposit link → webhook → order confirmed → balance link
+- [ ] Invoice generation — React-PDF, branded, sent via Resend + WhatsApp
+- [ ] Order management — status pipeline, status update → customer notification
+- [ ] Customer tracking page `/tracking/[orderCode]` — public, no login, ES + EN
+- [ ] Customer database (CRM) — company, contacts, order history, tags
+- [ ] Revenue dashboard — MRR, orders by status, top customers, conversion rate
+- [ ] WhatsApp + email notifications on every order status change
 
-**Deliverable:** Marketing engine running inside the platform. Lorena updates coffee from the app or WhatsApp.
+**Deliverable:** Lorena receives a lead, builds a quote, generates a Stripe payment link, confirms payment via webhook, tracks production, and updates delivery status. Customer tracks their order publicly.
 
-### Phase 4 — Customer Service + Polish (Week 4–5)
-- [ ] Incoming message inbox (WhatsApp webhook → UI)
-- [ ] Response templates
-- [ ] AI draft assistant (Claude-powered)
-- [ ] Settings page (API keys, social accounts, brand voice)
-- [ ] Revenue dashboard
-- [ ] Email notifications (Resend)
-- [ ] Mobile-responsive admin
+---
 
-**Deliverable:** Full platform live. Lorena can run the business from her phone.
+### Phase 3 — Marketing Engine (Week 4–5)
+- [ ] Connect cbc-engine service to platform via internal API
+- [ ] Coffee manager UI — current micro-lot form, history, active/inactive
+- [ ] Post scheduler — calendar view, toggle per post type, time/day config
+- [ ] Content generator — manual trigger, AI preview (caption + image), approve or regenerate
+- [ ] Fire-and-forget mode — **default ON** — per post type toggle in settings
+- [ ] Post history feed — thumbnail, caption preview, platform, status, timestamp
+- [ ] WhatsApp webhook UI — show last coffee update, timestamp, confirmation
+- [ ] Seasonal campaign controls — activate/deactivate by season, preview
+
+**Deliverable:** Marketing engine fully visible and controllable from the admin. Lorena updates coffee, machine does the rest. Fire-and-forget is on by default.
+
+---
+
+### Phase 4 — Customer Service + Polish (Week 5–7)
+- [ ] Message inbox — all incoming WhatsApp messages, unread filter, assign to lead
+- [ ] AI draft assistant — "Draft reply" button → Claude generates in Lorena's voice
+- [ ] Response templates — pre-written, with variables, one-click send
+- [ ] Settings — API keys (masked + test), social account status + expiry alerts, brand voice editor with version history, notification preferences
+- [ ] PostHog analytics — funnel tracking, conversion events, session recordings
+- [ ] Full accessibility audit — WCAG 2.1 AA pass
+- [ ] Performance audit — Core Web Vitals pass, Lighthouse 90+
+- [ ] SEO audit — meta tags, structured data, sitemap, hreflang, OG images
+- [ ] Security audit — CSP headers, rate limiting, input validation review
+- [ ] Mobile QA — full admin flow on iPhone + Android
+
+**Deliverable:** Full platform live. Every best practice checked. Lorena runs the entire business from her phone.
 
 ---
 
@@ -403,45 +669,69 @@ The standalone `content-engine/` we already built gets absorbed into the platfor
 
 ---
 
-## Environment Variables Needed
+## Environment Variables
 
-```
-# Database
+All variables validated at startup with Zod. App refuses to start with missing required vars.
+
+```bash
+# ─── App ──────────────────────────────────────────
+NODE_ENV=production
+NEXT_PUBLIC_APP_URL=https://coffeebunncafe.com
+NEXT_PUBLIC_ADMIN_URL=https://admin.coffeebunncafe.com
+CBC_ENGINE_URL=https://engine.internal.railway.app  # internal Railway URL
+
+# ─── Database ─────────────────────────────────────
 DATABASE_URL=postgresql://...
 
-# Auth
-NEXTAUTH_SECRET=random_secret
+# ─── Auth ─────────────────────────────────────────
+NEXTAUTH_SECRET=random_32+_char_string
 NEXTAUTH_URL=https://admin.coffeebunncafe.com
 ADMIN_EMAIL=contact@coffeebunncafe.com
-ADMIN_PASSWORD=hashed_password
+ADMIN_PASSWORD_HASH=bcrypt_hash
 
-# AI
-ANTHROPIC_API_KEY=...
-OPENAI_API_KEY=...
+# ─── Payments (Stripe) ────────────────────────────
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 
-# Meta
+# ─── AI ───────────────────────────────────────────
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+
+# ─── Meta (Instagram + Facebook) ──────────────────
 META_ACCESS_TOKEN=...
 META_INSTAGRAM_ACCOUNT_ID=...
 META_FACEBOOK_PAGE_ID=...
+META_APP_SECRET=...           # for webhook signature verification
 
-# LinkedIn
+# ─── LinkedIn ─────────────────────────────────────
 LINKEDIN_ACCESS_TOKEN=...
-LINKEDIN_PERSON_URN=...
+LINKEDIN_PERSON_URN=urn:li:person:...
+LINKEDIN_ORGANIZATION_URN=urn:li:organization:...  # optional company page
 
-# WhatsApp
+# ─── WhatsApp (Meta Cloud API) ────────────────────
 WHATSAPP_TOKEN=...
 WHATSAPP_PHONE_NUMBER_ID=...
-WHATSAPP_VERIFY_TOKEN=...
-LORENA_PHONE=521XXXXXXXXXX
+WHATSAPP_VERIFY_TOKEN=...     # random string, you choose
+LORENA_PHONE=521XXXXXXXXXX    # Lorena's personal number (for coffee updates)
 
-# Email
-RESEND_API_KEY=...
+# ─── Email (Resend) ───────────────────────────────
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=hola@coffeebunncafe.com
 
-# Storage
+# ─── File Storage (Cloudflare R2) ─────────────────
 CLOUDFLARE_R2_ACCOUNT_ID=...
 CLOUDFLARE_R2_ACCESS_KEY=...
 CLOUDFLARE_R2_SECRET_KEY=...
 CLOUDFLARE_R2_BUCKET=cbc-assets
+NEXT_PUBLIC_R2_PUBLIC_URL=https://assets.coffeebunncafe.com
+
+# ─── Monitoring ───────────────────────────────────
+SENTRY_DSN=https://...@sentry.io/...
+NEXT_PUBLIC_SENTRY_DSN=https://...@sentry.io/...
+NEXT_PUBLIC_POSTHOG_KEY=phc_...
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 ```
 
 ---
