@@ -5,10 +5,14 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
-    "lint": {},
     "dev": {
       "cache": false,
       "persistent": true
-    }
+    },
+    "start": {
+      "cache": false
+    },
+    "lint": {},
+    "typecheck": {}
   }
 }

@@ -5,6 +5,8 @@ node_modules/
 
 # Build
 .next/
+.turbo/
+dist/
 out/
 build/
 
@@ -17,6 +19,11 @@ build/
 
 # TypeScript
 tsconfig.tsbuildinfo
+next-env.d.ts
+
+# Lockfiles (pnpm only)
+package-lock.json
+yarn.lock
 
 # Misc
 .DS_Store

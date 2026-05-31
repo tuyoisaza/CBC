@@ -1,27 +1,65 @@
+$ next build
+  ▲ Next.js 14.2.35
 
-> web@0.0.1 build
-> astro build
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/34) ...
+   Generating static pages (8/34) 
+   Generating static pages (16/34) 
+   Generating static pages (25/34) 
+ ✓ Generating static pages (34/34)
+   Finalizing page optimization ...
+   Collecting build traces ...
 
-[2m08:18:39[22m [34m[types][39m Generated [2m40ms[22m
-[2m08:18:39[22m [34m[build][39m output: [34m"static"[39m
-[2m08:18:39[22m [34m[build][39m mode: [34m"static"[39m
-[2m08:18:39[22m [34m[build][39m directory: [34mC:\Users\Tuyo Isaza\Documents\GitHub\CBC\apps\web\dist\[39m
-[2m08:18:39[22m [34m[build][39m Collecting build info...
-[2m08:18:39[22m [34m[build][39m [32m✓ Completed in 58ms.[39m
-[2m08:18:39[22m [34m[build][39m Building static entrypoints...
-[2m08:18:40[22m [34m[vite][39m [32m✓ built in 1.08s[39m
-[2m08:18:40[22m [34m[vite][39m [32m✓ built in 31ms[39m
-[2m08:18:40[22m [34m[build][39m Rearranging server assets...
+Route (app)                              Size     First Load JS
+┌ ○ /                                    152 B          87.4 kB
+├ ○ /_not-found                          871 B          88.1 kB
+├ ƒ /admin/dashboard                     182 B          96.1 kB
+├ ƒ /admin/marketing                     182 B          96.1 kB
+├ ƒ /admin/marketing/coffee              2.9 kB         90.2 kB
+├ ƒ /admin/marketing/generator           2.98 kB        90.3 kB
+├ ƒ /admin/marketing/history             152 B          87.4 kB
+├ ƒ /admin/marketing/schedule            2.14 kB        89.4 kB
+├ ƒ /admin/sales                         152 B          87.4 kB
+├ ƒ /admin/sales/leads                   182 B          96.1 kB
+├ ƒ /admin/sales/leads/[id]              867 B          96.8 kB
+├ ƒ /admin/sales/orders                  182 B          96.1 kB
+├ ƒ /admin/sales/orders/[id]             783 B          96.7 kB
+├ ƒ /admin/sales/revenue                 152 B          87.4 kB
+├ ƒ /admin/service                       3.54 kB        90.8 kB
+├ ƒ /admin/settings                      3.07 kB        90.3 kB
+├ ƒ /api/admin/cfdi                      0 B                0 B
+├ ƒ /api/admin/coffee                    0 B                0 B
+├ ƒ /api/admin/engine                    0 B                0 B
+├ ƒ /api/admin/leads/[id]                0 B                0 B
+├ ƒ /api/admin/messages                  0 B                0 B
+├ ƒ /api/admin/orders                    0 B                0 B
+├ ƒ /api/admin/posts                     0 B                0 B
+├ ƒ /api/admin/quotes                    0 B                0 B
+├ ƒ /api/admin/schedule                  0 B                0 B
+├ ƒ /api/admin/settings                  0 B                0 B
+├ ƒ /api/auth/[...nextauth]              0 B                0 B
+├ ƒ /api/coffee/current                  0 B                0 B
+├ ƒ /api/health                          0 B                0 B
+├ ƒ /api/leads                           0 B                0 B
+├ ƒ /api/tracking/[code]                 0 B                0 B
+├ ƒ /api/upload                          0 B                0 B
+├ ƒ /api/webhooks/stripe                 0 B                0 B
+├ ƒ /api/webhooks/whatsapp               0 B                0 B
+├ ○ /cotizar                             2.13 kB        89.4 kB
+├ ○ /en                                  152 B          87.4 kB
+├ ○ /en/cotizar                          2.07 kB        89.3 kB
+├ ƒ /en/tracking/[code]                  2.87 kB        90.1 kB
+├ ○ /login                               1.53 kB        98.4 kB
+└ ƒ /tracking/[code]                     2.93 kB        90.2 kB
++ First Load JS shared by all            87.3 kB
+  ├ chunks/414-3b276aece053abc2.js       31.7 kB
+  ├ chunks/74e89571-84a0e0ccea6119ae.js  53.6 kB
+  └ other shared chunks (total)          1.92 kB
 
-[42m[30m generating static routes [39m[49m
-[2m08:18:40[22m   [34m├─[39m [2m/cotizar/index.html[22m [2m(+14ms)[22m 
-[2m08:18:40[22m   [34m├─[39m [2m/en/cotizar/index.html[22m [2m(+5ms)[22m 
-[2m08:18:40[22m   [34m├─[39m [2m/en/tracking/search/index.html[22m [2m(+4ms)[22m 
-[2m08:18:40[22m   [34m├─[39m [2m/en/index.html[22m [2m(+4ms)[22m 
-[2m08:18:40[22m   [34m├─[39m [2m/tracking/search/index.html[22m [2m(+5ms)[22m 
-[2m08:18:40[22m   [34m├─[39m [2m/index.html[22m [2m(+4ms)[22m 
-[2m08:18:40[22m [32m✓ Completed in 136ms.
-[39m
-[2m08:18:40[22m [34m[build][39m [32m✓ Completed in 1.31s.[39m
-[2m08:18:40[22m [34m[build][39m 6 page(s) built in [1m1.38s[22m
-[2m08:18:40[22m [34m[build][39m [1mComplete![22m
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

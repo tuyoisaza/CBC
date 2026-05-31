@@ -2,16 +2,14 @@
   "name": "cbc-monorepo",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "npm@10.8.2",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@11.0.9",
   "scripts": {
-    "postinstall": "prisma generate --schema=packages/db/schema.prisma",
+    "postinstall": "pnpm --filter @cbc/db build",
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "turbo run lint"
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "turbo": "^2.0.12"
