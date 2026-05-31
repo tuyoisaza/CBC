@@ -3,13 +3,18 @@
 # default. Keep in sync with the `engines.node` field in package.json.
 
 [phases.setup]
-nixPkgs = ["nodejs_20", "npm-9_x", "openssl"]
+# npm is bundled inside the nodejs_20 package in nixpkgs — do NOT add npm-9_x
+nixPkgs = ["nodejs_20", "openssl"]
 
 [phases.install]
 cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npm run build"]
+# prisma generate MUST run before next build so the Prisma client is available
+cmds = [
+  "npx prisma generate",
+  "npm run build"
+]
 
 # Start command is defined in railway.json — do NOT duplicate it here.
 # railway.json `deploy.startCommand` always overrides nixpacks [start].

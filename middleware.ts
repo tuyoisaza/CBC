@@ -6,7 +6,7 @@ import { routing } from './src/i18n/routing'
 const intlMiddleware = createMiddleware(routing)
 
 const authMiddleware = withAuth(
-  function onSuccess(req) {
+  function onSuccess(_req) {
     return NextResponse.next()
   },
   {
@@ -20,30 +20,33 @@ const authMiddleware = withAuth(
 )
 
 export default function middleware(req: NextRequest) {
-  const isAdminRoute = req.nextUrl.pathname.startsWith('/admin')
-  const isApiRoute = req.nextUrl.pathname.startsWith('/api')
-  const isLoginPage = req.nextUrl.pathname === '/login'
+  const { pathname } = req.nextUrl
 
-  // Login page — no auth required
-  if (isLoginPage) return NextResponse.next()
-
-  // Admin routes — require auth
-  if (isAdminRoute) {
-    return (authMiddleware as any)(req)
+  // ── Static assets / Next internals — always pass through ──────────────────
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/_vercel') ||
+    /\.(.*)$/.test(pathname)   // any file with an extension (.ico, .png, …)
+  ) {
+    return NextResponse.next()
   }
 
-  // API routes — pass through (each route handles its own auth/verification)
-  if (isApiRoute) return NextResponse.next()
+  // ── Login page — no auth required (outside locale tree intentionally) ──────
+  if (pathname === '/login') return NextResponse.next()
 
-  // Public routes — i18n routing
+  // ── API routes — each handler manages its own auth / HMAC verification ─────
+  if (pathname.startsWith('/api/')) return NextResponse.next()
+
+  // ── Admin routes — NextAuth guards these ──────────────────────────────────
+  if (pathname.startsWith('/admin')) {
+    return (authMiddleware as unknown as typeof middleware)(req)
+  }
+
+  // ── Everything else — public, i18n-routed pages ───────────────────────────
   return intlMiddleware(req)
 }
 
 export const config = {
-  matcher: [
-    // i18n: match all public pages except _next, api, static
-    '/((?!_next|_vercel|.*\\..*).*)',
-    // Admin
-    '/admin/:path*',
-  ],
+  // Match every path except static files handled above
+  matcher: ['/((?!_next|_vercel|.*\\..*).*)'],
 }

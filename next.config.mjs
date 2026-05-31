@@ -3,6 +3,12 @@ import createNextIntlPlugin from 'next-intl/plugin'
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 const nextConfig = {
+  // ─── Standalone output (required for Railway / Docker deployments) ──────
+  output: 'standalone',
+
+  // ─── Server-side external packages (must not be bundled) ────────────────
+  serverExternalPackages: ['@prisma/client', 'bcryptjs'],
+
   // ─── Images ───────────────────────────────────────────────────────
   images: {
     remotePatterns: [
