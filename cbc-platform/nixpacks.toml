@@ -1,2 +1,15 @@
-[start]
-cmd = "npx prisma migrate deploy && npm start"
+# ─── Nixpacks build configuration for Railway ────────────────────────────────
+# Pins the Node version so every build is identical regardless of Nixpacks
+# default. Keep in sync with the `engines.node` field in package.json.
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm-9_x", "openssl"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+# Start command is defined in railway.json — do NOT duplicate it here.
+# railway.json `deploy.startCommand` always overrides nixpacks [start].
