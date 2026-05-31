@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { Moon, Sun, Menu, X } from 'lucide-react'
 import { Link } from '@/i18n/routing'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LocaleSwitcher } from './LocaleSwitcher'
 
 const WA_URL = 'https://wa.me/5215572293512?text=Hola%2C%20quiero%20cotizar%20cajas%20de%20regalo%20CBC'
@@ -13,6 +13,14 @@ export function PublicHeader() {
   const t = useTranslations('nav')
   const { theme, setTheme } = useTheme()
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Avoid hydration mismatch: next-themes can't read localStorage on the server.
+  // Don't render theme-dependent UI until after the first client paint.
+  useEffect(() => setMounted(true), [])
+
+  // During SSR / initial hydration, default to dark (matches defaultTheme="dark")
+  const isDark = mounted ? theme === 'dark' : true
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/40 bg-background/80 backdrop-blur-sm">
@@ -42,11 +50,11 @@ export function PublicHeader() {
             </a>
             <LocaleSwitcher />
             <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
               className="rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              aria-label={theme === 'dark' ? t('toggleLight') : t('toggleDark')}
+              aria-label={isDark ? t('toggleLight') : t('toggleDark')}
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
             <a
               href={WA_URL}
@@ -80,10 +88,10 @@ export function PublicHeader() {
             <div className="flex items-center gap-3 px-2 pt-2">
               <LocaleSwitcher />
               <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
                 className="p-2 text-muted-foreground hover:text-foreground"
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
             </div>
           </div>
