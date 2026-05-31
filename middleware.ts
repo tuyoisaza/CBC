@@ -19,34 +19,33 @@ const authMiddleware = withAuth(
   }
 )
 
-export default function middleware(req: NextRequest) {
+export default function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl
 
   // ── Static assets / Next internals — always pass through ──────────────────
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/_vercel') ||
-    /\.(.*)$/.test(pathname)   // any file with an extension (.ico, .png, …)
+    /\.(.*)$/.test(pathname)
   ) {
     return NextResponse.next()
   }
 
-  // ── Login page — no auth required (outside locale tree intentionally) ──────
+  // ── Login page — no auth required ─────────────────────────────────────────
   if (pathname === '/login') return NextResponse.next()
 
-  // ── API routes — each handler manages its own auth / HMAC verification ─────
+  // ── API routes — each handler manages its own auth ────────────────────────
   if (pathname.startsWith('/api/')) return NextResponse.next()
 
   // ── Admin routes — NextAuth guards these ──────────────────────────────────
   if (pathname.startsWith('/admin')) {
-    return (authMiddleware as unknown as typeof middleware)(req)
+    return (authMiddleware as any)(req)
   }
 
   // ── Everything else — public, i18n-routed pages ───────────────────────────
-  return intlMiddleware(req)
+  return intlMiddleware(req) as NextResponse
 }
 
 export const config = {
-  // Match every path except static files handled above
   matcher: ['/((?!_next|_vercel|.*\\..*).*)'],
 }
