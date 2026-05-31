@@ -49,6 +49,14 @@ const nextConfig = {
   // ─── Redirects ────────────────────────────────────────────────────
   async redirects() {
     return [
+      // www → bare domain (permanent)
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.coffeebunncafe.com' }],
+        destination: 'https://coffeebunncafe.com/:path*',
+        permanent: true,
+      },
+      // /admin → /admin/dashboard
       {
         source: '/admin',
         destination: '/admin/dashboard',

@@ -14,7 +14,7 @@ const authMiddleware = withAuth(
       authorized: ({ token }) => token?.role === 'admin',
     },
     pages: {
-      signIn: '/admin/login',
+      signIn: '/login',
     },
   }
 )
@@ -22,10 +22,10 @@ const authMiddleware = withAuth(
 export default function middleware(req: NextRequest) {
   const isAdminRoute = req.nextUrl.pathname.startsWith('/admin')
   const isApiRoute = req.nextUrl.pathname.startsWith('/api')
-  const isAdminLogin = req.nextUrl.pathname === '/admin/login'
+  const isLoginPage = req.nextUrl.pathname === '/login'
 
-  // Admin login page — no auth required
-  if (isAdminLogin) return NextResponse.next()
+  // Login page — no auth required
+  if (isLoginPage) return NextResponse.next()
 
   // Admin routes — require auth
   if (isAdminRoute) {
