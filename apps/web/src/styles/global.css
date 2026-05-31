@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cbc-black: #262626;
+  --color-cbc-yellow: #f7b84e;
+  --color-cbc-cream: #fffaf3;
+  --color-primary: #f7b84e;
+  --color-primary-foreground: #1a1a1a;
+  
+  --font-sans: "Raleway", sans-serif;
+  
+  --animate-fade-in: fade-in 0.4s ease-out;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-cbc-black);
+    color: var(--color-cbc-cream);
+    font-family: var(--font-sans);
+  }
+
+  ::selection {
+    background-color: rgba(247, 184, 78, 0.3);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cbc-gradient {
+  background: linear-gradient(135deg, #262626 0%, #3a3018 100%);
+}

@@ -1,0 +1,247 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout 
+  title="Track your order | Coffee Bunn Café"
+  description="Enter your order code to see the current status."
+>
+  <main class="min-h-screen bg-cbc-black py-24">
+    <div class="mx-auto max-w-xl px-4 sm:px-6">
+      <div class="mb-10 text-center">
+        <svg class="mx-auto h-10 w-10 text-cbc-yellow mb-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        <h1 class="text-3xl font-bold text-cbc-cream">Track your order</h1>
+        <p class="mt-2 text-gray-400">Enter your order code to see the current status.</p>
+      </div>
+
+      <div class="bg-[#1a1a1a] rounded-xl p-8 border border-gray-800 shadow-xl mb-8">
+        <form id="trackingForm" class="flex gap-4">
+          <input required type="text" id="orderCode" name="code" placeholder="CBC-2025-001" class="flex-1 bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none uppercase" />
+          <button type="submit" id="searchBtn" class="bg-cbc-yellow text-black font-bold px-6 py-3 rounded-md hover:bg-cbc-yellow/90 transition-colors">
+            Search
+          </button>
+        </form>
+      </div>
+
+      <div id="resultContainer" class="hidden">
+        <!-- Not found state -->
+        <div id="notFoundState" class="hidden rounded-xl border border-gray-800 bg-[#1a1a1a] p-8 text-center">
+          <p class="font-semibold text-cbc-cream">We couldn't find an order with that code.</p>
+          <p class="mt-1 text-sm text-gray-400">Code: <span id="notFoundCode"></span></p>
+        </div>
+
+        <!-- Order found state -->
+        <div id="foundState" class="hidden space-y-6">
+          <div class="rounded-xl border border-gray-800 bg-[#1a1a1a] p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs text-gray-400 uppercase tracking-wider">Order</p>
+                <p id="displayOrderCode" class="text-xl font-bold text-cbc-cream mt-0.5"></p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-gray-400">Company</p>
+                <p id="displayCompany" class="font-semibold text-cbc-cream"></p>
+              </div>
+            </div>
+            
+            <div id="deliveryEstimateContainer" class="hidden mt-4 rounded-lg bg-cbc-yellow/10 px-4 py-3 text-sm">
+              <span class="text-cbc-yellow font-medium">Estimated Delivery: </span>
+              <span id="displayDate" class="text-cbc-cream"></span>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-gray-800 bg-[#1a1a1a] p-6">
+            <div id="stepsContainer" class="space-y-4">
+              <!-- Steps populated by JS -->
+            </div>
+
+            <div id="carrierContainer" class="hidden mt-6 rounded-lg border border-gray-800 p-4 text-sm">
+              <p class="text-gray-400 text-xs uppercase tracking-wider mb-2">Shipping</p>
+              <p id="displayCarrier" class="font-medium text-cbc-cream"></p>
+              <p id="displayTrackingNumber" class="text-gray-400 font-mono mt-0.5"></p>
+            </div>
+          </div>
+
+          <div id="cfdiContainer" class="hidden rounded-xl border border-gray-800 bg-[#1a1a1a] p-6">
+            <h2 class="text-sm font-semibold text-cbc-cream mb-4">Invoice (CFDI)</h2>
+            <div class="flex gap-3">
+              <a id="btnCfdiPdf" href="#" target="_blank" class="hidden items-center gap-2 rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-cbc-cream hover:bg-gray-800 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Download PDF
+              </a>
+              <a id="btnCfdiXml" href="#" target="_blank" class="hidden items-center gap-2 rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-cbc-cream hover:bg-gray-800 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                XML
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const STEPS = [
+      { key: 'confirmed',    label: 'Confirmed' },
+      { key: 'in_production', label: 'In production' },
+      { key: 'ready',        label: 'Ready' },
+      { key: 'shipped',      label: 'On its way' },
+      { key: 'delivered',    label: 'Delivered' },
+    ];
+
+    const form = document.getElementById('trackingForm');
+    const input = document.getElementById('orderCode') as HTMLInputElement;
+    const searchBtn = document.getElementById('searchBtn');
+    const resultContainer = document.getElementById('resultContainer');
+    const notFoundState = document.getElementById('notFoundState');
+    const foundState = document.getElementById('foundState');
+    const stepsContainer = document.getElementById('stepsContainer');
+
+    // On page load, check URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const codeParam = urlParams.get('code');
+    if (codeParam) {
+      input.value = codeParam;
+      fetchTracking(codeParam);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = input.value.trim().toUpperCase();
+      if (code) {
+        // Update URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('code', code);
+        window.history.pushState({}, '', newUrl);
+        fetchTracking(code);
+      }
+    });
+
+    async function fetchTracking(code: string) {
+      searchBtn.textContent = '...';
+      searchBtn.setAttribute('disabled', 'true');
+      resultContainer.classList.remove('hidden');
+      notFoundState.classList.add('hidden');
+      foundState.classList.add('hidden');
+
+      try {
+        // In development, you might point to localhost:3000. For prod, use the full admin URL.
+        const apiUrl = window.location.hostname === 'localhost' 
+          ? `http://localhost:3000/api/tracking/${code}`
+          : `https://admin.coffeebunncafe.com/api/tracking/${code}`;
+
+        const res = await fetch(apiUrl);
+        if (!res.ok) {
+          if (res.status === 404) {
+            document.getElementById('notFoundCode').textContent = code;
+            notFoundState.classList.remove('hidden');
+            return;
+          }
+          throw new Error('API error');
+        }
+
+        const order = await res.json();
+        renderOrder(order);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('notFoundCode').textContent = code;
+        notFoundState.classList.remove('hidden');
+      } finally {
+        searchBtn.textContent = 'Search';
+        searchBtn.removeAttribute('disabled');
+      }
+    }
+
+    function renderOrder(order: any) {
+      foundState.classList.remove('hidden');
+      
+      document.getElementById('displayOrderCode').textContent = order.orderCode;
+      document.getElementById('displayCompany').textContent = order.customer?.companyName || '';
+
+      const estDateContainer = document.getElementById('deliveryEstimateContainer');
+      if (order.estimatedDate) {
+        const d = new Date(order.estimatedDate);
+        document.getElementById('displayDate').textContent = d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+        estDateContainer.classList.remove('hidden');
+      } else {
+        estDateContainer.classList.add('hidden');
+      }
+
+      // Steps
+      const currentStepIdx = STEPS.findIndex(s => s.key === order.status);
+      stepsContainer.innerHTML = '';
+      STEPS.forEach((step, i) => {
+        const done = i <= currentStepIdx;
+        const current = i === currentStepIdx;
+
+        const iconHtml = done 
+          ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
+          : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`;
+
+        const colorClasses = done
+          ? 'border-cbc-yellow bg-cbc-yellow text-black'
+          : 'border-gray-700 bg-cbc-black text-gray-500';
+
+        const textClass = done ? 'text-cbc-cream' : 'text-gray-500';
+        
+        stepsContainer.innerHTML += `
+          <div class="flex items-center gap-4">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${colorClasses}">
+              ${iconHtml}
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-medium ${textClass}">${step.label}</p>
+              ${current ? '<p class="text-xs text-cbc-yellow mt-0.5">Current status</p>' : ''}
+            </div>
+            ${current ? '<div class="h-2 w-2 rounded-full bg-cbc-yellow animate-pulse"></div>' : ''}
+          </div>
+        `;
+      });
+
+      // Carrier
+      const carrierContainer = document.getElementById('carrierContainer');
+      if (order.trackingNumber && order.carrier) {
+        document.getElementById('displayCarrier').textContent = order.carrier;
+        document.getElementById('displayTrackingNumber').textContent = order.trackingNumber;
+        carrierContainer.classList.remove('hidden');
+      } else {
+        carrierContainer.classList.add('hidden');
+      }
+
+      // CFDI
+      const cfdiContainer = document.getElementById('cfdiContainer');
+      const btnPdf = document.getElementById('btnCfdiPdf');
+      const btnXml = document.getElementById('btnCfdiXml');
+
+      if (order.cfdis && order.cfdis.length > 0 && order.cfdis[0].status === 'valid') {
+        const cfdi = order.cfdis[0];
+        let hasLinks = false;
+
+        if (cfdi.pdfUrl) {
+          btnPdf.href = cfdi.pdfUrl;
+          btnPdf.classList.replace('hidden', 'flex');
+          hasLinks = true;
+        } else {
+          btnPdf.classList.replace('flex', 'hidden');
+        }
+
+        if (cfdi.xmlUrl) {
+          btnXml.href = cfdi.xmlUrl;
+          btnXml.classList.replace('hidden', 'flex');
+          hasLinks = true;
+        } else {
+          btnXml.classList.replace('flex', 'hidden');
+        }
+
+        if (hasLinks) {
+          cfdiContainer.classList.remove('hidden');
+        } else {
+          cfdiContainer.classList.add('hidden');
+        }
+      } else {
+        cfdiContainer.classList.add('hidden');
+      }
+    }
+  </script>
+</Layout>

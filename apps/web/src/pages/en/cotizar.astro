@@ -1,0 +1,114 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout 
+  title="Request Quote | Coffee Bunn Café"
+  description="Request a quote for corporate gift boxes with specialty coffee."
+>
+  <main class="min-h-screen bg-cbc-black py-24">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-cbc-cream mb-4">Request a Quote</h1>
+        <p class="text-gray-400">Leave your details and we will contact you within 24 hours with a custom proposal.</p>
+      </div>
+
+      <div class="bg-[#1a1a1a] rounded-xl p-8 border border-gray-800 shadow-xl">
+        <form id="quoteForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Company Name *</label>
+              <input required type="text" name="companyName" class="w-full bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Your Name *</label>
+              <input required type="text" name="contactName" class="w-full bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Email *</label>
+              <input required type="email" name="email" class="w-full bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">WhatsApp *</label>
+              <input required type="tel" name="whatsapp" class="w-full bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Box Type *</label>
+              <select required name="boxType" class="w-full bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none">
+                <option value="prensa">French Press Kit</option>
+                <option value="moka">Moka Pot Kit</option>
+                <option value="mix">Mix of Both</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Estimated Quantity *</label>
+              <select required name="quantity" class="w-full bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none">
+                <option value="10-14">10 to 14 boxes</option>
+                <option value="15-30">15 to 30 boxes</option>
+                <option value="31-50">31 to 50 boxes</option>
+                <option value="50+">More than 50 boxes</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Occasion *</label>
+            <select required name="occasion" class="w-full bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none">
+              <option value="cliente">Client Gift</option>
+              <option value="onboarding">Employee Onboarding</option>
+              <option value="fin-de-ano">End of Year</option>
+              <option value="otro">Other</option>
+            </select>
+          </div>
+
+          <div id="alertBox" class="hidden rounded-md p-4 mb-4"></div>
+
+          <button type="submit" id="submitBtn" class="w-full bg-cbc-yellow text-black font-bold py-4 rounded-md hover:bg-cbc-yellow/90 transition-colors">
+            Submit Request
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('quoteForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const alertBox = document.getElementById('alertBox');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      alertBox.className = 'hidden';
+      
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch('https://admin.coffeebunncafe.com/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          alertBox.textContent = 'Request sent successfully! We will contact you soon.';
+          alertBox.className = 'rounded-md p-4 mb-4 bg-green-500/20 text-green-400 border border-green-500/50';
+          form.reset();
+        } else {
+          throw new Error('Submit Error');
+        }
+      } catch (err) {
+        alertBox.textContent = 'An error occurred. Please try again or contact us via WhatsApp.';
+        alertBox.className = 'rounded-md p-4 mb-4 bg-red-500/20 text-red-400 border border-red-500/50';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Request';
+      }
+    });
+  </script>
+</Layout>
