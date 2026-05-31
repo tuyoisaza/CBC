@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev --port 3001",
     "build": "next build",
+    "prestart": "prisma db push --schema=../../packages/db/schema.prisma --accept-data-loss",
     "start": "next start",
     "lint": "next lint"
   },
