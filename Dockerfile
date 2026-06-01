@@ -1,23 +1,29 @@
-FROM alpine:latest
-
-RUN apk add --no-cache nodejs npm openssl
-
-RUN npm install -g pnpm@11.0.9
-
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@11.0.9 --activate
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY apps/web/package.json apps/web/package.json
-COPY apps/api/package.json apps/api/package.json
-COPY packages/db/package.json packages/db/package.json
-COPY packages/db/schema.prisma packages/db/schema.prisma
-
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json apps/web/
+COPY packages/db/package.json packages/db/
+COPY packages/db/schema.prisma packages/db/
 RUN pnpm install --frozen-lockfile
 
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN pnpm build --filter=@cbc/web
 
-RUN pnpm build
+FROM base AS runner
+ENV NODE_ENV=production
+RUN apk add --no-cache openssl
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+COPY --from=builder /app/packages/db ./packages/db
 
 EXPOSE 3000
-
-CMD ["pnpm", "start"]
+CMD ["node", "apps/web/server.js"]

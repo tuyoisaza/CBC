@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Raleway } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
+import '@/lib/env'
 import './globals.css'
 
 const raleway = Raleway({
