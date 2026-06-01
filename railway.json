@@ -1,15 +1,14 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "builder": "DOCKERFILE",
-    "dockerfilePath": "/Dockerfile",
-    "buildCommand": null
+    "builder": "RAILPACK",
+    "buildCommand": "pnpm build --filter=@cbc/web"
   },
   "deploy": {
+    "startCommand": "pnpm --filter @cbc/db db:push --accept-data-loss && pnpm start --filter=@cbc/web",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3,
     "healthcheckPath": "/api/health",
-    "healthcheckTimeout": 120,
-    "startCommand": "pnpm --filter @cbc/db db:push --accept-data-loss && pnpm start --filter=@cbc/web"
+    "healthcheckTimeout": 120
   }
 }
