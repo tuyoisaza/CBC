@@ -1,5 +1,6 @@
-FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@11.0.9 --activate
+FROM alpine:latest AS base
+RUN apk add --no-cache nodejs npm openssl
+RUN npm install -g pnpm@11.0.9
 WORKDIR /app
 
 FROM base AS deps
@@ -16,7 +17,6 @@ RUN pnpm build --filter=@cbc/web
 
 FROM base AS runner
 ENV NODE_ENV=production
-RUN apk add --no-cache openssl
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-workspace.yaml ./
