@@ -1,7 +1,11 @@
 FROM alpine:latest
 
-RUN apk add --no-cache nodejs npm openssl git
-RUN npm install -g pnpm@11.0.9
+RUN echo "=== Installing Node.js and dependencies ===" && \
+    apk add --no-cache nodejs npm openssl git && \
+    echo "=== Installing pnpm ===" && \
+    npm install -g pnpm@11.0.9 && \
+    echo "=== pnpm version ===" && \
+    pnpm --version
 
 WORKDIR /app
 
@@ -11,11 +15,13 @@ COPY apps/api/package.json apps/api/
 COPY packages/db/package.json packages/db/
 COPY packages/db/schema.prisma packages/db/
 
-RUN pnpm install --frozen-lockfile
+RUN echo "=== Installing dependencies ===" && \
+    pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN pnpm build --filter=@cbc/web
+RUN echo "=== Building web app ===" && \
+    pnpm build --filter=@cbc/web
 
 EXPOSE 3000
 
