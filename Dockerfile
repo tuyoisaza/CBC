@@ -1,3 +1,2 @@
-FROM node:20-alpine
-RUN echo "hello from node:20"
-CMD ["node", "-e", "console.log('hello')"]
+FROM node:22-alpine
+CMD ["node", "-e", "console.log('hello from node22')"]
