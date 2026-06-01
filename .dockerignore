@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.env.local
+.env.*.local
+node_modules
+.next
+dist
+.turbo
+*.md
+.DS_Store
+docs
+.claude
