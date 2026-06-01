@@ -1,2 +1,2 @@
-FROM node:22-alpine
-CMD ["node", "-e", "console.log('hello from node22')"]
+FROM python:3.12-alpine
+CMD ["python", "-c", "print('hello from python')"]
