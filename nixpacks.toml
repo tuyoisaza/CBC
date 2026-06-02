@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm-9_x", "openssl"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm build --filter=@cbc/web"]
+
+[start]
+cmd = "pnpm --filter @cbc/db db:push && pnpm start --filter=@cbc/web"
