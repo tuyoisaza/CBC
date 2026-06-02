@@ -39,3 +39,4 @@ prisma/migrations/*.sql.bak
 # Uploads / temp
 public/uploads/
 tmp/
+.env.backup

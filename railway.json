@@ -5,9 +5,9 @@
     "buildCommand": "pnpm build --filter=@cbc/web"
   },
   "deploy": {
-    "startCommand": "pnpm --filter @cbc/db db:push && node apps/web/server.js",
+    "startCommand": "pnpm --filter @cbc/db db:push && pnpm start --filter=@cbc/web",
     "healthcheckPath": "/api/health",
-    "healthcheckTimeout": 120,
+    "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }
