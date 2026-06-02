@@ -73,8 +73,10 @@ const parsed = envSchema.safeParse(process.env)
 if (!parsed.success) {
   console.error('❌ Invalid environment variables:')
   console.error(parsed.error.flatten().fieldErrors)
-  // Skip validation during build phase
-  if (process.env.NODE_ENV === 'production' && !process.env.RAILWAY_STATIC_URL) {
+  // Skip validation during Next.js build phase
+  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build' || 
+                       process.env.RAILWAY_STATIC_URL === undefined
+  if (process.env.NODE_ENV === 'production' && !isBuildPhase) {
     process.exit(1)
   }
 }
