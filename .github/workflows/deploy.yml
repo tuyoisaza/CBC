@@ -16,18 +16,20 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Link to Railway project
-        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production --service ${{ secrets.RAILWAY_SERVICE_ID }}
+        run: railway link -p ${{ secrets.RAILWAY_PROJECT_ID }} -e production -s ${{ secrets.RAILWAY_SERVICE_ID }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Check if Postgres exists
         id: check-postgres
         run: |
-          SERVICES=$(railway service list --json)
-          if echo "$SERVICES" | grep -q '"name":"Postgres"'; then
+          SERVICES=$(railway service list --json 2>/dev/null || echo "[]")
+          if echo "$SERVICES" | grep -q '"Postgres"'; then
             echo "postgres_exists=true" >> $GITHUB_OUTPUT
+            echo "Postgres already exists"
           else
             echo "postgres_exists=false" >> $GITHUB_OUTPUT
+            echo "Postgres not found, will create"
           fi
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -35,14 +37,26 @@ jobs:
       - name: Create Postgres database
         if: steps.check-postgres.outputs.postgres_exists == 'false'
         run: |
-          railway service create --name Postgres --plugin postgres
-          sleep 10  # Wait for Postgres to be ready
+          railway service create Postgres
+          echo "Waiting for Postgres to be ready..."
+          sleep 15
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
-      - name: Set DATABASE_URL variable
+      - name: Get DATABASE_URL from Postgres
+        id: get-db-url
         run: |
-          railway variables set DATABASE_URL='${{Postgres.DATABASE_URL}}' --service ${{ secrets.RAILWAY_SERVICE_ID }}
+          railway link -p ${{ secrets.RAILWAY_PROJECT_ID }} -e production -s Postgres
+          DB_URL=$(railway variables list --json | jq -r '.DATABASE_URL')
+          echo "db_url=$DB_URL" >> $GITHUB_OUTPUT
+          echo "DATABASE_URL retrieved: ${DB_URL:0:20}..."
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Set DATABASE_URL in app service
+        run: |
+          railway link -p ${{ secrets.RAILWAY_PROJECT_ID }} -e production -s ${{ secrets.RAILWAY_SERVICE_ID }}
+          railway variables set DATABASE_URL="${{ steps.get-db-url.outputs.db_url }}"
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
