@@ -1,0 +1,52 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Link to Railway project
+        run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }} --environment production --service ${{ secrets.RAILWAY_SERVICE_ID }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Check if Postgres exists
+        id: check-postgres
+        run: |
+          SERVICES=$(railway service list --json)
+          if echo "$SERVICES" | grep -q '"name":"Postgres"'; then
+            echo "postgres_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "postgres_exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Create Postgres database
+        if: steps.check-postgres.outputs.postgres_exists == 'false'
+        run: |
+          railway service create --name Postgres --plugin postgres
+          sleep 10  # Wait for Postgres to be ready
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Set DATABASE_URL variable
+        run: |
+          railway variables set DATABASE_URL='${{Postgres.DATABASE_URL}}' --service ${{ secrets.RAILWAY_SERVICE_ID }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Deploy to Railway
+        run: railway up --service ${{ secrets.RAILWAY_SERVICE_ID }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
