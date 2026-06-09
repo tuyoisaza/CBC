@@ -1,8 +1,5 @@
 
 const nextConfig = {
-  // ─── Standalone output (required for Railway / Docker deployments) ──────
-  output: 'standalone',
-
   // ─── Server-side external packages (Next.js 14 syntax) ──────────────────
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
