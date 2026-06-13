@@ -6,12 +6,13 @@ import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import {
   LayoutDashboard, ShoppingBag, Megaphone,
-  MessageCircle, Settings, LogOut, Sun, Moon, Coffee
+  MessageCircle, Settings, LogOut, Sun, Moon, Coffee, Package
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
   { href: '/admin/sales',     label: 'Ventas',      icon: ShoppingBag },
+  { href: '/admin/sales/products', label: 'Productos', icon: Package },
   { href: '/admin/marketing', label: 'Marketing',   icon: Megaphone },
   { href: '/admin/service',   label: 'Servicio',    icon: MessageCircle },
   { href: '/admin/settings',  label: 'Config',      icon: Settings },

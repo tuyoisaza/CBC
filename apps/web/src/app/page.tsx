@@ -1,8 +1,18 @@
+import { db } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 
 const WA_URL = 'https://wa.me/5215572293512?text=Hola%2C%20quiero%20cotizar%20cajas%20de%20regalo%20CBC'
 
-export default function HomePage() {
+async function getActiveProducts() {
+  return db.product.findMany({
+    where: { active: true },
+    orderBy: { sortOrder: 'asc' },
+  })
+}
+
+export default async function HomePage() {
+  const products = await getActiveProducts()
+
   return (
     <>
       <main>
@@ -31,6 +41,65 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {products.length > 0 && (
+          <section className="py-24 bg-cbc-black">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-16">
+                <h2 className="text-4xl font-bold text-white">Nuestras Cajas</h2>
+                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
+                  Elige la experiencia que mejor se adapte a tu equipo o clientes.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {products.map((product) => (
+                  <div key={product.id} className="rounded-2xl border border-gray-800 bg-[#1e1e1e] overflow-hidden hover:border-cbc-yellow/30 transition-all group">
+                    {product.imageUrl && (
+                      <div className="aspect-[16/9] overflow-hidden">
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    )}
+                    <div className="p-8">
+                      <h3 className="text-2xl font-bold text-white">{product.name}</h3>
+                      {product.subtitle && (
+                        <p className="mt-1 text-sm text-cbc-yellow">{product.subtitle}</p>
+                      )}
+                      <p className="mt-4 text-gray-400">{product.description}</p>
+                      {(product.features as string[]).length > 0 && (
+                        <ul className="mt-6 space-y-2">
+                          {(product.features as string[]).map((feature, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
+                              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-cbc-yellow shrink-0" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <div className="mt-8 flex items-center justify-between">
+                        <span className="text-3xl font-bold text-white">
+                          ${product.price.toLocaleString('es-MX')}
+                          <span className="text-sm font-normal text-gray-500 ml-1">MXN</span>
+                        </span>
+                        <a
+                          href={WA_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-md bg-cbc-yellow px-6 py-3 text-sm font-semibold text-black hover:bg-cbc-yellow/90 transition-all"
+                        >
+                          Cotizar por WhatsApp
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="py-24 bg-cbc-black">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">

@@ -243,3 +243,20 @@ model Translation {
 
   @@unique([locale, namespace, key])
 }
+
+// ─── Products ───────────────────────────────────────────────────────────────
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  subtitle    String?
+  description String
+  price       Float
+  imageUrl    String?
+  features    String[]
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

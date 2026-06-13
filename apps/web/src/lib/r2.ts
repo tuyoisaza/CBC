@@ -44,3 +44,7 @@ export function cfdiKey(orderId: string, type: 'pdf' | 'xml') {
 export function quoteKey(quoteId: string) {
   return `quotes/${quoteId}/cotizacion.pdf`
 }
+
+export function productImageKey(productId: string, filename: string) {
+  return `products/${productId}/${Date.now()}-${filename}`
+}

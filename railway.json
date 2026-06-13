@@ -5,7 +5,7 @@
     "buildCommand": "pnpm build --filter=@cbc/web"
   },
   "deploy": {
-    "startCommand": "pnpm --filter @cbc/db db:push && pnpm start --filter=@cbc/web",
+    "startCommand": "pnpm --filter @cbc/db db:push && pnpm --filter @cbc/db db:seed && pnpm start --filter=@cbc/web",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
