@@ -57,7 +57,7 @@ export default async function HomePage() {
                   Elige la experiencia que mejor se adapte a tu equipo o clientes.
                 </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-2 gap-8">
                 {products.map((product) => (
                   <div key={product.id} className="rounded-2xl border border-gray-800 bg-[#1e1e1e] overflow-hidden hover:border-cbc-yellow/30 transition-all group">
                     {product.imageUrl && (
