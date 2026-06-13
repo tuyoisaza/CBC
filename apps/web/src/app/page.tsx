@@ -1,13 +1,19 @@
 import { db } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 
+export const dynamic = 'force-dynamic'
+
 const WA_URL = 'https://wa.me/5215572293512?text=Hola%2C%20quiero%20cotizar%20cajas%20de%20regalo%20CBC'
 
 async function getActiveProducts() {
-  return db.product.findMany({
-    where: { active: true },
-    orderBy: { sortOrder: 'asc' },
-  })
+  try {
+    return await db.product.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: 'asc' },
+    })
+  } catch {
+    return []
+  }
 }
 
 export default async function HomePage() {
