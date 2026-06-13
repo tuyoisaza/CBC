@@ -8,4 +8,4 @@ cmds = ["pnpm install --frozen-lockfile"]
 cmds = ["pnpm build --filter=@cbc/web"]
 
 [start]
-cmd = "pnpm --filter @cbc/db db:push && pnpm --filter @cbc/db db:seed && pnpm start --filter=@cbc/web"
+cmd = "pnpm --filter @cbc/db db:push && pnpm --filter @cbc/db db:seed && pnpm --filter @cbc/web run start"
