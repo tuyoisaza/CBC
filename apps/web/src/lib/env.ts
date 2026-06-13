@@ -73,11 +73,6 @@ const parsed = envSchema.safeParse(process.env)
 if (!parsed.success) {
   console.error('❌ Invalid environment variables:')
   console.error(parsed.error.flatten().fieldErrors)
-  // Skip validation during Next.js build phase
-  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build'
-  if (process.env.NODE_ENV === 'production' && !isBuildPhase) {
-    process.exit(1)
-  }
 }
 
 export const env = (parsed.data ?? {}) as z.infer<typeof envSchema>

@@ -49,12 +49,16 @@ async function main() {
   console.log('✓ Products seeded successfully')
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect()
-  })
-  .catch(async (e) => {
+async function run() {
+  try {
+    await main()
+  } catch (e) {
     console.error('Seed failed:', e)
     await prisma.$disconnect()
     process.exit(1)
-  })
+  }
+  await prisma.$disconnect()
+  process.exit(0)
+}
+
+run()
