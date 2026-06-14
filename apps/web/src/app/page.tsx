@@ -34,24 +34,15 @@ export default async function HomePage() {
               <p className="mt-6 text-xl leading-relaxed text-gray-400">
                 Regalos corporativos premium con café de especialidad mexicano. Diseñamos cajas personalizadas que tus clientes y equipo realmente recordarán.
               </p>
-              <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                <a href={WA_URL} target="_blank" rel="noopener noreferrer"
-                   className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all hover:shadow-lg focus-visible:ring-2 focus-visible:ring-cbc-yellow">
-                  Hablar con Ventas
-                </a>
-                <a href="/cotizar"
-                   className="inline-flex items-center justify-center rounded-md border border-cbc-yellow/40 px-8 py-4 text-base font-semibold text-cbc-yellow hover:bg-cbc-yellow/10 transition-colors">
-                  Ver Catálogo B2B
-                </a>
-              </div>
+
             </div>
           </div>
         </section>
 
         {products.length > 0 && (
-          <section className="py-24 bg-cbc-black">
+          <section className="py-12 bg-cbc-black">
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-16">
+              <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold text-white">Nuestras Cajas</h2>
                 <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
                   Elige la experiencia que mejor se adapte a tu equipo o clientes.
@@ -102,6 +93,17 @@ export default async function HomePage() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+                <a href={WA_URL} target="_blank" rel="noopener noreferrer"
+                   className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all hover:shadow-lg focus-visible:ring-2 focus-visible:ring-cbc-yellow">
+                  Hablar con Ventas
+                </a>
+                <a href="/cotizar"
+                   className="inline-flex items-center justify-center rounded-md border border-cbc-yellow/40 px-8 py-4 text-base font-semibold text-cbc-yellow hover:bg-cbc-yellow/10 transition-colors">
+                  Ver Catálogo B2B
+                </a>
               </div>
             </div>
           </section>
