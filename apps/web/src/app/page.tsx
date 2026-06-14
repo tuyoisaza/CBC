@@ -22,16 +22,16 @@ export default async function HomePage() {
   return (
     <>
       <main>
-        <section className="relative overflow-hidden min-h-[90vh] flex items-center cbc-gradient">
-          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+        <section className="relative overflow-hidden cbc-gradient">
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
             <div className="max-w-2xl animate-fade-in">
-              <p className="mb-6 text-sm font-semibold tracking-widest uppercase text-cbc-yellow">
+              <p className="mb-3 text-sm font-semibold tracking-widest uppercase text-cbc-yellow">
                 B2B / Regalos Corporativos
               </p>
-              <h1 className="text-5xl font-bold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
+              <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
                 Eleva la <span className="text-cbc-yellow">Experiencia</span> de tu Marca
               </h1>
-              <p className="mt-6 text-xl leading-relaxed text-gray-400">
+              <p className="mt-4 text-lg leading-relaxed text-gray-400">
                 Regalos corporativos premium con café de especialidad mexicano. Diseñamos cajas personalizadas que tus clientes y equipo realmente recordarán.
               </p>
 
