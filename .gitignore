@@ -40,3 +40,6 @@ prisma/migrations/*.sql.bak
 public/uploads/
 tmp/
 .env.backup
+
+# Worktrees
+.worktrees/
