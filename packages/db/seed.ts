@@ -9,7 +9,8 @@ interface ProductSeed {
   description: string
   price: number
   features: string[]
-  imageUrl: string
+  images: string[]
+  videos: any[]
   active: boolean
   sortOrder: number
 }
@@ -28,7 +29,12 @@ const products: ProductSeed[] = [
       'Tarjeta de curación con historia y guía de preparación',
       'Branding de tu empresa en la caja',
     ],
-    imageUrl: 'https://placehold.co/600x400/111827/ca8a04?text=Prensa+Francesa',
+    images: [
+      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Box+Prensa+Francesa',
+      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Prensa+Francesa+2',
+      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Prensa+Francesa+3',
+    ],
+    videos: [],
     active: true,
     sortOrder: 0,
   },
@@ -45,7 +51,12 @@ const products: ProductSeed[] = [
       'Tarjeta de curación con historia y guía de preparación',
       'Branding de tu empresa en la caja',
     ],
-    imageUrl: 'https://placehold.co/600x400/111827/ca8a04?text=Moka+Italiana',
+    images: [
+      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Box+Moka',
+      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Moka+Italiana+2',
+      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Moka+Italiana+3',
+    ],
+    videos: [],
     active: true,
     sortOrder: 1,
   },
