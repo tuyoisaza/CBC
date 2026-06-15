@@ -253,7 +253,8 @@ model Product {
   subtitle    String?
   description String
   price       Float
-  imageUrl    String?
+  images      String[] @default([])
+  videos      Json     @default("[]")
   features    String[]
   active      Boolean  @default(true)
   sortOrder   Int      @default(0)
