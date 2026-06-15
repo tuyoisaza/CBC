@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUploadUrl, logoKey } from '@/lib/r2'
+import { getUploadUrl, logoKey, productImageKey } from '@/lib/r2'
 import { z } from 'zod'
 import crypto from 'crypto'
 
@@ -10,13 +10,14 @@ export async function GET(req: NextRequest) {
   const url      = new URL(req.url)
   const filename = url.searchParams.get('filename') || 'logo.png'
   const type     = url.searchParams.get('type') || 'image/png'
+  const folder   = url.searchParams.get('folder') || 'logo'
 
   if (!ALLOWED_TYPES.includes(type)) {
     return NextResponse.json({ error: 'File type not allowed' }, { status: 400 })
   }
 
   const id  = crypto.randomUUID()
-  const key = logoKey(id, filename)
+  const key = folder === 'product' ? productImageKey(id, filename) : logoKey(id, filename)
   const { uploadUrl, publicUrl } = await getUploadUrl(key, type)
 
   return NextResponse.json({ uploadUrl, publicUrl })

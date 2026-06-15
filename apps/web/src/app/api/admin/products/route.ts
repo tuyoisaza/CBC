@@ -10,7 +10,11 @@ const productSchema = z.object({
   subtitle: z.string().optional(),
   description: z.string().min(1),
   price: z.number().positive(),
-  imageUrl: z.string().optional(),
+  images: z.array(z.string()).optional().default([]),
+  videos: z.array(z.object({
+    url: z.string().url(),
+    title: z.string().optional(),
+  })).optional().default([]),
   features: z.array(z.string()),
   active: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
@@ -46,7 +50,8 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
   const body = await req.json()
-  const product = await db.product.update({ where: { id }, data: body })
+  const data = productSchema.partial().parse(body)
+  const product = await db.product.update({ where: { id }, data })
   return NextResponse.json(product)
 }
 
