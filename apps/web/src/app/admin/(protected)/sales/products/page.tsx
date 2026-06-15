@@ -58,8 +58,8 @@ export default async function ProductsPage() {
               <tr key={product.id} className="hover:bg-muted/20 transition-colors">
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    {product.imageUrl ? (
-                      <img src={product.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                    {product.images[0] ? (
+                      <img src={product.images[0]} alt={product.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
                     ) : (
                       <div className="w-10 h-10 rounded-lg bg-muted shrink-0 flex items-center justify-center text-muted-foreground text-xs">
                         ?

@@ -12,5 +12,12 @@ export default async function EditProductPage({
   const product = await db.product.findUnique({ where: { id: params.id } })
   if (!product) notFound()
 
-  return <ProductForm product={product} />
+  return (
+    <ProductForm
+      product={{
+        ...product,
+        videos: (product.videos ?? []) as { url: string; title?: string }[],
+      }}
+    />
+  )
 }

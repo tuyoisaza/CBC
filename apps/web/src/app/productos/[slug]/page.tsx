@@ -19,11 +19,10 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   })
   if (!product) notFound()
 
-  const images = product.images as string[]
-  const videos = (product.videos as { url: string; title?: string }[]) || []
+  const videos = (Array.isArray(product.videos) ? product.videos : []) as { url: string; title?: string }[]
 
   const allMedia = [
-    ...images.map((url) => ({ type: 'image' as const, url, thumbnail: url, title: product.name })),
+    ...product.images.map((url) => ({ type: 'image' as const, url, thumbnail: url, title: product.name })),
     ...videos.map((v) => {
       const id = getYouTubeId(v.url)
       return {
@@ -55,9 +54,9 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             )}
             <p className="mt-6 text-gray-400 leading-relaxed">{product.description}</p>
 
-            {(product.features as string[]).length > 0 && (
+            {product.features.length > 0 && (
               <ul className="mt-6 space-y-3">
-                {(product.features as string[]).map((feature, i) => (
+                {product.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-3 text-gray-400">
                     <span className="mt-2 h-1.5 w-1.5 rounded-full bg-cbc-yellow shrink-0" />
                     {feature}

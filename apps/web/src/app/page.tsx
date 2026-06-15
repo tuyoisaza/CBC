@@ -59,9 +59,9 @@ export default async function HomePage() {
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        {(product.images.length > 1 || (product.videos as any[]).length > 0) && (
+                        {(product.images.length > 1 || Array.isArray(product.videos)) && (
                           <span className="absolute top-2 right-2 rounded-full bg-black/60 text-white text-xs px-2 py-0.5">
-                            +{(product.images.length - 1) + (product.videos as any[]).length}
+                            +{(product.images.length - 1) + (Array.isArray(product.videos) ? product.videos.length : 0)}
                           </span>
                         )}
                       </div>
@@ -76,9 +76,9 @@ export default async function HomePage() {
                         <p className="mt-1 text-sm text-cbc-yellow">{product.subtitle}</p>
                       )}
                       <p className="mt-4 text-gray-400">{product.description}</p>
-                      {(product.features as string[]).length > 0 && (
+                      {product.features.length > 0 && (
                         <ul className="mt-6 space-y-2">
-                          {(product.features as string[]).map((feature, i) => (
+                          {product.features.map((feature, i) => (
                             <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
                               <span className="mt-1 h-1.5 w-1.5 rounded-full bg-cbc-yellow shrink-0" />
                               {feature}

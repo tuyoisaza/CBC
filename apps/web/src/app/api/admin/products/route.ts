@@ -10,14 +10,14 @@ const productSchema = z.object({
   subtitle: z.string().optional(),
   description: z.string().min(1),
   price: z.number().positive(),
-  images: z.array(z.string()).optional().default([]),
+  images: z.array(z.string()).optional(),
   videos: z.array(z.object({
     url: z.string().url(),
     title: z.string().optional(),
-  })).optional().default([]),
+  })).optional(),
   features: z.array(z.string()),
-  active: z.boolean().default(true),
-  sortOrder: z.number().int().default(0),
+  active: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
 })
 
 export async function GET() {
@@ -37,7 +37,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const data = productSchema.parse(body)
 
-  const product = await db.product.create({ data })
+  const product = await db.product.create({
+    data: {
+      ...data,
+      images: data.images ?? [],
+      videos: data.videos ?? [],
+      active: data.active ?? true,
+      sortOrder: data.sortOrder ?? 0,
+    },
+  })
   return NextResponse.json(product, { status: 201 })
 }
 
