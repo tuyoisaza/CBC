@@ -13,7 +13,8 @@ interface ProductFormProps {
     subtitle: string | null
     description: string
     price: number
-    imageUrl: string | null
+    images: string[]
+    videos: { url: string; title?: string }[]
     features: string[]
     active: boolean
     sortOrder: number
@@ -29,12 +30,15 @@ export function ProductForm({ product }: ProductFormProps) {
   const [subtitle, setSubtitle] = useState(product?.subtitle ?? '')
   const [description, setDescription] = useState(product?.description ?? '')
   const [price, setPrice] = useState(product?.price ?? 799)
-  const [imageUrl, setImageUrl] = useState(product?.imageUrl ?? '')
+  const [images, setImages] = useState<string[]>(product?.images ?? [])
+  const [videos, setVideos] = useState<{ url: string; title?: string }[]>(product?.videos ?? [])
   const [features, setFeatures] = useState<string[]>(product?.features ?? [''])
   const [active, setActive] = useState(product?.active ?? true)
   const [sortOrder, setSortOrder] = useState(product?.sortOrder ?? 0)
   const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
+  const [uploadingImages, setUploadingImages] = useState(false)
+  const [newVideoUrl, setNewVideoUrl] = useState('')
+  const [newVideoTitle, setNewVideoTitle] = useState('')
   const [error, setError] = useState('')
 
   function slugify(val: string) {
@@ -60,31 +64,48 @@ export function ProductForm({ product }: ProductFormProps) {
     setFeatures(copy)
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  async function handleImagesUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
-    setUploading(true)
+    setUploadingImages(true)
     try {
-      const params = new URLSearchParams({
-        filename: file.name,
-        type: file.type,
-      })
-      const res = await fetch(`/api/upload?${params}`)
-      const { uploadUrl, publicUrl } = await res.json()
+      const results = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const params = new URLSearchParams({
+            filename: file.name,
+            type: file.type,
+            folder: 'product',
+          })
+          const res = await fetch(`/api/upload?${params}`)
+          const { uploadUrl, publicUrl } = await res.json()
 
-      await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      })
+          await fetch(uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: { 'Content-Type': file.type },
+          })
 
-      setImageUrl(publicUrl)
+          return publicUrl
+        })
+      )
+      setImages((prev) => [...prev, ...results])
     } catch {
-      setError('Error al subir la imagen')
+      setError('Error al subir imágenes')
     } finally {
-      setUploading(false)
+      setUploadingImages(false)
     }
+  }
+
+  function addVideo() {
+    if (!newVideoUrl.trim()) return
+    setVideos([...videos, { url: newVideoUrl.trim(), title: newVideoTitle.trim() || undefined }])
+    setNewVideoUrl('')
+    setNewVideoTitle('')
+  }
+
+  function removeVideo(i: number) {
+    setVideos(videos.filter((_, idx) => idx !== i))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -98,7 +119,8 @@ export function ProductForm({ product }: ProductFormProps) {
       subtitle: subtitle || undefined,
       description,
       price,
-      imageUrl: imageUrl || undefined,
+      images,
+      videos: videos.length > 0 ? videos : undefined,
       features: features.filter((f) => f.trim()),
       active,
       sortOrder,
@@ -208,25 +230,62 @@ export function ProductForm({ product }: ProductFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Imagen</label>
-          {imageUrl && (
-            <div className="mb-3 rounded-lg overflow-hidden border border-border w-48">
-              <img src={imageUrl} alt="Preview" className="w-full h-32 object-cover" />
+          <label className="block text-sm font-medium text-foreground mb-1.5">Imágenes</label>
+          {images.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-3">
+              {images.map((url, i) => (
+                <div key={i} className="relative rounded-lg overflow-hidden border border-border w-32 h-24 group">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setImages(images.filter((_, idx) => idx !== i))}
+                    className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/60 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
-          <div className="flex items-center gap-3">
-            <label className="cursor-pointer inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors">
-              <Upload className="h-4 w-4" />
-              {uploading ? 'Subiendo...' : imageUrl ? 'Cambiar imagen' : 'Subir imagen'}
-              <input type="file" accept="image/png,image/jpeg,image/jpg,image/svg+xml" onChange={handleImageUpload}
-                className="hidden" disabled={uploading} />
-            </label>
-            {imageUrl && (
-              <button type="button" onClick={() => setImageUrl('')}
-                className="text-sm text-muted-foreground hover:text-destructive">
-                Quitar
-              </button>
-            )}
+          <label className="cursor-pointer inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors">
+            <Upload className="h-4 w-4" />
+            {uploadingImages ? 'Subiendo...' : 'Subir imágenes'}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+              multiple
+              onChange={handleImagesUpload}
+              className="hidden"
+              disabled={uploadingImages}
+            />
+          </label>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Videos (YouTube)</label>
+          {videos.length > 0 && (
+            <div className="mb-3 space-y-2">
+              {videos.map((v, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+                  <span className="flex-1 truncate text-foreground">{v.url}</span>
+                  {v.title && <span className="text-muted-foreground text-xs">— {v.title}</span>}
+                  <button type="button" onClick={() => removeVideo(i)}
+                    className="text-muted-foreground hover:text-destructive shrink-0">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)}
+              className="input-field flex-1" placeholder="https://youtube.com/watch?v=..." />
+            <input value={newVideoTitle} onChange={(e) => setNewVideoTitle(e.target.value)}
+              className="input-field w-40" placeholder="Título (opcional)" />
+            <button type="button" onClick={addVideo}
+              className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors">
+              <Plus className="h-3.5 w-3.5" /> Agregar
+            </button>
           </div>
         </div>
 
