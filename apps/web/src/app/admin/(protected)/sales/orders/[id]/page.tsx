@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { OrderStatusUpdater } from '@/components/admin/sales/OrderStatusUpdater'
+import { GenerateCfdiButton } from '@/components/admin/sales/GenerateCfdiButton'
 
 export const metadata = { title: 'Pedido' }
 
@@ -102,19 +103,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">CFDI / Factura</h2>
           {order.cfdis.length === 0 && order.customer.rfc && (
-            <button
-              onClick={async () => {
-                await fetch('/api/admin/cfdi', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ orderId: order.id, paymentForm: '03' }),
-                })
-                window.location.reload()
-              }}
-              className="rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
-            >
-              Generar CFDI
-            </button>
+            <GenerateCfdiButton orderId={order.id} />
           )}
           {!order.customer.rfc && (
             <span className="text-xs text-muted-foreground">Cliente sin RFC registrado</span>

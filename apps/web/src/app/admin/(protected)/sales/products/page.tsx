@@ -1,8 +1,9 @@
 import { db } from '@/lib/db'
 import Link from 'next/link'
-import { Plus, Pencil, Trash2, EyeOff } from 'lucide-react'
+import { Plus, Pencil, EyeOff } from 'lucide-react'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { DeleteProductForm } from '@/components/admin/sales/DeleteProductForm'
 
 export const metadata = { title: 'Productos — CBC Admin' }
 
@@ -105,16 +106,7 @@ export default async function ProductsPage() {
                     >
                       <Pencil className="h-3 w-3" /> Editar
                     </Link>
-                    <form action={deleteProduct}>
-                      <input type="hidden" name="id" value={product.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex items-center gap-1 rounded-md border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                        onClick={(e: any) => { if (!confirm('¿Eliminar este producto?')) e.preventDefault() }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </form>
+                    <DeleteProductForm productId={product.id} action={deleteProduct} />
                   </div>
                 </td>
               </tr>
