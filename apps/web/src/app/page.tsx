@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { db } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 
@@ -51,13 +52,22 @@ export default async function HomePage() {
               <div className="grid grid-cols-2 gap-8">
                 {products.map((product) => (
                   <div key={product.id} className="rounded-2xl border border-gray-800 bg-[#1e1e1e] overflow-hidden hover:border-cbc-yellow/30 transition-all group">
-                    {product.imageUrl && (
-                      <div className="aspect-[16/9] overflow-hidden">
+                    {product.images.length > 0 ? (
+                      <div className="aspect-[16/9] overflow-hidden relative">
                         <img
-                          src={product.imageUrl}
+                          src={product.images[0]}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
+                        {(product.images.length > 1 || (product.videos as any[]).length > 0) && (
+                          <span className="absolute top-2 right-2 rounded-full bg-black/60 text-white text-xs px-2 py-0.5">
+                            +{(product.images.length - 1) + (product.videos as any[]).length}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="aspect-[16/9] bg-muted flex items-center justify-center text-muted-foreground text-sm">
+                        Sin imagen
                       </div>
                     )}
                     <div className="p-8">
@@ -76,6 +86,14 @@ export default async function HomePage() {
                           ))}
                         </ul>
                       )}
+                      <div className="mt-4">
+                        <Link
+                          href={`/productos/${product.slug}`}
+                          className="text-sm text-cbc-yellow hover:underline"
+                        >
+                          Ver detalle completo →
+                        </Link>
+                      </div>
                       <div className="mt-8 flex items-center justify-between">
                         <span className="text-3xl font-bold text-white">
                           ${product.price.toLocaleString('es-MX')}
