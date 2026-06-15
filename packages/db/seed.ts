@@ -2,6 +2,11 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+interface VideoSeed {
+  url: string
+  title?: string
+}
+
 interface ProductSeed {
   slug: string
   name: string
@@ -10,7 +15,7 @@ interface ProductSeed {
   price: number
   features: string[]
   images: string[]
-  videos: any[]
+  videos: VideoSeed[]
   active: boolean
   sortOrder: number
 }
