@@ -2,17 +2,21 @@ type LogEntry = { type: string; args: unknown[]; timestamp: string }
 
 const MAX = 50
 const entries: LogEntry[] = []
+let initialized = false
 
 function capture(type: string, args: unknown[]) {
   entries.push({ type, args: args.map(a => a instanceof Error ? a.stack || a.message : a), timestamp: new Date().toISOString() })
   if (entries.length > MAX) entries.shift()
 }
 
-const origLog = console.log.bind(console)
-const origWarn = console.warn.bind(console)
-const origError = console.error.bind(console)
+export function initDebugCapture() {
+  if (initialized || typeof window === 'undefined') return
+  initialized = true
 
-if (typeof window !== 'undefined') {
+  const origLog = console.log.bind(console)
+  const origWarn = console.warn.bind(console)
+  const origError = console.error.bind(console)
+
   console.log = (...args) => { capture('log', args); origLog(...args) }
   console.warn = (...args) => { capture('warn', args); origWarn(...args) }
   console.error = (...args) => { capture('error', args); origError(...args) }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
@@ -10,7 +10,7 @@ import {
   MessageCircle, Settings, LogOut, Sun, Moon, Coffee, Package,
   Beaker, Puzzle, MapPin, Percent, Clipboard
 } from 'lucide-react'
-import { getDebugDump } from '@/lib/debug-capture'
+import { getDebugDump, initDebugCapture } from '@/lib/debug-capture'
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
@@ -28,7 +28,13 @@ const NAV_ITEMS = [
 export function AdminNav() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    initDebugCapture()
+  }, [])
 
   return (
     <aside className="flex w-16 lg:w-56 flex-col border-r border-border bg-card shrink-0">
@@ -81,10 +87,10 @@ export function AdminNav() {
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
-          {theme === 'dark'
+          {mounted && (theme === 'dark'
             ? <Sun className="h-4 w-4 shrink-0" />
-            : <Moon className="h-4 w-4 shrink-0" />}
-          <span className="hidden lg:block">{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</span>
+            : <Moon className="h-4 w-4 shrink-0" />)}
+          <span className="hidden lg:block">{mounted ? (theme === 'dark' ? 'Modo claro' : 'Modo oscuro') : ''}</span>
         </button>
         <button
           onClick={() => signOut({ callbackUrl: '/admin/login' })}
