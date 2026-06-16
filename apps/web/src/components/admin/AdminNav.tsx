@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
@@ -7,8 +8,9 @@ import Link from 'next/link'
 import {
   LayoutDashboard, ShoppingBag, Megaphone,
   MessageCircle, Settings, LogOut, Sun, Moon, Coffee, Package,
-  Beaker, Puzzle, MapPin, Percent
+  Beaker, Puzzle, MapPin, Percent, Clipboard
 } from 'lucide-react'
+import { getDebugDump } from '@/lib/debug-capture'
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
@@ -26,6 +28,7 @@ const NAV_ITEMS = [
 export function AdminNav() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
+  const [copied, setCopied] = useState(false)
 
   return (
     <aside className="flex w-16 lg:w-56 flex-col border-r border-border bg-card shrink-0">
@@ -34,7 +37,21 @@ export function AdminNav() {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
           <Coffee className="h-4 w-4 text-primary-foreground" />
         </div>
-        <span className="hidden lg:block text-sm font-bold text-foreground">CBC Admin</span>
+        <div className="hidden lg:flex items-center gap-2">
+          <span className="text-sm font-bold text-foreground">CBC Admin</span>
+          <span className="text-[10px] text-muted-foreground/50 font-mono">{process.env.NEXT_PUBLIC_APP_VERSION}</span>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(getDebugDump())
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            }}
+            className="inline-flex items-center justify-center h-5 w-5 rounded text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors"
+            title="Copiar debug info"
+          >
+            {copied ? <span className="text-[9px] font-mono text-green-500">OK</span> : <Clipboard className="h-3 w-3" />}
+          </button>
+        </div>
       </div>
 
       {/* Nav items */}
