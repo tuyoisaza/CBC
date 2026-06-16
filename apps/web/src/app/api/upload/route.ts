@@ -1,32 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUploadUrl, logoKey, productImageKey } from '@/lib/r2'
-import { z } from 'zod'
-import crypto from 'crypto'
+import path from 'path'
+import fs from 'fs/promises'
 
 const ALLOWED_TYPES = ['image/png', 'image/svg+xml', 'image/jpeg', 'image/jpg']
-const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_SIZE = 5 * 1024 * 1024
 
-export async function GET(req: NextRequest) {
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads')
+
+export async function POST(req: NextRequest) {
   const url      = new URL(req.url)
-  const filename = url.searchParams.get('filename') || 'logo.png'
-  const type     = url.searchParams.get('type') || 'image/png'
-  const folder   = url.searchParams.get('folder') || 'logo'
-
-  console.log(`[upload] GET filename=${filename} type=${type} folder=${folder}`)
+  const filename = url.searchParams.get('filename') || 'image.png'
+  const type     = url.searchParams.get('type') || req.headers.get('content-type') || 'image/png'
+  const folder   = url.searchParams.get('folder') || 'general'
 
   if (!ALLOWED_TYPES.includes(type)) {
     return NextResponse.json({ error: 'File type not allowed' }, { status: 400 })
   }
 
   try {
-    const id  = crypto.randomUUID()
-    const key = folder === 'product' ? productImageKey(id, filename) : logoKey(id, filename)
-    console.log(`[upload] key=${key}`)
+    const buffer = await req.arrayBuffer()
+    if (buffer.byteLength > MAX_SIZE) {
+      return NextResponse.json({ error: 'File too large (max 5MB)' }, { status: 400 })
+    }
 
-    const { uploadUrl, publicUrl } = await getUploadUrl(key, type)
-    console.log(`[upload] ok publicUrl=${publicUrl}`)
+    const dir = path.join(UPLOAD_DIR, folder)
+    await fs.mkdir(dir, { recursive: true })
 
-    return NextResponse.json({ uploadUrl, publicUrl })
+    const stamp = Date.now()
+    const safeName = `${stamp}-${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+    const filePath = path.join(dir, safeName)
+    await fs.writeFile(filePath, Buffer.from(buffer))
+
+    const publicUrl = `/uploads/${folder}/${safeName}`
+    console.log(`[upload] saved ${filePath} -> ${publicUrl}`)
+
+    return NextResponse.json({ uploadUrl: publicUrl, publicUrl })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error(`[upload] error ${msg}`)

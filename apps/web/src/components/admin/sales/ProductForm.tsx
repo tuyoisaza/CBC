@@ -92,31 +92,20 @@ export function ProductForm({ product }: ProductFormProps) {
     try {
       const results = await Promise.all(
         Array.from(files).map(async (file) => {
-          const params = new URLSearchParams({
-            filename: file.name,
-            type: file.type,
-            folder: 'product',
-          })
+          const params = new URLSearchParams({ filename: file.name, type: file.type, folder: 'product' })
           const url = `/api/upload?${params}`
-          console.log(`[product-form] upload-presign ${file.name} -> ${url}`)
-          const res = await fetch(url)
-          if (!res.ok) {
-            const text = await res.text().catch(() => '')
-            console.error(`[product-form] upload-presign-err ${file.name} HTTP ${res.status} body="${text}"`)
-            throw new Error(`upload HTTP ${res.status}`)
-          }
-          const body = await res.json()
-          console.log(`[product-form] upload-presign-resp ${file.name}`, body)
-          if (body.error) throw new Error(body.error)
-
-          const putRes = await fetch(body.uploadUrl, {
-            method: 'PUT',
+          console.log(`[product-form] upload-post ${file.name} -> ${url}`)
+          const res = await fetch(url, {
+            method: 'POST',
             body: file,
             headers: { 'Content-Type': file.type },
           })
-          if (!putRes.ok) throw new Error(`PUT ${putRes.status}`)
+          const body = await res.json()
+          if (!res.ok || body.error) {
+            console.error(`[product-form] upload-err ${file.name} HTTP ${res.status}`, body)
+            throw new Error(body.error || `HTTP ${res.status}`)
+          }
           console.log(`[product-form] upload-ok ${file.name} publicUrl=${body.publicUrl}`)
-
           return body.publicUrl
         })
       )
