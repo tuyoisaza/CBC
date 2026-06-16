@@ -18,66 +18,128 @@ interface ProductSeed {
   videos: VideoSeed[]
   active: boolean
   sortOrder: number
+  methodId?: string
 }
 
-const products: ProductSeed[] = [
-  {
-    slug: 'box-prensa-francesa',
-    name: 'Box Prensa Francesa',
-    subtitle: 'French press 350cc',
-    description:
-      'Caja de regalo que incluye una prensa francesa de 350cc y 250g de café de especialidad mexicano seleccionado por Lorena Luna. Ideal para oficinas, home office y amantes del cuerpo completo.',
-    price: 799,
-    features: [
-      '250g café de especialidad (micro-lote)',
-      'Prensa francesa 350cc',
-      'Tarjeta de curación con historia y guía de preparación',
-      'Branding de tu empresa en la caja',
-    ],
-    images: [
-      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Box+Prensa+Francesa',
-      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Prensa+Francesa+2',
-      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Prensa+Francesa+3',
-    ],
-    videos: [],
-    active: true,
-    sortOrder: 0,
-  },
-  {
-    slug: 'box-moka',
-    name: 'Box Moka',
-    subtitle: 'Mini moka italiana',
-    description:
-      'Caja de regalo que incluye una mini moka italiana y 250g de café de especialidad mexicano seleccionado por Lorena Luna. Perfecta para amantes del espresso, cocina y hogar.',
-    price: 799,
-    features: [
-      '250g café de especialidad (micro-lote)',
-      'Mini moka italiana',
-      'Tarjeta de curación con historia y guía de preparación',
-      'Branding de tu empresa en la caja',
-    ],
-    images: [
-      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Box+Moka',
-      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Moka+Italiana+2',
-      'https://placehold.co/800x450/1e1e1e/cbc9a0?text=Moka+Italiana+3',
-    ],
-    videos: [],
-    active: true,
-    sortOrder: 1,
-  },
-]
-
 async function main() {
-  for (const p of products) {
-    await prisma.product.upsert({
-      where: { slug: p.slug },
-      update: p,
-      create: p,
+  // Seed Methods
+  const methodData = [
+    { name: 'Prensa Francesa', unitPrice: 799, sortOrder: 0 },
+    { name: 'Moka Italiana', unitPrice: 849, sortOrder: 1 },
+  ]
+  const methods: Record<string, string> = {}
+  for (const m of methodData) {
+    const existing = await prisma.method.findFirst({ where: { name: m.name } })
+    if (existing) {
+      await prisma.method.update({ where: { id: existing.id }, data: m })
+      methods[m.name] = existing.id
+    } else {
+      const created = await prisma.method.create({ data: m })
+      methods[m.name] = created.id
+    }
+  }
+
+  // Seed Extras
+  const extraData = [
+    { name: 'Tapografia', unitPrice: 50, sortOrder: 0 },
+    { name: 'Personalizacion de caja', unitPrice: 120, sortOrder: 1 },
+    { name: 'Tarjeta de mensaje', unitPrice: 35, sortOrder: 2 },
+    { name: 'QR + curso personalizado', unitPrice: 200, sortOrder: 3 },
+  ]
+  for (const e of extraData) {
+    const existing = await prisma.extra.findFirst({ where: { name: e.name } })
+    if (existing) {
+      await prisma.extra.update({ where: { id: existing.id }, data: e })
+    } else {
+      await prisma.extra.create({ data: e })
+    }
+  }
+
+  // Seed Shipping Zones
+  const zoneData = [
+    { name: 'CDMX / Area Metropolitana', baseFee: 0, feePerUnit: 15, sortOrder: 0 },
+    { name: 'Interior del pais', baseFee: 150, feePerUnit: 25, sortOrder: 1 },
+    { name: 'Recoleccion (sin envio)', baseFee: 0, feePerUnit: 0, sortOrder: 2 },
+  ]
+  for (const z of zoneData) {
+    const existing = await prisma.shippingZone.findFirst({ where: { name: z.name } })
+    if (existing) {
+      await prisma.shippingZone.update({ where: { id: existing.id }, data: z })
+    } else {
+      await prisma.shippingZone.create({ data: z })
+    }
+  }
+
+  // Seed Volume Discounts
+  const discountData = [
+    { minQty: 10, maxQty: 20, discountPct: 5 },
+    { minQty: 21, maxQty: 50, discountPct: 10 },
+    { minQty: 51, maxQty: null, discountPct: 15 },
+  ]
+  for (const d of discountData) {
+    const existing = await prisma.volumeDiscount.findFirst({
+      where: { minQty: d.minQty, maxQty: d.maxQty ?? null, discountPct: d.discountPct },
+    })
+    if (!existing) {
+      await prisma.volumeDiscount.create({ data: d as any })
+    }
+  }
+
+  // Seed Settings
+  const settingsData: { key: string; value: string }[] = [
+    { key: 'MIN_PRODUCTION_DAYS', value: '15' },
+    { key: 'RUSH_DAYS_THRESHOLD', value: '8' },
+    { key: 'RUSH_FEE_PCT', value: '40' },
+    { key: 'ADVANCE_PCT', value: '50' },
+    { key: 'MIN_QTY_PER_METHOD', value: '10' },
+  ]
+  for (const s of settingsData) {
+    await prisma.setting.upsert({
+      where: { key: s.key },
+      update: { value: s.value },
+      create: s,
     })
   }
 
-  const count = await prisma.product.count()
-  console.log(`✓ ${count} products synced`)
+  // Seed Products (cajas predefinidas)
+  const products: ProductSeed[] = [
+    {
+      slug: 'box-prensa-francesa',
+      name: 'Box Prensa Francesa',
+      subtitle: 'French press 350cc',
+      description: 'Caja de regalo que incluye una prensa francesa de 350cc y 250g de cafe de especialidad mexicano seleccionado por Lorena Luna.',
+      price: 799,
+      features: ['250g cafe de especialidad (micro-lote)', 'Prensa francesa 350cc', 'Tarjeta de curacion con historia y guia de preparacion', 'Branding de tu empresa en la caja'],
+      images: ['https://placehold.co/800x450/1e1e1e/cbc9a0?text=Box+Prensa+Francesa'],
+      videos: [],
+      active: true,
+      sortOrder: 0,
+      methodId: methods['Prensa Francesa'],
+    },
+    {
+      slug: 'box-moka',
+      name: 'Box Moka',
+      subtitle: 'Mini moka italiana',
+      description: 'Caja de regalo que incluye una mini moka italiana y 250g de cafe de especialidad mexicano seleccionado por Lorena Luna.',
+      price: 799,
+      features: ['250g cafe de especialidad (micro-lote)', 'Mini moka italiana', 'Tarjeta de curacion con historia y guia de preparacion', 'Branding de tu empresa en la caja'],
+      images: ['https://placehold.co/800x450/1e1e1e/cbc9a0?text=Box+Moka'],
+      videos: [],
+      active: true,
+      sortOrder: 1,
+      methodId: methods['Moka Italiana'],
+    },
+  ]
+
+  for (const p of products) {
+    await prisma.product.upsert({
+      where: { slug: p.slug },
+      update: { name: p.name, subtitle: p.subtitle, description: p.description, price: p.price, features: p.features, images: p.images, videos: p.videos, methodId: p.methodId },
+      create: p as any,
+    })
+  }
+
+  console.log('✓ Seed complete')
 }
 
 async function run() {

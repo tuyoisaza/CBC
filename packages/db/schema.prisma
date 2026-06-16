@@ -14,7 +14,7 @@ model Customer {
   companyName         String
   contactName         String
   email               String?
-  whatsapp            String?
+  whatsapp            String?   @unique
   city                String?
   industry            String?
   notes               String?
@@ -75,6 +75,17 @@ model Quote {
   order       Order?
   notes       String?
   createdAt   DateTime  @default(now())
+  extraItems    Json         @default("[]")
+  shippingZone  ShippingZone? @relation(fields: [shippingZoneId], references: [id])
+  shippingZoneId String?
+  deliveryDate  DateTime?
+  rush          Boolean      @default(false)
+  discount      Float        @default(0)
+  discountPct   Float        @default(0)
+  shippingFee   Float        @default(0)
+  rushFee       Float        @default(0)
+  advancePct    Float        @default(50)
+  advanceAmount Float        @default(0)
   updatedAt   DateTime  @updatedAt
 }
 
@@ -258,6 +269,52 @@ model Product {
   features    String[]
   active      Boolean  @default(true)
   sortOrder   Int      @default(0)
+  methodId    String?
+  method      Method?  @relation(fields: [methodId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Method {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  unitPrice   Float
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  products    Product[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Extra {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  unitPrice   Float
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ShippingZone {
+  id          String   @id @default(cuid())
+  name        String
+  baseFee     Float
+  feePerUnit  Float
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  quotes      Quote[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model VolumeDiscount {
+  id          String   @id @default(cuid())
+  minQty      Int
+  maxQty      Int?
+  discountPct Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
