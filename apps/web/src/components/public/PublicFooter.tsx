@@ -1,5 +1,3 @@
-const WA_URL = 'https://wa.me/5215572293512'
-
 interface PublicFooterProps {
   lang?: 'es' | 'en'
 }
@@ -39,12 +37,6 @@ export function PublicFooter({ lang = 'es' }: PublicFooterProps) {
           <div>
             <h4 className="text-white font-bold mb-3">{t.contact}</h4>
             <ul className="space-y-2 text-sm">
-              <li>
-                <a href={WA_URL} target="_blank" rel="noopener noreferrer"
-                  className="text-gray-500 hover:text-cbc-yellow transition-colors">
-                  {t.whatsapp}
-                </a>
-              </li>
               <li>
                 <a href={lang === 'es' ? '/cotizar' : '/en/cotizar'}
                   className="text-gray-500 hover:text-cbc-yellow transition-colors">

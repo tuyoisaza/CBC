@@ -4,7 +4,7 @@ import { PublicFooter } from '@/components/public/PublicFooter'
 
 export const dynamic = 'force-dynamic'
 
-const WA_URL = 'https://wa.me/5215572293512?text=Hola%2C%20quiero%20cotizar%20cajas%20de%20regalo%20CBC'
+const WA_SALES = 'https://wa.me/5215572293512?text=Hola%2C%20quiero%20cotizar%20cajas%20de%20regalo%20CBC'
 
 async function getActiveProducts() {
   try {
@@ -99,14 +99,12 @@ export default async function HomePage() {
                           ${product.price.toLocaleString('es-MX')}
                           <span className="text-sm font-normal text-gray-500 ml-1">MXN</span>
                         </span>
-                        <a
-                          href={WA_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Link
+                          href={`/cotizar?product=${product.slug}`}
                           className="inline-flex items-center gap-2 rounded-md bg-cbc-yellow px-6 py-3 text-sm font-semibold text-black hover:bg-cbc-yellow/90 transition-all"
                         >
-                          Cotizar por WhatsApp
-                        </a>
+                          Cotizar
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -114,7 +112,7 @@ export default async function HomePage() {
               </div>
 
               <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-                <a href={WA_URL} target="_blank" rel="noopener noreferrer"
+                <a href={WA_SALES} target="_blank" rel="noopener noreferrer"
                    className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all hover:shadow-lg focus-visible:ring-2 focus-visible:ring-cbc-yellow">
                   Hablar con Ventas
                 </a>

@@ -1,6 +1,6 @@
 import { PublicFooter } from '@/components/public/PublicFooter'
 
-const WA_URL = 'https://wa.me/5215572293512?text=Hello%2C%20I%20want%20to%20quote%20CBC%20gift%20boxes'
+export const dynamic = 'force-dynamic'
 
 export default function HomePageEn() {
   return (
@@ -19,9 +19,9 @@ export default function HomePageEn() {
                 Premium corporate gifts featuring Mexican specialty coffee. We design custom boxes that your clients and team will truly remember.
               </p>
               <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                <a href={WA_URL} target="_blank" rel="noopener noreferrer"
+                <a href="/en/cotizar"
                    className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all">
-                  Talk to Sales
+                  Get a Quote
                 </a>
                 <a href="/en/cotizar"
                    className="inline-flex items-center justify-center rounded-md border border-cbc-yellow/40 px-8 py-4 text-base font-semibold text-cbc-yellow hover:bg-cbc-yellow/10 transition-colors">

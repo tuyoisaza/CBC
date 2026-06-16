@@ -6,8 +6,6 @@ import { ProductGallery } from '@/components/productos/ProductGallery'
 
 export const dynamic = 'force-dynamic'
 
-const WA_URL = 'https://wa.me/5215572293512?text=Hola%2C%20quiero%20cotizar%20cajas%20de%20regalo%20CBC'
-
 function getYouTubeId(url: string): string | null {
   const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
   return match?.[1] || null
@@ -73,14 +71,12 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <a
-                href={WA_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href={`/cotizar?product=${product.slug}`}
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all"
               >
-                Cotizar por WhatsApp
-              </a>
+                Cotizar
+              </Link>
               <Link
                 href="/cotizar"
                 className="inline-flex items-center justify-center rounded-md border border-cbc-yellow/40 px-8 py-4 text-base font-semibold text-cbc-yellow hover:bg-cbc-yellow/10 transition-colors"
