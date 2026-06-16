@@ -41,8 +41,8 @@ async function main() {
 
   // Seed Extras
   const extraData = [
-    { name: 'Tapografia', unitPrice: 50, sortOrder: 0 },
-    { name: 'Personalizacion de caja', unitPrice: 120, sortOrder: 1 },
+    { name: 'Tapografía', unitPrice: 50, sortOrder: 0 },
+    { name: 'Personalización de caja', unitPrice: 120, sortOrder: 1 },
     { name: 'Tarjeta de mensaje', unitPrice: 35, sortOrder: 2 },
     { name: 'QR + curso personalizado', unitPrice: 200, sortOrder: 3 },
   ]
@@ -57,9 +57,9 @@ async function main() {
 
   // Seed Shipping Zones
   const zoneData = [
-    { name: 'CDMX / Area Metropolitana', baseFee: 0, feePerUnit: 15, sortOrder: 0 },
-    { name: 'Interior del pais', baseFee: 150, feePerUnit: 25, sortOrder: 1 },
-    { name: 'Recoleccion (sin envio)', baseFee: 0, feePerUnit: 0, sortOrder: 2 },
+    { name: 'CDMX / Área Metropolitana', baseFee: 0, feePerUnit: 15, sortOrder: 0 },
+    { name: 'Interior del país', baseFee: 150, feePerUnit: 25, sortOrder: 1 },
+    { name: 'Recolección (sin envío)', baseFee: 0, feePerUnit: 0, sortOrder: 2 },
   ]
   for (const z of zoneData) {
     const existing = await prisma.shippingZone.findFirst({ where: { name: z.name } })
@@ -134,7 +134,7 @@ async function main() {
   for (const p of products) {
     await prisma.product.upsert({
       where: { slug: p.slug },
-      update: { name: p.name, subtitle: p.subtitle, description: p.description, price: p.price, features: p.features, images: p.images, videos: p.videos, methodId: p.methodId },
+      update: { name: p.name, subtitle: p.subtitle, description: p.description, price: p.price, features: p.features, images: p.images, videos: p.videos as any, methodId: p.methodId },
       create: p as any,
     })
   }
