@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -134,8 +134,8 @@ async function main() {
   for (const p of products) {
     await prisma.product.upsert({
       where: { slug: p.slug },
-      update: { name: p.name, subtitle: p.subtitle, description: p.description, price: p.price, features: p.features, images: p.images, videos: p.videos as any, methodId: p.methodId },
-      create: p as any,
+      update: { name: p.name, subtitle: p.subtitle, description: p.description, price: p.price, features: p.features, images: p.images, videos: p.videos as unknown as Prisma.InputJsonValue, methodId: p.methodId },
+      create: p as unknown as Prisma.ProductCreateInput,
     })
   }
 

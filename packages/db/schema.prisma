@@ -68,7 +68,7 @@ model Quote {
   total       Float
   logoUrl     String?   // R2 URL
   messageCard String?
-  status      String    @default("draft") // draft | sent | accepted | rejected | expired
+  status      String    @default("Cotización creada") // Cotización creada | Pendiente de pago | Anticipo pagado | En producción | Lista para entrega | Entregada | Cancelada
   pdfUrl      String?
   sentAt      DateTime?
   expiresAt   DateTime?
