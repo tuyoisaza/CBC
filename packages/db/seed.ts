@@ -92,6 +92,7 @@ async function main() {
     { key: 'RUSH_FEE_PCT', value: '40' },
     { key: 'ADVANCE_PCT', value: '50' },
     { key: 'MIN_QTY_PER_METHOD', value: '10' },
+    { key: 'IVA_PCT', value: '16' },
   ]
   for (const s of settingsData) {
     await prisma.setting.upsert({
