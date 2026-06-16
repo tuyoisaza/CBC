@@ -1,9 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, X, Upload, Check, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+
+interface Method {
+  id: string
+  name: string
+}
 
 interface ProductFormProps {
   product?: {
@@ -18,6 +23,7 @@ interface ProductFormProps {
     features: string[]
     active: boolean
     sortOrder: number
+    methodId: string | null
   }
 }
 
@@ -35,8 +41,17 @@ export function ProductForm({ product }: ProductFormProps) {
   const [features, setFeatures] = useState<string[]>(product?.features ?? [''])
   const [active, setActive] = useState(product?.active ?? true)
   const [sortOrder, setSortOrder] = useState(product?.sortOrder ?? 0)
+  const [methodId, setMethodId] = useState<string | null>(product?.methodId ?? null)
+  const [methods, setMethods] = useState<Method[]>([])
   const [saving, setSaving] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/methods')
+      .then((res) => res.json())
+      .then((data) => setMethods(data))
+      .catch(() => {})
+  }, [])
   const [newVideoUrl, setNewVideoUrl] = useState('')
   const [newVideoTitle, setNewVideoTitle] = useState('')
   const [error, setError] = useState('')
@@ -124,6 +139,7 @@ export function ProductForm({ product }: ProductFormProps) {
       features: features.filter((f) => f.trim()),
       active,
       sortOrder,
+      methodId,
     }
 
     try {
@@ -207,6 +223,17 @@ export function ProductForm({ product }: ProductFormProps) {
             <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))}
               className="input-field" />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Método de preparación</label>
+          <select value={methodId ?? ''} onChange={(e) => setMethodId(e.target.value || null)}
+            className="input-field">
+            <option value="">Sin método</option>
+            {methods.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
         </div>
 
         <div>

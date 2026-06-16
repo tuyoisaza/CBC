@@ -18,6 +18,7 @@ const productSchema = z.object({
   features: z.array(z.string()),
   active: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
+  methodId: z.string().nullable().optional(),
 })
 
 export async function GET() {
