@@ -15,7 +15,6 @@ const API_KEY_SETTINGS = [
   { key: 'stripe_webhook_secret',      label: 'Stripe Webhook Secret',       hint: 'Para verificar pagos',                   prefix: 'whsec_' },
   { key: 'facturapi_key',              label: 'Facturapi Key',               hint: 'Para generar CFDIs',                     prefix: 'sk_' },
   { key: 'resend_api_key',             label: 'Resend API Key',              hint: 'Para envíos de email',                   prefix: 're_' },
-  { key: 'openai_key_purpose',         label: '',                           hint: '',                                       prefix: '' },
   { key: 'whatsapp_token',             label: 'WhatsApp Business Token',     hint: 'Meta Cloud API',                         prefix: '' },
   { key: 'whatsapp_phone_number_id',   label: 'WhatsApp Phone Number ID',    hint: 'ID del número de WhatsApp',              prefix: '' },
 ]
@@ -26,7 +25,7 @@ async function getSettings() {
   const rows = await db.setting.findMany({
     where: {
       key: {
-        in: [...API_KEY_SETTINGS.map((s) => s.key), BRAND_VOICE_KEY, 'brand_voice_updated_at'],
+        in: [...API_KEY_SETTINGS.map((s) => s.key), BRAND_VOICE_KEY, 'brand_voice_updated_at', 'openai_key_purpose'],
       },
     },
   })

@@ -16,11 +16,13 @@ export function SettingsForm({
   apiKeyValues,
   brandVoice,
   brandVoiceUpdatedAt,
+  openaiKeyPurpose: initialPurpose,
 }: {
   apiKeys: ApiKeySetting[]
   apiKeyValues: Record<string, string>
   brandVoice: string
   brandVoiceUpdatedAt: string
+  openaiKeyPurpose: string
 }) {
   const [values, setValues]           = useState(apiKeyValues)
   const [voice, setVoice]             = useState(brandVoice)
@@ -28,6 +30,8 @@ export function SettingsForm({
   const [saving, setSaving]           = useState<string | null>(null)
   const [saved, setSaved]             = useState<string | null>(null)
   const [voiceOpen, setVoiceOpen]     = useState(false)
+  const [purpose, setPurpose]         = useState(initialPurpose)
+  const [purposeSaving, setPurposeSaving] = useState(false)
   const router = useRouter()
 
   function mask(value: string) {
@@ -72,6 +76,20 @@ export function SettingsForm({
     }
   }
 
+  async function savePurpose(value: string) {
+    setPurposeSaving(true)
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'openai_key_purpose', value }),
+      })
+      router.refresh()
+    } finally {
+      setPurposeSaving(false)
+    }
+  }
+
   // Group API keys by service
   const groups = [
     { label: 'Inteligencia Artificial',    keys: ['anthropic_api_key', 'openai_api_key'] },
@@ -110,10 +128,17 @@ export function SettingsForm({
                         <label className="block text-sm font-medium text-foreground mb-1">
                           {setting.label}
                           {hasValue
-                            ? <span className="ml-2 inline-flex items-center gap-0.5 text-xs text-green-600 dark:text-green-400 font-normal"><Check className="h-3 w-3" /> Configurado</span>
-                            : <span className="ml-2 inline-flex items-center gap-0.5 text-xs text-amber-600 dark:text-amber-400 font-normal"><AlertCircle className="h-3 w-3" /> Sin configurar</span>}
+                            ? <><span className="inline-flex items-center gap-0.5 text-xs text-green-600 dark:text-green-400 font-normal"><Check className="h-3 w-3" /> Configurado</span>
+                              {setting.key === 'openai_api_key' && purpose === 'both' && (
+                                <span className="ml-2 inline-flex items-center gap-0.5 text-xs text-blue-600 dark:text-blue-400 font-normal">Usando también para copy</span>
+                              )}</>
+                            : <span className="inline-flex items-center gap-0.5 text-xs text-amber-600 dark:text-amber-400 font-normal"><AlertCircle className="h-3 w-3" /> Sin configurar</span>}
                         </label>
-                        <p className="text-xs text-muted-foreground mb-2">{setting.hint}</p>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          {setting.key === 'openai_api_key' && purpose === 'both'
+                            ? 'Para DALL-E 3 y GPT — generación de imágenes y copy'
+                            : setting.hint}
+                        </p>
                         <div className="flex gap-2">
                           <div className="relative flex-1">
                             <input
@@ -141,6 +166,24 @@ export function SettingsForm({
                             {isSaving ? '...' : isSaved ? '✓' : 'Guardar'}
                           </button>
                         </div>
+                        {setting.key === 'openai_api_key' && hasValue && (
+                          <div className="mt-3 flex items-center gap-3">
+                            <label className="text-xs text-muted-foreground">Usar para:</label>
+                            <select
+                              value={purpose}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                setPurpose(val)
+                                savePurpose(val)
+                              }}
+                              disabled={purposeSaving}
+                              className="input-field text-xs py-1 px-2 w-auto"
+                            >
+                              <option value="image">Solo imágenes</option>
+                              <option value="both">Imágenes y Copy</option>
+                            </select>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
