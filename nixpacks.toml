@@ -8,4 +8,4 @@ cmds = ["pnpm install --frozen-lockfile"]
 cmds = ["pnpm build --filter=@cbc/web"]
 
 [start]
-cmd = "node packages/db/wait-for-db.cjs && pnpm --filter @cbc/db db:push && pnpm --filter @cbc/db db:seed && pnpm --filter @cbc/web run start"
+cmd = "node packages/db/wait-for-db.cjs && pnpm --filter @cbc/db exec prisma db push --accept-data-loss && pnpm --filter @cbc/db db:seed && pnpm --filter @cbc/web run start"

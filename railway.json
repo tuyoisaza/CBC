@@ -5,7 +5,7 @@
     "buildCommand": "pnpm build --filter=@cbc/web"
   },
   "deploy": {
-    "startCommand": "node packages/db/wait-for-db.cjs && pnpm --filter @cbc/db db:push && pnpm --filter @cbc/db db:seed && pnpm --filter @cbc/web run start",
+    "startCommand": "node packages/db/wait-for-db.cjs && pnpm --filter @cbc/db exec prisma db push --accept-data-loss && pnpm --filter @cbc/db db:seed && pnpm --filter @cbc/web run start",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
