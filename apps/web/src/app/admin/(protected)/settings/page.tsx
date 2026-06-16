@@ -15,6 +15,7 @@ const API_KEY_SETTINGS = [
   { key: 'stripe_webhook_secret',      label: 'Stripe Webhook Secret',       hint: 'Para verificar pagos',                   prefix: 'whsec_' },
   { key: 'facturapi_key',              label: 'Facturapi Key',               hint: 'Para generar CFDIs',                     prefix: 'sk_' },
   { key: 'resend_api_key',             label: 'Resend API Key',              hint: 'Para envíos de email',                   prefix: 're_' },
+  { key: 'openai_key_purpose',         label: '',                           hint: '',                                       prefix: '' },
   { key: 'whatsapp_token',             label: 'WhatsApp Business Token',     hint: 'Meta Cloud API',                         prefix: '' },
   { key: 'whatsapp_phone_number_id',   label: 'WhatsApp Phone Number ID',    hint: 'ID del número de WhatsApp',              prefix: '' },
 ]
@@ -54,6 +55,7 @@ export default async function SettingsPage() {
         apiKeyValues={apiKeyValues}
         brandVoice={settings[BRAND_VOICE_KEY] || ''}
         brandVoiceUpdatedAt={settings['brand_voice_updated_at'] || ''}
+        openaiKeyPurpose={settings['openai_key_purpose'] || 'image'}
       />
     </div>
   )
