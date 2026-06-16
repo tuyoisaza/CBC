@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs'
-const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'))
+const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf-8'))
 
 const nextConfig = {
   // ─── Server-side external packages (Next.js 14 syntax) ──────────────────
