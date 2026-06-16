@@ -100,9 +100,14 @@ export function ProductForm({ product }: ProductFormProps) {
           const url = `/api/upload?${params}`
           console.log(`[product-form] upload-presign ${file.name} -> ${url}`)
           const res = await fetch(url)
+          if (!res.ok) {
+            const text = await res.text().catch(() => '')
+            console.error(`[product-form] upload-presign-err ${file.name} HTTP ${res.status} body="${text}"`)
+            throw new Error(`upload HTTP ${res.status}`)
+          }
           const body = await res.json()
           console.log(`[product-form] upload-presign-resp ${file.name}`, body)
-          if (!res.ok || body.error) throw new Error(body.error || `HTTP ${res.status}`)
+          if (body.error) throw new Error(body.error)
 
           const putRes = await fetch(body.uploadUrl, {
             method: 'PUT',

@@ -12,13 +12,24 @@ export async function GET(req: NextRequest) {
   const type     = url.searchParams.get('type') || 'image/png'
   const folder   = url.searchParams.get('folder') || 'logo'
 
+  console.log(`[upload] GET filename=${filename} type=${type} folder=${folder}`)
+
   if (!ALLOWED_TYPES.includes(type)) {
     return NextResponse.json({ error: 'File type not allowed' }, { status: 400 })
   }
 
-  const id  = crypto.randomUUID()
-  const key = folder === 'product' ? productImageKey(id, filename) : logoKey(id, filename)
-  const { uploadUrl, publicUrl } = await getUploadUrl(key, type)
+  try {
+    const id  = crypto.randomUUID()
+    const key = folder === 'product' ? productImageKey(id, filename) : logoKey(id, filename)
+    console.log(`[upload] key=${key}`)
 
-  return NextResponse.json({ uploadUrl, publicUrl })
+    const { uploadUrl, publicUrl } = await getUploadUrl(key, type)
+    console.log(`[upload] ok publicUrl=${publicUrl}`)
+
+    return NextResponse.json({ uploadUrl, publicUrl })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error(`[upload] error ${msg}`)
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 }
