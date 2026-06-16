@@ -48,6 +48,7 @@ export function ProductForm({ product }: ProductFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    console.log(`[product-form] mount id=${product?.id || 'new'} images=${product?.images?.length ?? 0} videos=${product?.videos?.length ?? 0}`)
     fetch('/api/admin/methods')
       .then((res) => res.json())
       .then((data) => setMethods(data))
@@ -84,6 +85,9 @@ export function ProductForm({ product }: ProductFormProps) {
     const files = e.target.files
     if (!files || files.length === 0) return
 
+    const fileList = Array.from(files).map(f => ({ name: f.name, size: f.size, type: f.type }))
+    console.log(`[product-form] upload-start files=${fileList.length}`, fileList)
+
     setUploadingImages(true)
     try {
       const results = await Promise.all(
@@ -93,21 +97,29 @@ export function ProductForm({ product }: ProductFormProps) {
             type: file.type,
             folder: 'product',
           })
-          const res = await fetch(`/api/upload?${params}`)
-          const { uploadUrl, publicUrl } = await res.json()
+          const url = `/api/upload?${params}`
+          console.log(`[product-form] upload-presign ${file.name} -> ${url}`)
+          const res = await fetch(url)
+          const body = await res.json()
+          console.log(`[product-form] upload-presign-resp ${file.name}`, body)
+          if (!res.ok || body.error) throw new Error(body.error || `HTTP ${res.status}`)
 
-          await fetch(uploadUrl, {
+          const putRes = await fetch(body.uploadUrl, {
             method: 'PUT',
             body: file,
             headers: { 'Content-Type': file.type },
           })
+          if (!putRes.ok) throw new Error(`PUT ${putRes.status}`)
+          console.log(`[product-form] upload-ok ${file.name} publicUrl=${body.publicUrl}`)
 
-          return publicUrl
+          return body.publicUrl
         })
       )
       setImages((prev) => [...prev, ...results])
       if (fileInputRef.current) fileInputRef.current.value = ''
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`[product-form] upload-error ${msg}`)
       setError('Error al subir imágenes')
     } finally {
       setUploadingImages(false)
@@ -115,8 +127,16 @@ export function ProductForm({ product }: ProductFormProps) {
   }
 
   function addVideo() {
-    if (!newVideoUrl.trim()) return
-    setVideos([...videos, { url: newVideoUrl.trim(), title: newVideoTitle.trim() || undefined }])
+    const url = newVideoUrl.trim()
+    const title = newVideoTitle.trim()
+    console.log(`[product-form] addVideo url="${url}" title="${title}"`)
+    if (!url) {
+      console.log(`[product-form] addVideo skipped — empty url`)
+      return
+    }
+    const next = [...videos, { url, title: title || undefined }]
+    console.log(`[product-form] addVideo-ok videos=${next.length}`)
+    setVideos(next)
     setNewVideoUrl('')
     setNewVideoTitle('')
   }
@@ -149,20 +169,24 @@ export function ProductForm({ product }: ProductFormProps) {
         ? `/api/admin/products?id=${product!.id}`
         : '/api/admin/products'
 
+      console.log(`[product-form] submit ${url} images=${body.images?.length} videos=${body.videos?.length} features=${body.features?.length}`)
       const res = await fetch(url, {
         method: isEditing ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
 
+      const data = await res.json()
       if (!res.ok) {
-        const data = await res.json()
+        console.error(`[product-form] submit-error HTTP ${res.status}`, data)
         throw new Error(data.error || 'Error al guardar')
       }
 
+      console.log(`[product-form] submit-ok productId=${data.id}`)
       router.push('/admin/sales/products')
       router.refresh()
     } catch (err: any) {
+      console.error(`[product-form] submit-fail ${err.message}`)
       setError(err.message)
     } finally {
       setSaving(false)
