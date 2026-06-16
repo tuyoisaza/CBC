@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, X, Upload, Check, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -45,6 +45,7 @@ export function ProductForm({ product }: ProductFormProps) {
   const [methods, setMethods] = useState<Method[]>([])
   const [saving, setSaving] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/api/admin/methods')
@@ -105,6 +106,7 @@ export function ProductForm({ product }: ProductFormProps) {
         })
       )
       setImages((prev) => [...prev, ...results])
+      if (fileInputRef.current) fileInputRef.current.value = ''
     } catch {
       setError('Error al subir imágenes')
     } finally {
@@ -278,6 +280,7 @@ export function ProductForm({ product }: ProductFormProps) {
             <Upload className="h-4 w-4" />
             {uploadingImages ? 'Subiendo...' : 'Subir imágenes'}
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/png,image/jpeg,image/jpg,image/svg+xml"
               multiple
