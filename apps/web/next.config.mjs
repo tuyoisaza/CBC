@@ -1,15 +1,7 @@
-import { readFileSync } from 'fs'
-const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf-8'))
-
 const nextConfig = {
   // ─── Server-side external packages (Next.js 14 syntax) ──────────────────
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
-  },
-
-  // ─── Build-time env ──────────────────────────────────────────────
-  env: {
-    NEXT_PUBLIC_APP_VERSION: pkg.version,
   },
 
   // ─── Images ───────────────────────────────────────────────────────
