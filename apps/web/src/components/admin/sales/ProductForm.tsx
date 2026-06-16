@@ -132,9 +132,14 @@ export function ProductForm({ product }: ProductFormProps) {
   }
 
   function addVideo() {
-    const url = newVideoUrl.trim()
-    const title = newVideoTitle.trim()
+    let url = newVideoUrl.trim()
+    let title = newVideoTitle.trim()
     console.log(`[product-form] addVideo url="${url}" title="${title}"`)
+    if (!url && /^https?:\/\//.test(title)) {
+      console.log(`[product-form] addVideo swap — url found in title field`)
+      url = title
+      title = ''
+    }
     if (!url) {
       console.log(`[product-form] addVideo skipped — empty url`)
       return
@@ -336,13 +341,19 @@ export function ProductForm({ product }: ProductFormProps) {
               ))}
             </div>
           )}
-          <div className="flex gap-2">
-            <input value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)}
-              className="input-field flex-1" placeholder="https://youtube.com/watch?v=..." />
-            <input value={newVideoTitle} onChange={(e) => setNewVideoTitle(e.target.value)}
-              className="input-field w-40" placeholder="Título (opcional)" />
+          <div className="flex flex-wrap gap-2">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-xs text-muted-foreground mb-0.5">URL del video</label>
+              <input value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)}
+                className="input-field w-full" placeholder="https://youtube.com/watch?v=..." />
+            </div>
+            <div className="w-36">
+              <label className="block text-xs text-muted-foreground mb-0.5">Título</label>
+              <input value={newVideoTitle} onChange={(e) => setNewVideoTitle(e.target.value)}
+                className="input-field w-full" placeholder="Opcional" />
+            </div>
             <button type="button" onClick={addVideo}
-              className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors">
+              className="self-end flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors">
               <Plus className="h-3.5 w-3.5" /> Agregar
             </button>
           </div>
