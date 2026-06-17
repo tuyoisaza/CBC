@@ -133,11 +133,10 @@ async function main() {
   ]
 
   for (const p of products) {
-    await prisma.product.upsert({
-      where: { slug: p.slug },
-      update: { name: p.name, subtitle: p.subtitle, description: p.description, price: p.price, features: p.features, images: p.images, videos: p.videos as unknown as Prisma.InputJsonValue, methodId: p.methodId },
-      create: p as unknown as Prisma.ProductCreateInput,
-    })
+    const existing = await prisma.product.findUnique({ where: { slug: p.slug } })
+    if (!existing) {
+      await prisma.product.create({ data: p as unknown as Prisma.ProductCreateInput })
+    }
   }
 
   console.log('✓ Seed complete')
