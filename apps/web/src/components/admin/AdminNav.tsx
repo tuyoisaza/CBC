@@ -10,7 +10,7 @@ import {
   MessageCircle, Settings, LogOut, Sun, Moon, Coffee, Package,
   Beaker, Puzzle, MapPin, Percent, Clipboard
 } from 'lucide-react'
-import { getDebugDump, initDebugCapture } from '@/lib/debug-capture'
+import { getDebugDump, downloadDebugDump } from '@/lib/debug-capture'
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
@@ -33,7 +33,6 @@ export function AdminNav() {
 
   useEffect(() => {
     setMounted(true)
-    initDebugCapture()
   }, [])
 
   return (
@@ -56,6 +55,13 @@ export function AdminNav() {
             title="Copiar debug info"
           >
             {copied ? <span className="text-[9px] font-mono text-green-500">OK</span> : <Clipboard className="h-3 w-3" />}
+          </button>
+          <button
+            onClick={downloadDebugDump}
+            className="inline-flex items-center justify-center h-5 w-5 rounded text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors"
+            title="Descargar debug info"
+          >
+            <span className="text-[9px] font-mono">DL</span>
           </button>
         </div>
       </div>
