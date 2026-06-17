@@ -1,5 +1,7 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { createLogger } from '@/lib/logger'
+const log = createLogger('api/settings/public')
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +15,7 @@ export async function GET() {
     const map = Object.fromEntries(settings.map((s) => [s.key, s.value]))
     return NextResponse.json(map)
   } catch (error) {
-    console.error('GET /api/settings/public error:', error)
+    log.error({ path: '/api/settings/public', method: 'GET', error }, 'Failed to fetch public settings')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

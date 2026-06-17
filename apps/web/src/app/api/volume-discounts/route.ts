@@ -1,5 +1,7 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { createLogger } from '@/lib/logger'
+const log = createLogger('api/volume-discounts')
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +12,7 @@ export async function GET() {
     })
     return NextResponse.json(discounts)
   } catch (error) {
-    console.error('GET /api/volume-discounts error:', error)
+    log.error({ path: '/api/volume-discounts', method: 'GET', error }, 'Failed to fetch volume discounts')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

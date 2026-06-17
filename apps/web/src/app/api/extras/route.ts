@@ -1,5 +1,7 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { createLogger } from '@/lib/logger'
+const log = createLogger('api/extras')
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +13,7 @@ export async function GET() {
     })
     return NextResponse.json(extras)
   } catch (error) {
-    console.error('GET /api/extras error:', error)
+    log.error({ path: '/api/extras', method: 'GET', error }, 'Failed to fetch extras')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

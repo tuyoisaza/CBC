@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@cbc/db'
+import { createLogger } from '@/lib/logger'
+const log = createLogger('api/tracking')
 
 export async function GET(
   request: NextRequest,
@@ -24,7 +26,7 @@ export async function GET(
       },
     })
   } catch (error) {
-    console.error('Tracking API error:', error)
+    log.error({ path: '/api/tracking/[code]', method: 'GET', code: params.code, error }, 'Failed to fetch tracking')
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } }
