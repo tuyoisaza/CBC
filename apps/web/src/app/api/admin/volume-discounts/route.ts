@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('admin/volume-discounts')
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +23,7 @@ export async function GET() {
     const items = await db.volumeDiscount.findMany({ orderBy: { minQty: 'asc' } })
     return NextResponse.json(items)
   } catch (error) {
-    console.error('GET /api/admin/volume-discounts error:', error)
+    log.error({ path: '/api/admin/volume-discounts', method: 'GET', error }, 'Failed to fetch volume discounts')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
@@ -38,7 +41,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
     }
-    console.error('POST /api/admin/volume-discounts error:', error)
+    log.error({ path: '/api/admin/volume-discounts', method: 'POST', error }, 'Failed to create volume discount')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

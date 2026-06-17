@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('admin/shipping-zones')
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +25,7 @@ export async function GET() {
     const items = await db.shippingZone.findMany({ orderBy: { sortOrder: 'asc' } })
     return NextResponse.json(items)
   } catch (error) {
-    console.error('GET /api/admin/shipping-zones error:', error)
+    log.error({ path: '/api/admin/shipping-zones', method: 'GET', error }, 'Failed to fetch shipping zones')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
@@ -40,7 +43,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
     }
-    console.error('POST /api/admin/shipping-zones error:', error)
+    log.error({ path: '/api/admin/shipping-zones', method: 'POST', error }, 'Failed to create shipping zone')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
