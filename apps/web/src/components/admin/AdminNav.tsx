@@ -99,7 +99,7 @@ export function AdminNav() {
           <span className="hidden lg:block">{mounted ? (theme === 'dark' ? 'Modo claro' : 'Modo oscuro') : ''}</span>
         </button>
         <button
-          onClick={() => signOut({ callbackUrl: '/admin/login' })}
+          onClick={() => signOut({ callbackUrl: '/login' })}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
