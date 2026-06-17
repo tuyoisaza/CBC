@@ -38,6 +38,7 @@ prisma/migrations/*.sql.bak
 
 # Uploads / temp
 public/uploads/
+.uploads/
 tmp/
 .env.backup
 
