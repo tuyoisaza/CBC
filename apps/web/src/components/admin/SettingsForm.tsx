@@ -21,6 +21,7 @@ export function SettingsForm({
   logoSize: initialLogoSize,
   logoAlignment: initialLogoAlignment,
   logoLink: initialLogoLink,
+  singlePurchaseMarkup: initialMarkup,
 }: {
   apiKeys: ApiKeySetting[]
   apiKeyValues: Record<string, string>
@@ -31,6 +32,7 @@ export function SettingsForm({
   logoSize: string
   logoAlignment: string
   logoLink: string
+  singlePurchaseMarkup: string
 }) {
   const [values, setValues]           = useState(apiKeyValues)
   const [voice, setVoice]             = useState(brandVoice)
@@ -46,6 +48,8 @@ export function SettingsForm({
   const [logoAlignment, setLogoAlignment] = useState(initialLogoAlignment)
   const [logoLink, setLogoLink] = useState(initialLogoLink)
   const [savingLogoConfig, setSavingLogoConfig] = useState<string | null>(null)
+  const [markup, setMarkup] = useState(initialMarkup)
+  const [savingMarkup, setSavingMarkup] = useState(false)
   const router = useRouter()
 
   function mask(value: string) {
@@ -115,6 +119,20 @@ export function SettingsForm({
       router.refresh()
     } finally {
       setSavingLogoConfig(null)
+    }
+  }
+
+  async function saveMarkup() {
+    setSavingMarkup(true)
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'single_purchase_markup', value: markup }),
+      })
+      router.refresh()
+    } finally {
+      setSavingMarkup(false)
     }
   }
 
@@ -244,6 +262,38 @@ export function SettingsForm({
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Single Purchase Markup */}
+      <section className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="border-b border-border bg-muted/30 px-5 py-3">
+          <h2 className="text-sm font-semibold text-foreground">Compra individual</h2>
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Porcentaje de aumento sobre el precio B2B para la compra de 1 unidad en la página de producto.
+          </p>
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <label className="block text-xs text-muted-foreground mb-1">Margen %</label>
+              <input
+                type="number"
+                value={markup}
+                onChange={(e) => setMarkup(e.target.value)}
+                min={0}
+                max={500}
+                className="input-field w-32 text-sm"
+              />
+            </div>
+            <button
+              onClick={saveMarkup}
+              disabled={savingMarkup}
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              {savingMarkup ? 'Guardando...' : 'Guardar'}
+            </button>
           </div>
         </div>
       </section>

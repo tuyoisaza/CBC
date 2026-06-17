@@ -47,9 +47,9 @@ export async function notifyLorenaPayment(opts: {
   companyName: string
   orderCode: string
   amount: number
-  type: 'deposit' | 'balance'
+  type: 'deposit' | 'balance' | 'full'
 }) {
-  const typeLabel = opts.type === 'deposit' ? 'Anticipo' : 'Saldo final'
+  const typeLabel = opts.type === 'deposit' ? 'Anticipo' : opts.type === 'balance' ? 'Saldo final' : 'Compra única'
   const msg =
     `💰 *Pago recibido — ${typeLabel}*\n` +
     `Empresa: ${opts.companyName}\n` +

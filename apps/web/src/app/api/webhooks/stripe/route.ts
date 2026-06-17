@@ -23,18 +23,58 @@ export async function POST(req: NextRequest) {
     const meta    = session.metadata ?? {}
 
     if (meta.orderId && meta.type) {
-      await handlePaymentReceived({
-        orderId:    meta.orderId,
-        orderCode:  meta.orderCode,
-        customerId: meta.customerId,
-        type:       meta.type as 'deposit' | 'balance',
-        amount:     (session.amount_total ?? 0) / 100, // back to MXN
-        stripeId:   session.payment_intent as string,
-      })
+      const type = meta.type as 'deposit' | 'balance' | 'full'
+      if (type === 'full') {
+        await handleSinglePurchase({
+          orderId:   meta.orderId,
+          orderCode: meta.orderCode,
+          amount:    (session.amount_total ?? 0) / 100,
+          stripeId:  session.payment_intent as string,
+        })
+      } else {
+        await handlePaymentReceived({
+          orderId:    meta.orderId,
+          orderCode:  meta.orderCode,
+          customerId: meta.customerId,
+          type:       type as 'deposit' | 'balance',
+          amount:     (session.amount_total ?? 0) / 100,
+          stripeId:   session.payment_intent as string,
+        })
+      }
     }
   }
 
   return NextResponse.json({ received: true })
+}
+
+async function handleSinglePurchase(opts: {
+  orderId:   string
+  orderCode: string
+  amount:    number
+  stripeId:  string
+}) {
+  await db.payment.updateMany({
+    where: { orderId: opts.orderId, type: 'full', status: 'pending' },
+    data:  { status: 'paid', paidAt: new Date(), stripePaymentId: opts.stripeId },
+  })
+
+  await db.order.update({
+    where: { id: opts.orderId },
+    data:  { status: 'in_production' },
+  })
+
+  const order = await db.order.findUnique({
+    where: { id: opts.orderId },
+    include: { customer: true },
+  })
+  if (order) {
+    await notifyLorenaPayment({
+      companyName: order.customer.companyName,
+      orderCode:   opts.orderCode,
+      amount:      opts.amount,
+      type:        'full',
+    })
+  }
 }
 
 async function handlePaymentReceived(opts: {
