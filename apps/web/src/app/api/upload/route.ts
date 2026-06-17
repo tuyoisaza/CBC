@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     await fs.writeFile(filePath, Buffer.from(buffer))
 
     const publicUrl = `/api/uploads/${folder}/${safeName}`
-    log.info({ path: '/api/upload', method: 'POST', folder, filename: safeName }, 'File saved')
+    log.info({ path: '/api/upload', method: 'POST', folder, filename: safeName, dir: UPLOAD_DIR }, 'File saved')
 
     return NextResponse.json({ uploadUrl: publicUrl, publicUrl })
   } catch (err) {
