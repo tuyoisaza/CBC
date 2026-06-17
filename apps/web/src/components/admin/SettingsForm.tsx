@@ -18,6 +18,9 @@ export function SettingsForm({
   brandVoiceUpdatedAt,
   openaiKeyPurpose: initialPurpose,
   logoUrl: initialLogoUrl,
+  logoSize: initialLogoSize,
+  logoAlignment: initialLogoAlignment,
+  logoLink: initialLogoLink,
 }: {
   apiKeys: ApiKeySetting[]
   apiKeyValues: Record<string, string>
@@ -25,6 +28,9 @@ export function SettingsForm({
   brandVoiceUpdatedAt: string
   openaiKeyPurpose: string
   logoUrl: string
+  logoSize: string
+  logoAlignment: string
+  logoLink: string
 }) {
   const [values, setValues]           = useState(apiKeyValues)
   const [voice, setVoice]             = useState(brandVoice)
@@ -36,6 +42,10 @@ export function SettingsForm({
   const [purposeSaving, setPurposeSaving] = useState(false)
   const [logoUrl, setLogoUrl]         = useState(initialLogoUrl)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [logoSize, setLogoSize] = useState(initialLogoSize)
+  const [logoAlignment, setLogoAlignment] = useState(initialLogoAlignment)
+  const [logoLink, setLogoLink] = useState(initialLogoLink)
+  const [savingLogoConfig, setSavingLogoConfig] = useState<string | null>(null)
   const router = useRouter()
 
   function mask(value: string) {
@@ -91,6 +101,20 @@ export function SettingsForm({
       router.refresh()
     } finally {
       setPurposeSaving(false)
+    }
+  }
+
+  async function saveLogoConfig(key: string, value: string) {
+    setSavingLogoConfig(key)
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value }),
+      })
+      router.refresh()
+    } finally {
+      setSavingLogoConfig(null)
     }
   }
 
@@ -170,6 +194,57 @@ export function SettingsForm({
           <p className="text-xs text-muted-foreground">
             Se mostrará en la página principal. PNG, JPG o SVG. Recomendado: fondo transparente, 400px de ancho.
           </p>
+
+          <div className="border-t border-border pt-4 space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Configuración</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">Tamaño</label>
+                <select
+                  value={logoSize}
+                  onChange={(e) => { setLogoSize(e.target.value); saveLogoConfig('logo_size', e.target.value) }}
+                  disabled={savingLogoConfig === 'logo_size'}
+                  className="input-field text-xs py-1.5"
+                >
+                  <option value="small">Pequeño</option>
+                  <option value="medium">Mediano</option>
+                  <option value="large">Grande</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">Alineación</label>
+                <select
+                  value={logoAlignment}
+                  onChange={(e) => { setLogoAlignment(e.target.value); saveLogoConfig('logo_alignment', e.target.value) }}
+                  disabled={savingLogoConfig === 'logo_alignment'}
+                  className="input-field text-xs py-1.5"
+                >
+                  <option value="left">Izquierda</option>
+                  <option value="center">Centro</option>
+                  <option value="right">Derecha</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-muted-foreground mb-1">Enlace (opcional)</label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={logoLink}
+                  onChange={(e) => setLogoLink(e.target.value)}
+                  placeholder="https://..."
+                  className="input-field flex-1 text-xs"
+                />
+                <button
+                  onClick={() => saveLogoConfig('logo_link', logoLink)}
+                  disabled={savingLogoConfig === 'logo_link'}
+                  className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                  {savingLogoConfig === 'logo_link' ? '...' : 'Guardar'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

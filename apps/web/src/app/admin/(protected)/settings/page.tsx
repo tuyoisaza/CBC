@@ -25,7 +25,7 @@ async function getSettings() {
   const rows = await db.setting.findMany({
     where: {
       key: {
-        in: [...API_KEY_SETTINGS.map((s) => s.key), BRAND_VOICE_KEY, 'brand_voice_updated_at', 'openai_key_purpose', 'site_logo_url'],
+        in: [...API_KEY_SETTINGS.map((s) => s.key), BRAND_VOICE_KEY, 'brand_voice_updated_at', 'openai_key_purpose', 'site_logo_url', 'logo_size', 'logo_alignment', 'logo_link'],
       },
     },
   })
@@ -56,6 +56,9 @@ export default async function SettingsPage() {
         brandVoiceUpdatedAt={settings['brand_voice_updated_at'] || ''}
         openaiKeyPurpose={settings['openai_key_purpose'] || 'image'}
         logoUrl={settings['site_logo_url'] || ''}
+        logoSize={settings['logo_size'] || 'medium'}
+        logoAlignment={settings['logo_alignment'] || 'left'}
+        logoLink={settings['logo_link'] || ''}
       />
     </div>
   )

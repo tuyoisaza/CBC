@@ -17,17 +17,26 @@ async function getActiveProducts() {
   }
 }
 
-async function getSiteLogo() {
+async function getSiteSettings() {
   try {
-    const row = await db.setting.findUnique({ where: { key: 'site_logo_url' } })
-    return row?.value || ''
+    const keys = ['site_logo_url', 'logo_size', 'logo_alignment', 'logo_link'] as const
+    const rows = await db.setting.findMany({ where: { key: { in: keys as any } } })
+    const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
+    return {
+      logoUrl: map.site_logo_url || '',
+      logoSize: map.logo_size || 'medium',
+      logoAlignment: map.logo_alignment || 'left',
+      logoLink: map.logo_link || '',
+    }
   } catch {
-    return ''
+    return { logoUrl: '', logoSize: 'medium', logoAlignment: 'left', logoLink: '' }
   }
 }
 
 export default async function HomePage() {
-  const [products, logoUrl] = await Promise.all([getActiveProducts(), getSiteLogo()])
+  const [products, { logoUrl, logoSize, logoAlignment, logoLink }] = await Promise.all([getActiveProducts(), getSiteSettings()])
+  const logoAlignClass = logoAlignment === 'center' ? 'text-center' : logoAlignment === 'right' ? 'text-right' : 'text-left'
+  const logoSizeClass = logoSize === 'small' ? 'h-12 sm:h-16' : logoSize === 'large' ? 'h-20 sm:h-24' : 'h-16 sm:h-20'
 
   return (
     <>
@@ -36,7 +45,15 @@ export default async function HomePage() {
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
             <div className="max-w-2xl animate-fade-in">
               {logoUrl && (
-                <img src={logoUrl} alt="Coffee Bunn Café" className="h-16 sm:h-20 mb-6 object-contain" />
+                <div className={logoAlignClass}>
+                  {logoLink ? (
+                    <a href={logoLink} target="_blank" rel="noopener noreferrer">
+                      <img src={logoUrl} alt="Coffee Bunn Café" className={`${logoSizeClass} mb-6 object-contain`} />
+                    </a>
+                  ) : (
+                    <img src={logoUrl} alt="Coffee Bunn Café" className={`${logoSizeClass} mb-6 object-contain`} />
+                  )}
+                </div>
               )}
               <p className="mb-3 text-sm font-semibold tracking-widest uppercase text-cbc-yellow">
                 B2B / Regalos Corporativos
