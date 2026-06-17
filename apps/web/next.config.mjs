@@ -1,13 +1,20 @@
 import { execSync } from 'child_process'
 
 // Auto-detect version from git tag so NEXT_PUBLIC_APP_VERSION stays in sync
-try {
-  const tag = execSync('git describe --tags --abbrev=0', { encoding: 'utf-8' }).trim()
-  process.env.NEXT_PUBLIC_APP_VERSION = tag
-} catch {
-  // git not available (e.g. shallow clone, dev build without history)
-  process.env.NEXT_PUBLIC_APP_VERSION ||= '?'
+function getVersion() {
+  try {
+    return execSync('git describe --tags --abbrev=0', { encoding: 'utf-8' }).trim()
+  } catch {
+    // Railway does shallow clones without tags — fetch them and retry
+    try {
+      execSync('git fetch --tags --depth=1 origin main 2>/dev/null', { encoding: 'utf-8' })
+      return execSync('git describe --tags --abbrev=0', { encoding: 'utf-8' }).trim()
+    } catch {
+      return process.env.NEXT_PUBLIC_APP_VERSION || '?'
+    }
+  }
 }
+process.env.NEXT_PUBLIC_APP_VERSION = getVersion()
 
 const nextConfig = {
   // ─── Server-side external packages (Next.js 14 syntax) ──────────────────
