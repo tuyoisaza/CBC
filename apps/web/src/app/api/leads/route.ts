@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('api/leads')
 
 // RFC validation — Mexican RFC format
 const rfcRegex = /^[A-Z&Ñ]{3,4}[0-9]{6}[A-Z0-9]{3}$/
@@ -86,7 +89,7 @@ export async function POST(req: NextRequest) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: err.errors }, { status: 400 })
     }
-    console.error('Lead creation error:', err)
+    log.error({ path: '/api/leads', method: 'POST', error: err }, 'Failed to create lead')
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

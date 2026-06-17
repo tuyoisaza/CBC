@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('api/quote/calculate')
 
 export const dynamic = 'force-dynamic'
 
@@ -90,7 +93,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
     }
-    console.error('POST /api/quote/calculate error:', error)
+    log.error({ path: '/api/quote/calculate', method: 'POST', error }, 'Failed to calculate quote')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

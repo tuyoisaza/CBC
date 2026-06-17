@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('api/quote/submit')
 
 export const dynamic = 'force-dynamic'
 
@@ -110,7 +113,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof Error && (error.message.startsWith('Invalid methods') || error.message.startsWith('Invalid extras') || error.message === 'Invalid shipping zone')) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
-    console.error('POST /api/quote/submit error:', error)
+    log.error({ path: '/api/quote/submit', method: 'POST', error }, 'Failed to submit quote')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
