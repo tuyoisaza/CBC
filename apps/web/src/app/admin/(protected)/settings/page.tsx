@@ -17,6 +17,7 @@ const API_KEY_SETTINGS = [
   { key: 'resend_api_key',             label: 'Resend API Key',              hint: 'Para envíos de email',                   prefix: 're_' },
   { key: 'whatsapp_token',             label: 'WhatsApp Business Token',     hint: 'Meta Cloud API',                         prefix: '' },
   { key: 'whatsapp_phone_number_id',   label: 'WhatsApp Phone Number ID',    hint: 'ID del número de WhatsApp',              prefix: '' },
+  { key: 'mercadopago_access_token',   label: 'Mercado Pago Access Token',   hint: 'Para cobros con tarjeta, OXXO y SPEI',   prefix: '' },
 ]
 
 const BRAND_VOICE_KEY = 'brand_voice_prompt'
