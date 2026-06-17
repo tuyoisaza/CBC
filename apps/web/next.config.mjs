@@ -1,3 +1,14 @@
+import { execSync } from 'child_process'
+
+// Auto-detect version from git tag so NEXT_PUBLIC_APP_VERSION stays in sync
+try {
+  const tag = execSync('git describe --tags --abbrev=0', { encoding: 'utf-8' }).trim()
+  process.env.NEXT_PUBLIC_APP_VERSION = tag
+} catch {
+  // git not available (e.g. shallow clone, dev build without history)
+  process.env.NEXT_PUBLIC_APP_VERSION ||= '?'
+}
+
 const nextConfig = {
   // ─── Server-side external packages (Next.js 14 syntax) ──────────────────
   experimental: {
