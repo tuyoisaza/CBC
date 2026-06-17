@@ -36,7 +36,8 @@ export async function reportDebugDump(): Promise<{ ok: boolean; timestamp?: stri
     if (!res.ok) return { ok: false }
     return await res.json()
   } catch {
-    origError('debug-capture report failed')
+    const errLog = typeof origError === 'function' ? origError : console.error.bind(console)
+    errLog('debug-capture report failed')
     return { ok: false }
   }
 }
