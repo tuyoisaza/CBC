@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Check, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Eye, EyeOff, Check, AlertCircle, ChevronDown, ChevronUp, Upload, X } from 'lucide-react'
 
 interface ApiKeySetting {
   key: string
@@ -17,12 +17,14 @@ export function SettingsForm({
   brandVoice,
   brandVoiceUpdatedAt,
   openaiKeyPurpose: initialPurpose,
+  logoUrl: initialLogoUrl,
 }: {
   apiKeys: ApiKeySetting[]
   apiKeyValues: Record<string, string>
   brandVoice: string
   brandVoiceUpdatedAt: string
   openaiKeyPurpose: string
+  logoUrl: string
 }) {
   const [values, setValues]           = useState(apiKeyValues)
   const [voice, setVoice]             = useState(brandVoice)
@@ -32,6 +34,8 @@ export function SettingsForm({
   const [voiceOpen, setVoiceOpen]     = useState(false)
   const [purpose, setPurpose]         = useState(initialPurpose)
   const [purposeSaving, setPurposeSaving] = useState(false)
+  const [logoUrl, setLogoUrl]         = useState(initialLogoUrl)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const router = useRouter()
 
   function mask(value: string) {
@@ -90,6 +94,29 @@ export function SettingsForm({
     }
   }
 
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    try {
+      const params = new URLSearchParams({ filename: file.name, type: file.type, folder: 'logo' })
+      const res = await fetch(`/api/upload?${params}`, { method: 'POST', body: file, headers: { 'Content-Type': file.type } })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Upload failed')
+      setLogoUrl(body.publicUrl)
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'site_logo_url', value: body.publicUrl }),
+      })
+      router.refresh()
+    } catch (err: any) {
+      console.error('Logo upload failed', err)
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
   // Group API keys by service
   const groups = [
     { label: 'Inteligencia Artificial',    keys: ['anthropic_api_key', 'openai_api_key'] },
@@ -103,6 +130,49 @@ export function SettingsForm({
 
   return (
     <div className="space-y-8">
+      {/* Logo */}
+      <section className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="border-b border-border bg-muted/30 px-5 py-3">
+          <h2 className="text-sm font-semibold text-foreground">Logo del sitio</h2>
+        </div>
+        <div className="p-5 space-y-4">
+          {logoUrl && (
+            <div className="relative inline-block">
+              <img src={logoUrl} alt="Logo" className="h-16 rounded-lg border border-border" />
+              <button
+                type="button"
+                onClick={async () => {
+                  setLogoUrl('')
+                  await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: 'site_logo_url', value: '' }),
+                  })
+                  router.refresh()
+                }}
+                className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs hover:bg-red-700"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+          <label className="cursor-pointer inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors w-fit">
+            <Upload className="h-4 w-4" />
+            {uploadingLogo ? 'Subiendo...' : logoUrl ? 'Cambiar logo' : 'Subir logo'}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+              className="hidden"
+              onChange={handleLogoUpload}
+              disabled={uploadingLogo}
+            />
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Se mostrará en la página principal. PNG, JPG o SVG. Recomendado: fondo transparente, 400px de ancho.
+          </p>
+        </div>
+      </section>
+
       {/* API Keys */}
       {groups.map((group) => {
         const groupKeys = apiKeys.filter((k) => group.keys.includes(k.key))

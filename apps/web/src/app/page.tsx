@@ -17,8 +17,17 @@ async function getActiveProducts() {
   }
 }
 
+async function getSiteLogo() {
+  try {
+    const row = await db.setting.findUnique({ where: { key: 'site_logo_url' } })
+    return row?.value || ''
+  } catch {
+    return ''
+  }
+}
+
 export default async function HomePage() {
-  const products = await getActiveProducts()
+  const [products, logoUrl] = await Promise.all([getActiveProducts(), getSiteLogo()])
 
   return (
     <>
@@ -26,6 +35,9 @@ export default async function HomePage() {
         <section className="relative overflow-hidden cbc-gradient">
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
             <div className="max-w-2xl animate-fade-in">
+              {logoUrl && (
+                <img src={logoUrl} alt="Coffee Bunn Café" className="h-16 sm:h-20 mb-6 object-contain" />
+              )}
               <p className="mb-3 text-sm font-semibold tracking-widest uppercase text-cbc-yellow">
                 B2B / Regalos Corporativos
               </p>
