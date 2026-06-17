@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('admin/extras')
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
     }
-    console.error('PATCH /api/admin/extras error:', error)
+    log.error({ path: '/api/admin/extras/[id]', method: 'PATCH', id: params.id, error }, 'Failed to update extra')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
@@ -40,7 +43,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     await db.extra.delete({ where: { id: params.id } })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/admin/extras error:', error)
+    log.error({ path: '/api/admin/extras/[id]', method: 'DELETE', id: params.id, error }, 'Failed to delete extra')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
