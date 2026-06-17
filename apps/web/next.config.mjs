@@ -5,13 +5,15 @@ function getVersion() {
   try {
     return execSync('git describe --tags --abbrev=0', { encoding: 'utf-8' }).trim()
   } catch {
-    // Railway does shallow clones without tags — fetch them and retry
+    // Railway does shallow clones without tags — use public GitHub API
     try {
-      execSync('git fetch --tags --depth=1 origin main 2>/dev/null', { encoding: 'utf-8' })
-      return execSync('git describe --tags --abbrev=0', { encoding: 'utf-8' }).trim()
-    } catch {
-      return process.env.NEXT_PUBLIC_APP_VERSION || '?'
-    }
+      const tag = execSync(
+        'node --input-type=module -e "const r=await fetch(\'https://api.github.com/repos/tuyoisaza/CBC/tags?per_page=1\',{headers:{\'User-Agent\':\'CBC\'}});const d=await r.json();process.stdout.write(d[0]?.name||\'\')"',
+        { encoding: 'utf-8', timeout: 10000 },
+      ).trim()
+      if (tag) return tag
+    } catch {}
+    return process.env.NEXT_PUBLIC_APP_VERSION || '?'
   }
 }
 process.env.NEXT_PUBLIC_APP_VERSION = getVersion()
