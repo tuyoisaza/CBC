@@ -15,6 +15,7 @@ const raleway = Raleway({
 export const metadata: Metadata = {
   title: 'Coffee Bunn Café | Regalos Corporativos de Café',
   description: 'Regalos corporativos premium con café de especialidad mexicano.',
+  other: { 'app-version': process.env.NEXT_PUBLIC_APP_VERSION || '?' },
 }
 
 export default function RootLayout({
@@ -25,7 +26,6 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${raleway.variable} font-sans antialiased`}>
-        <meta name="app-version" content={process.env.NEXT_PUBLIC_APP_VERSION || '?'} />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
