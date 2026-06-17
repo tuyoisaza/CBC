@@ -8,15 +8,21 @@ const RATE_WINDOW = 30_000 // 30 seconds
 
 const ipTimestamps = new Map<string, number>()
 
+// Periodic cleanup of stale IP entries
+setInterval(() => {
+  const cutoff = Date.now() - RATE_WINDOW
+  for (const [ip, ts] of ipTimestamps) {
+    if (ts < cutoff) ipTimestamps.delete(ip)
+  }
+}, RATE_WINDOW)
+
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
   const last = ipTimestamps.get(ip)
   const now = Date.now()
   if (last && (now - last) < RATE_WINDOW) {
     return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
   }
-  ipTimestamps.set(ip, now)
-
   try {
     const body = await req.json()
     const raw = JSON.stringify(body)
@@ -25,6 +31,8 @@ export async function POST(req: NextRequest) {
     }
 
     log.info({ ip, entryCount: body.entries?.length, url: body.url }, 'Client debug report')
+
+    ipTimestamps.set(ip, now)
 
     // Log each entry individually for searchability
     for (const entry of (body.entries || [])) {
