@@ -5,6 +5,8 @@ import { updateEngineCoffee } from '@/lib/engine'
 import { notifyLorenaNewLead } from '@/lib/notifications'
 import axios from 'axios'
 import crypto from 'crypto'
+import { createLogger } from '@/lib/logger'
+const log = createLogger('webhooks/whatsapp')
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   // Always ack immediately (Meta requires < 20s response)
   const body = JSON.parse(rawBody)
-  handleMessage(body).catch(console.error)
+  handleMessage(body).catch(err => log.error({ error: err }, 'WhatsApp message handler failed'))
   return NextResponse.json({ received: true })
 }
 
@@ -111,7 +113,7 @@ Si un campo no está, usa null. Devuelve solo el JSON, sin markdown.`,
       `El motor de contenido usará este café en el próximo post. 🎉`
     )
   } catch (err) {
-    console.error('Coffee update failed:', err)
+    log.error({ error: err, from }, 'Coffee update failed')
     await sendWhatsApp(from,
       '❌ No pude procesar el café. Intenta con más detalle: nombre, origen, variedad, proceso y notas de cata.'
     )

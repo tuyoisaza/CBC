@@ -7,6 +7,8 @@ import { renderToBuffer } from '@react-pdf/renderer'
 import { createElement } from 'react'
 import { QuotePDF } from '@/lib/pdf/QuotePDF'
 import { uploadBuffer, quoteKey } from '@/lib/r2'
+import { createLogger } from '@/lib/logger'
+const log = createLogger('admin/quotes')
 
 const itemSchema = z.object({
   description: z.string(),
@@ -73,7 +75,7 @@ export async function POST(req: NextRequest) {
       'application/pdf'
     )
   } catch (err) {
-    console.error('PDF generation failed:', err)
+    log.error({ path: '/api/admin/quotes', method: 'POST', error: err }, 'PDF generation failed')
     // Continue without PDF — not fatal
   }
 

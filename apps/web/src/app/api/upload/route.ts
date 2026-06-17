@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 import fs from 'fs/promises'
+import { createLogger } from '@/lib/logger'
+const log = createLogger('api/upload')
 
 const ALLOWED_TYPES = ['image/png', 'image/svg+xml', 'image/jpeg', 'image/jpg']
 const MAX_SIZE = 5 * 1024 * 1024
@@ -32,12 +34,12 @@ export async function POST(req: NextRequest) {
     await fs.writeFile(filePath, Buffer.from(buffer))
 
     const publicUrl = `/uploads/${folder}/${safeName}`
-    console.log(`[upload] saved ${filePath} -> ${publicUrl}`)
+    log.info({ path: '/api/upload', method: 'POST', folder, filename: safeName }, 'File saved')
 
     return NextResponse.json({ uploadUrl: publicUrl, publicUrl })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    console.error(`[upload] error ${msg}`)
+    log.error({ path: '/api/upload', method: 'POST', error: msg }, 'Upload failed')
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
