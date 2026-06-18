@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { db } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { CotizadorWizard } from './components/CotizadorWizard'
@@ -26,6 +27,13 @@ export default async function CotizarPage({
   return (
     <main className="min-h-screen bg-cbc-black py-24">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <Link
+          href={params.product ? `/productos/${params.product}` : '/'}
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          {params.product ? 'Volver al producto' : 'Volver al inicio'}
+        </Link>
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-cbc-cream mb-4">Cotiza tus Regalos</h1>
           <p className="text-gray-400">Configura tu pedido y recibe una cotización automática al instante.</p>
