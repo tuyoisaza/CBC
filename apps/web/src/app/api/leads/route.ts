@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { createLogger } from '@/lib/logger'
+import { notifyNewContact, notifyLorenaNewLead } from '@/lib/notifications'
 
 const log = createLogger('api/leads')
 
@@ -80,8 +81,21 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // TODO: send WhatsApp notification to Lorena
-    // TODO: send confirmation email to client
+    notifyNewContact({
+      companyName: data.companyName,
+      contactName: data.contactName,
+      email: data.email,
+      whatsapp: data.whatsapp,
+      message: data.message,
+    }).catch(() => {})
+
+    notifyLorenaNewLead({
+      companyName: data.companyName,
+      contactName: data.contactName,
+      whatsapp: data.whatsapp,
+      boxType: data.boxType,
+      quantity: quantityNum,
+    }).catch(() => {})
 
     return NextResponse.json({ success: true, leadId: lead.id }, { status: 201 })
 

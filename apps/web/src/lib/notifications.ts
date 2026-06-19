@@ -4,6 +4,77 @@ import { Resend } from 'resend'
 // Lazy init — avoids throwing at build time when env var isn't set
 const getResend = () => new Resend(process.env.RESEND_API_KEY)
 
+// ─── Email notifications ──────────────────────────────────────────────────────
+
+const ADMIN_EMAILS = ['contacto@coffeebunncafe.com', 'lorena2114@gmail.com']
+
+async function sendAdminEmail(subject: string, html: string) {
+  try {
+    await getResend().emails.send({
+      from: process.env.RESEND_FROM_EMAIL!,
+      to: ADMIN_EMAILS,
+      subject,
+      html,
+    })
+  } catch (err) {
+    console.error('Admin email error:', err)
+  }
+}
+
+export async function notifyNewContact(data: {
+  companyName: string
+  contactName: string
+  email: string
+  whatsapp: string
+  message?: string
+}) {
+  await sendAdminEmail(
+    `🆕 Nuevo contacto — ${data.companyName}`,
+    `
+    <div style="font-family: sans-serif; max-width: 520px; color: #262626;">
+      <h2 style="color: #f7b84e;">Nuevo contacto</h2>
+      <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+        <tr><td style="padding:8px 0; color:#636363;">Empresa</td><td style="padding:8px 0;"><strong>${data.companyName}</strong></td></tr>
+        <tr><td style="padding:8px 0; color:#636363;">Contacto</td><td style="padding:8px 0;"><strong>${data.contactName}</strong></td></tr>
+        <tr><td style="padding:8px 0; color:#636363;">Email</td><td style="padding:8px 0;"><strong>${data.email}</strong></td></tr>
+        <tr><td style="padding:8px 0; color:#636363;">WhatsApp</td><td style="padding:8px 0;"><strong>${data.whatsapp}</strong></td></tr>
+      </table>
+      ${data.message ? `<p style="margin-top:16px; color:#636363;">Mensaje:</p><p style="background:#f5f5f5; padding:12px; border-radius:6px;">${data.message}</p>` : ''}
+      <p style="margin-top:24px;"><a href="${process.env.NEXT_PUBLIC_ADMIN_URL}/admin/sales" style="background:#f7b84e; color:#262626; padding:10px 20px; border-radius:6px; text-decoration:none; font-weight:700;">Ver en admin</a></p>
+    </div>
+    `
+  )
+}
+
+export async function notifyNewQuote(data: {
+  companyName: string
+  contactName: string
+  email: string
+  whatsapp: string
+  total: number
+  quoteCode: string
+  items: string
+}) {
+  await sendAdminEmail(
+    `📋 Nueva cotización — ${data.companyName} (${data.quoteCode})`,
+    `
+    <div style="font-family: sans-serif; max-width: 520px; color: #262626;">
+      <h2 style="color: #f7b84e;">Nueva cotización</h2>
+      <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+        <tr><td style="padding:8px 0; color:#636363;">Código</td><td style="padding:8px 0;"><strong>${data.quoteCode}</strong></td></tr>
+        <tr><td style="padding:8px 0; color:#636363;">Empresa</td><td style="padding:8px 0;"><strong>${data.companyName}</strong></td></tr>
+        <tr><td style="padding:8px 0; color:#636363;">Contacto</td><td style="padding:8px 0;"><strong>${data.contactName}</strong></td></tr>
+        <tr><td style="padding:8px 0; color:#636363;">Email</td><td style="padding:8px 0;"><strong>${data.email}</strong></td></tr>
+        <tr><td style="padding:8px 0; color:#636363;">WhatsApp</td><td style="padding:8px 0;"><strong>${data.whatsapp}</strong></td></tr>
+        <tr><td style="padding:8px 0; color:#636363;">Productos</td><td style="padding:8px 0;"><strong>${data.items}</strong></td></tr>
+        <tr><td style="padding:8px 0; color:#636363;">Total</td><td style="padding:8px 0;"><strong>$${data.total.toLocaleString('es-MX')} MXN</strong></td></tr>
+      </table>
+      <p style="margin-top:24px;"><a href="${process.env.NEXT_PUBLIC_ADMIN_URL}/admin/sales" style="background:#f7b84e; color:#262626; padding:10px 20px; border-radius:6px; text-decoration:none; font-weight:700;">Ver en admin</a></p>
+    </div>
+    `
+  )
+}
+
 // ─── WhatsApp ────────────────────────────────────────────────────────────────
 
 async function sendWhatsApp(to: string, message: string) {

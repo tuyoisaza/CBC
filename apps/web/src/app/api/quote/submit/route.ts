@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { createLogger } from '@/lib/logger'
+import { notifyNewQuote } from '@/lib/notifications'
 
 const log = createLogger('api/quote/submit')
 
@@ -102,8 +103,18 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      return { quoteId: quote.id }
+      return { quoteId: quote.id, quoteCode, companyName: parsed.companyName, contactName: parsed.contactName, email: parsed.email, whatsapp: parsed.whatsapp, total: parsed.total, items: parsed.items }
     })
+
+    notifyNewQuote({
+      companyName: result.companyName,
+      contactName: result.contactName,
+      email: result.email,
+      whatsapp: result.whatsapp,
+      total: result.total,
+      quoteCode: result.quoteCode,
+      items: result.items.map((i: any) => `${i.qty}× ${i.methodName}`).join(', '),
+    }).catch(() => {})
 
     return NextResponse.json({ success: true, quoteId: result.quoteId })
   } catch (error) {
