@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { db } from '@/lib/db'
+import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { CotizadorWizard } from '@/app/cotizar/components/CotizadorWizard'
 
@@ -12,13 +12,15 @@ export default async function CotizarPageEn({
 }: {
   searchParams: Promise<{ product?: string }>
 }) {
-  const [methods, extras, shippingZones, products, settings] = await Promise.all([
-    db.method.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
-    db.extra.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
-    db.shippingZone.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
-    db.product.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
-    db.setting.findMany({ where: { key: { in: PUBLIC_KEYS } } }),
-  ])
+  const [methods, extras, shippingZones, products, settings] = await withDbRetry(() =>
+    Promise.all([
+      db.method.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
+      db.extra.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
+      db.shippingZone.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
+      db.product.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
+      db.setting.findMany({ where: { key: { in: PUBLIC_KEYS } } }),
+    ]),
+  )
 
   const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]))
 

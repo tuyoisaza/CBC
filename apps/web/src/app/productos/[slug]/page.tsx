@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { db, withDbRetry } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -13,12 +13,16 @@ function getYouTubeId(url: string): string | null {
 }
 
 export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
-  const product = await db.product.findUnique({
-    where: { slug: params.slug },
-  })
+  const product = await withDbRetry(() =>
+    db.product.findUnique({
+      where: { slug: params.slug },
+    }),
+  )
   if (!product) notFound()
 
-  const markupSetting = await db.setting.findUnique({ where: { key: 'single_purchase_markup' } })
+  const markupSetting = await withDbRetry(() =>
+    db.setting.findUnique({ where: { key: 'single_purchase_markup' } }),
+  )
   const markupPct = parseFloat(markupSetting?.value || '20')
   const markedUpPrice = Math.round(product.price * (1 + markupPct / 100) * 100) / 100
 
