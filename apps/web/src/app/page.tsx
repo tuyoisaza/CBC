@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { db } from '@/lib/db'
+import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 
 export const dynamic = 'force-dynamic'
@@ -8,10 +8,12 @@ const WA_SALES = 'https://wa.me/5215572293512?text=Hola%2C%20quiero%20cotizar%20
 
 async function getActiveProducts() {
   try {
-    return await db.product.findMany({
-      where: { active: true },
-      orderBy: { sortOrder: 'asc' },
-    })
+    return await withDbRetry(() =>
+      db.product.findMany({
+        where: { active: true },
+        orderBy: { sortOrder: 'asc' },
+      }),
+    )
   } catch {
     return []
   }
@@ -20,7 +22,7 @@ async function getActiveProducts() {
 async function getSiteSettings() {
   try {
     const keys = ['site_logo_url', 'logo_size', 'logo_alignment', 'logo_link'] as const
-    const rows = await db.setting.findMany({ where: { key: { in: keys as any } } })
+    const rows = await withDbRetry(() => db.setting.findMany({ where: { key: { in: keys as any } } }))
     const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
     return {
       logoUrl: map.site_logo_url || '',
