@@ -3,7 +3,7 @@
  * Protected by a shared secret token, not user auth.
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, withDbRetry } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   const token = req.headers.get('x-engine-token')
@@ -11,10 +11,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const coffee = await db.coffee.findFirst({
-    where: { active: true },
-    orderBy: { updatedAt: 'desc' },
-  })
+  const coffee = await withDbRetry(() =>
+    db.coffee.findFirst({
+      where: { active: true },
+      orderBy: { updatedAt: 'desc' },
+    }),
+  )
 
   if (!coffee) {
     return NextResponse.json({ error: 'No active coffee' }, { status: 404 })

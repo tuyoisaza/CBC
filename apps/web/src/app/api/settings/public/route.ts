@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { db, withDbRetry } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { createLogger } from '@/lib/logger'
 const log = createLogger('api/settings/public')
@@ -9,9 +9,11 @@ const PUBLIC_KEYS = ['MIN_PRODUCTION_DAYS', 'RUSH_DAYS_THRESHOLD', 'RUSH_FEE_PCT
 
 export async function GET() {
   try {
-    const settings = await db.setting.findMany({
-      where: { key: { in: PUBLIC_KEYS } },
-    })
+    const settings = await withDbRetry(() =>
+      db.setting.findMany({
+        where: { key: { in: PUBLIC_KEYS } },
+      }),
+    )
     const map = Object.fromEntries(settings.map((s) => [s.key, s.value]))
     return NextResponse.json(map)
   } catch (error) {

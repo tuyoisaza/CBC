@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, withDbRetry } from '@/lib/db'
 import { z } from 'zod'
 import { createLogger } from '@/lib/logger'
 
@@ -25,13 +25,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const parsed = calcSchema.parse(body)
 
-    const [methods, extras, zone, discounts, settings] = await Promise.all([
-      db.method.findMany({ where: { id: { in: parsed.items.map(i => i.methodId) } } }),
-      db.extra.findMany({ where: { id: { in: parsed.extras.map(e => e.extraId) } } }),
-      db.shippingZone.findUnique({ where: { id: parsed.shippingZoneId } }),
-      db.volumeDiscount.findMany({ orderBy: { minQty: 'asc' } }),
-      db.setting.findMany({ where: { key: { in: ['RUSH_FEE_PCT', 'ADVANCE_PCT', 'IVA_PCT'] } } }),
-    ])
+    const [methods, extras, zone, discounts, settings] = await withDbRetry(() =>
+      Promise.all([
+        db.method.findMany({ where: { id: { in: parsed.items.map(i => i.methodId) } } }),
+        db.extra.findMany({ where: { id: { in: parsed.extras.map(e => e.extraId) } } }),
+        db.shippingZone.findUnique({ where: { id: parsed.shippingZoneId } }),
+        db.volumeDiscount.findMany({ orderBy: { minQty: 'asc' } }),
+        db.setting.findMany({ where: { key: { in: ['RUSH_FEE_PCT', 'ADVANCE_PCT', 'IVA_PCT'] } } }),
+      ]),
+    )
 
     if (!zone) return NextResponse.json({ error: 'Invalid zone' }, { status: 400 })
 
