@@ -11,8 +11,8 @@ export default function ShippingZonesPage() {
       emptyMessage="No hay zonas de envío aún"
       fields={[
         { key: 'name', label: 'Nombre', type: 'text', required: true },
-        { key: 'baseFee', label: 'Tarifa base', type: 'number', format: (v) => `$${v.toLocaleString('es-MX')}` },
-        { key: 'feePerUnit', label: 'Por unidad', type: 'number', format: (v) => `$${v.toLocaleString('es-MX')}` },
+        { key: 'baseFee', label: 'Tarifa base', type: 'number', format: 'currency' },
+        { key: 'feePerUnit', label: 'Por unidad', type: 'number', format: 'currency' },
         { key: 'active', label: 'Activo', type: 'boolean' },
         { key: 'sortOrder', label: 'Orden', type: 'number' },
       ]}

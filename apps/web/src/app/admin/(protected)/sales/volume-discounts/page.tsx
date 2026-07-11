@@ -4,8 +4,8 @@ export const metadata = { title: 'Descuentos por volumen — CBC Admin' }
 
 const fields: Field[] = [
   { key: 'minQty', label: 'Cant. mínima', type: 'number', required: true },
-  { key: 'maxQty', label: 'Cant. máxima', type: 'number', format: (v) => v ?? '∞' },
-  { key: 'discountPct', label: 'Descuento %', type: 'number', format: (v) => `${v}%` },
+  { key: 'maxQty', label: 'Cant. máxima', type: 'number', format: 'infinity' },
+  { key: 'discountPct', label: 'Descuento %', type: 'number', format: 'percent' },
 ]
 
 export default function VolumeDiscountsPage() {

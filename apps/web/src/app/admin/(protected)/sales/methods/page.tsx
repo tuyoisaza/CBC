@@ -12,7 +12,7 @@ export default function MethodsPage() {
       fields={[
         { key: 'name', label: 'Nombre', type: 'text', required: true },
         { key: 'description', label: 'Descripción', type: 'text' },
-        { key: 'unitPrice', label: 'Precio unitario', type: 'number', format: (v) => `$${v.toLocaleString('es-MX')}` },
+        { key: 'unitPrice', label: 'Precio unitario', type: 'number', format: 'currency' },
         { key: 'active', label: 'Activo', type: 'boolean' },
         { key: 'sortOrder', label: 'Orden', type: 'number' },
       ]}

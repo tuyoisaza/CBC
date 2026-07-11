@@ -8,7 +8,23 @@ export interface Field {
   label: string
   type: 'text' | 'number' | 'boolean'
   required?: boolean
-  format?: (val: any) => string
+  // Declarative (serializable) formatter — pages are Server Components, so
+  // passing a function here would crash the server→client boundary.
+  format?: 'currency' | 'percent' | 'infinity'
+}
+
+function formatValue(format: Field['format'], val: any): string {
+  if (val === null || val === undefined) {
+    return format === 'infinity' ? '∞' : '—'
+  }
+  switch (format) {
+    case 'currency':
+      return `$${Number(val).toLocaleString('es-MX')}`
+    case 'percent':
+      return `${val}%`
+    default:
+      return String(val)
+  }
 }
 
 export function EntityList({
@@ -199,7 +215,7 @@ export function EntityList({
                       <span className="text-foreground">
                         {f.type === 'boolean'
                           ? (item[f.key] ? '✓' : '—')
-                          : f.format ? f.format(item[f.key]) : (item[f.key] ?? '—')}
+                          : f.format ? formatValue(f.format, item[f.key]) : (item[f.key] ?? '—')}
                       </span>
                     )}
                   </td>
