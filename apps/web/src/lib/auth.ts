@@ -8,7 +8,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
 // The only Google accounts allowed into the admin. Overridable via
 // ADMIN_EMAILS (comma-separated) without a code change.
 const ALLOWED_EMAILS = (
-  process.env.ADMIN_EMAILS || 'thetboard@gmail.com,lorena2114@gmail.com'
+  process.env.ADMIN_EMAILS || 'thetboard@gmail.com,lorela2114@gmail.com'
 )
   .split(',')
   .map((e) => e.trim().toLowerCase())

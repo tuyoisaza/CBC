@@ -4,7 +4,7 @@ import { sendEmail } from '@/lib/email'
 // ─── Email notifications ──────────────────────────────────────────────────────
 // Provider (Brevo or Resend) is resolved in lib/email.ts
 
-const ADMIN_EMAILS = ['contacto@coffeebunncafe.com', 'lorena2114@gmail.com']
+const ADMIN_EMAILS = ['contacto@coffeebunncafe.com', 'lorela2114@gmail.com']
 
 async function sendAdminEmail(subject: string, html: string) {
   await sendEmail({ to: ADMIN_EMAILS, subject, html })
