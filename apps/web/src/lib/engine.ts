@@ -75,3 +75,27 @@ export async function setEngineSchedule(schedule: Record<string, unknown>) {
     body: JSON.stringify(schedule),
   })
 }
+
+// ─── Approval loop ────────────────────────────────────────────────────────────
+// Meta's WhatsApp webhook points at the platform; Lorena's "publicar" /
+// "descartar" replies are forwarded to the engine, which owns publishing.
+
+export async function approveScheduledPosts(): Promise<string> {
+  try {
+    const res = await engineFetch('/approve', { method: 'POST' })
+    return res.summary || 'Listo.'
+  } catch (err) {
+    console.error('Approve forward failed:', err)
+    return 'No pude contactar el motor de publicación. Intenta de nuevo en unos minutos.'
+  }
+}
+
+export async function discardScheduledPosts(): Promise<string> {
+  try {
+    const res = await engineFetch('/discard', { method: 'POST' })
+    return res.summary || 'Listo.'
+  } catch (err) {
+    console.error('Discard forward failed:', err)
+    return 'No pude contactar el motor de publicación. Intenta de nuevo en unos minutos.'
+  }
+}

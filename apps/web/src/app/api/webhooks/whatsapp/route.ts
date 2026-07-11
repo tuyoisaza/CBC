@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { db } from '@/lib/db'
-import { updateEngineCoffee } from '@/lib/engine'
-import { notifyLorenaNewLead } from '@/lib/notifications'
+import { updateEngineCoffee, approveScheduledPosts, discardScheduledPosts } from '@/lib/engine'
+import { generateText, stripJsonFences } from '@/lib/llm'
 import axios from 'axios'
 import crypto from 'crypto'
 import { createLogger } from '@/lib/logger'
 const log = createLogger('webhooks/whatsapp')
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 // Verify webhook with Meta
 export async function GET(req: NextRequest) {
@@ -51,11 +48,27 @@ async function handleMessage(body: any) {
   const from = message.from
   const text = (message.text.body as string).trim()
 
+  const isLorena = from === process.env.LORENA_PHONE?.replace(/\D/g, '')
+
   // ─── Lorena's coffee update ───────────────────────────────────
   const isCoffeeUpdate = /café nuevo|cafe nuevo|nuevo café|nuevo cafe|new coffee/i.test(text)
 
-  if (from === process.env.LORENA_PHONE?.replace(/\D/g, '') && isCoffeeUpdate) {
+  if (isLorena && isCoffeeUpdate) {
     await handleCoffeeUpdate(text, from)
+    return
+  }
+
+  // ─── Lorena's approval replies → forwarded to the engine ─────
+  // The engine queues LinkedIn/seasonal posts as 'scheduled'; Lorena approves
+  // or discards them by replying here (Meta's webhook points at this route).
+  if (isLorena && /^(publicar|aprobar|aprueba|s[ií],? publicar)\b/i.test(text)) {
+    const summary = await approveScheduledPosts()
+    await sendWhatsApp(from, `📤 *Resultado:*\n${summary}`)
+    return
+  }
+  if (isLorena && /^(descartar|rechazar|no publicar|cancelar)\b/i.test(text)) {
+    const summary = await discardScheduledPosts()
+    await sendWhatsApp(from, `🗑 ${summary}`)
     return
   }
 
@@ -65,10 +78,9 @@ async function handleMessage(body: any) {
 
 async function handleCoffeeUpdate(text: string, from: string) {
   try {
-    // Use Claude to parse the free-form coffee description
-    const response = await anthropic.messages.create({
-      model:      'claude-sonnet-4-6',
-      max_tokens: 600,
+    // Parse the free-form coffee description into structured data
+    const raw = await generateText({
+      maxTokens: 600,
       system: `Extrae información de un mensaje de WhatsApp donde Lorena describe un nuevo café de especialidad.
 Devuelve SOLO un objeto JSON válido con esta estructura:
 {
@@ -83,10 +95,10 @@ Devuelve SOLO un objeto JSON válido con esta estructura:
   "story": "una frase que capture la esencia de este café"
 }
 Si un campo no está, usa null. Devuelve solo el JSON, sin markdown.`,
-      messages: [{ role: 'user', content: text }],
+      prompt: text,
     })
 
-    const parsed = JSON.parse((response.content[0] as any).text)
+    const parsed = JSON.parse(stripJsonFences(raw))
 
     // Deactivate current coffees and create new one
     await db.coffee.updateMany({ data: { active: false } })
@@ -141,16 +153,13 @@ async function handleCustomerMessage(text: string, from: string) {
     },
   })
 
-  // Generate an AI draft reply using Claude (saved, not auto-sent)
+  // Generate an AI draft reply (saved, not auto-sent)
   try {
-    const draft = await anthropic.messages.create({
-      model:      'claude-sonnet-4-6',
-      max_tokens: 300,
+    const draftText = await generateText({
+      maxTokens: 300,
       system: `Eres el asistente de ventas de Coffee Bunn Café. Genera un borrador de respuesta breve y cálida en español mexicano para este mensaje de WhatsApp. La respuesta debe ser de Lorena Luna, experta en café de especialidad. Tono: amable, directo, profesional. Máximo 3 líneas. Solo el texto de la respuesta, sin comillas.`,
-      messages: [{ role: 'user', content: `Mensaje del cliente: "${text}"` }],
+      prompt: `Mensaje del cliente: "${text}"`,
     })
-
-    const draftText = (draft.content[0] as any).text
 
     // Update message with AI draft
     await db.message.updateMany({

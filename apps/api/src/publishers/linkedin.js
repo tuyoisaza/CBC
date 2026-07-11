@@ -1,12 +1,12 @@
 const axios = require('axios');
 const fs = require('fs');
+const { getLinkedInCreds } = require('../social-creds');
 
 const BASE_URL = 'https://api.linkedin.com/v2';
 
 async function publishToLinkedIn(imagePath, caption) {
-  const token = process.env.LINKEDIN_ACCESS_TOKEN;
-  // Use person URN for Lorena's personal profile, or org URN for company page
-  const authorUrn = process.env.LINKEDIN_ORGANIZATION_URN || process.env.LINKEDIN_PERSON_URN;
+  // DB-first (Admin → Marketing → Conexiones), env fallback
+  const { accessToken: token, authorUrn } = await getLinkedInCreds();
 
   const headers = {
     Authorization: `Bearer ${token}`,

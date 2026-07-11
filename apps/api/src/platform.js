@@ -76,6 +76,12 @@ async function getSchedule() {
   return res.data;
 }
 
+/** Social credentials Lorena authorized from /admin/marketing/connections. */
+async function getSocialCredentials() {
+  const res = await withRetry(() => client().get('/api/admin/social/credentials'));
+  return res.data; // { meta: {...}|null, linkedin: {...}|null }
+}
+
 /** Upload a generated post image to R2 via the platform. Returns durable public URL. */
 async function uploadPostImage(filepath) {
   const buffer = fs.readFileSync(filepath);
@@ -96,6 +102,7 @@ module.exports = {
   updatePost,
   upsertCoffee,
   getSchedule,
+  getSocialCredentials,
   uploadPostImage,
   withRetry,
 };

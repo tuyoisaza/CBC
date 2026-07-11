@@ -1,13 +1,14 @@
 import Link from 'next/link'
-import { Coffee, Calendar, Sparkles, History } from 'lucide-react'
+import { Coffee, Calendar, Sparkles, History, Share2 } from 'lucide-react'
 
 export const metadata = { title: 'Marketing Engine' }
 
 const LINKS = [
-  { href: '/admin/marketing/coffee',    icon: Coffee,    label: 'Café actual',      desc: 'Actualiza el micro-lote que va en las cajas' },
-  { href: '/admin/marketing/generator', icon: Sparkles,  label: 'Generar contenido', desc: 'Crea y publica posts manualmente' },
-  { href: '/admin/marketing/schedule',  icon: Calendar,  label: 'Calendario',        desc: 'Configura el horario de publicación' },
-  { href: '/admin/marketing/history',   icon: History,   label: 'Historial',         desc: 'Posts publicados anteriormente' },
+  { href: '/admin/marketing/coffee',      icon: Coffee,   label: 'Café actual',       desc: 'Actualiza el micro-lote que va en las cajas' },
+  { href: '/admin/marketing/generator',   icon: Sparkles, label: 'Generar contenido', desc: 'Crea y publica posts manualmente' },
+  { href: '/admin/marketing/schedule',    icon: Calendar, label: 'Calendario',        desc: 'Configura el horario de publicación' },
+  { href: '/admin/marketing/history',     icon: History,  label: 'Historial',         desc: 'Posts publicados anteriormente' },
+  { href: '/admin/marketing/connections', icon: Share2,   label: 'Conexiones',        desc: 'Autoriza Instagram, Facebook y LinkedIn' },
 ]
 
 export default function MarketingPage() {

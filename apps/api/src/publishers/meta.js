@@ -1,24 +1,32 @@
 const axios = require('axios');
 const fs = require('fs');
 const FormData = require('form-data');
+const { getMetaCreds } = require('../social-creds');
 
 const BASE_URL = 'https://graph.facebook.com/v21.0';
+
+// Credentials resolve DB-first (what Lorena authorized in Admin → Marketing →
+// Conexiones), falling back to env vars. See social-creds.js.
 
 // ─── Instagram ────────────────────────────────────────────────
 
 async function publishToInstagram(imagePath, caption) {
-  const accountId = process.env.META_INSTAGRAM_ACCOUNT_ID;
-  const token = process.env.META_ACCESS_TOKEN;
+  const { pageId, pageToken, igAccountId } = await getMetaCreds();
+  if (!igAccountId) {
+    throw new Error(
+      'La página de Facebook no tiene cuenta de Instagram Business vinculada.'
+    );
+  }
 
   // Step 1: Upload image and create media container
-  const imageUrl = await uploadImageToFacebook(imagePath);
+  const imageUrl = await uploadImageToFacebook(imagePath, pageId, pageToken);
 
   const containerRes = await axios.post(
-    `${BASE_URL}/${accountId}/media`,
+    `${BASE_URL}/${igAccountId}/media`,
     {
       image_url: imageUrl,
       caption,
-      access_token: token
+      access_token: pageToken
     }
   );
 
@@ -26,10 +34,10 @@ async function publishToInstagram(imagePath, caption) {
 
   // Step 2: Publish the container
   const publishRes = await axios.post(
-    `${BASE_URL}/${accountId}/media_publish`,
+    `${BASE_URL}/${igAccountId}/media_publish`,
     {
       creation_id: containerId,
-      access_token: token
+      access_token: pageToken
     }
   );
 
@@ -40,13 +48,12 @@ async function publishToInstagram(imagePath, caption) {
 // ─── Facebook ─────────────────────────────────────────────────
 
 async function publishToFacebook(imagePath, caption) {
-  const pageId = process.env.META_FACEBOOK_PAGE_ID;
-  const token = process.env.META_ACCESS_TOKEN;
+  const { pageId, pageToken } = await getMetaCreds();
 
   const form = new FormData();
   form.append('source', fs.createReadStream(imagePath));
   form.append('caption', caption);
-  form.append('access_token', token);
+  form.append('access_token', pageToken);
 
   const res = await axios.post(
     `${BASE_URL}/${pageId}/photos`,
@@ -62,14 +69,11 @@ async function publishToFacebook(imagePath, caption) {
 // Instagram requires a public URL for the image.
 // We upload to Facebook first (which gives us a hosted URL) then use it for IG.
 
-async function uploadImageToFacebook(imagePath) {
-  const pageId = process.env.META_FACEBOOK_PAGE_ID;
-  const token = process.env.META_ACCESS_TOKEN;
-
+async function uploadImageToFacebook(imagePath, pageId, pageToken) {
   const form = new FormData();
   form.append('source', fs.createReadStream(imagePath));
   form.append('published', 'false'); // upload without publishing
-  form.append('access_token', token);
+  form.append('access_token', pageToken);
 
   const res = await axios.post(
     `${BASE_URL}/${pageId}/photos`,
@@ -80,7 +84,7 @@ async function uploadImageToFacebook(imagePath) {
   // Get the hosted image URL
   const photoId = res.data.id;
   const photoRes = await axios.get(`${BASE_URL}/${photoId}`, {
-    params: { fields: 'images', access_token: token }
+    params: { fields: 'images', access_token: pageToken }
   });
 
   return photoRes.data.images[0].source;

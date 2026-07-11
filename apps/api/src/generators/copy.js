@@ -1,7 +1,37 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const OpenAI = require('openai');
 const brand = require('../../config/brand.json');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Provider selection: Claude when a real Anthropic key is present, otherwise
+// OpenAI (same key that powers DALL-E). A "real" key is longer than the
+// "sk-ant-" stub that placeholder configs carry.
+function hasRealAnthropicKey() {
+  const k = process.env.ANTHROPIC_API_KEY || '';
+  return k.startsWith('sk-ant-') && k.length > 20;
+}
+
+async function llm({ system, prompt, maxTokens }) {
+  if (hasRealAnthropicKey()) {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return response.content[0].text;
+  }
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o',
+    max_tokens: maxTokens,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: prompt },
+    ],
+  });
+  return response.choices[0].message.content;
+}
 
 const SYSTEM_PROMPT = `Eres el generador de contenido de redes sociales de Coffee Bunn Café.
 
@@ -98,39 +128,25 @@ Café actual (para contexto): ${JSON.stringify(data.coffee || {})}
 Termina con CTA a WhatsApp para cotizar.`
   };
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: prompts[postType] }]
-  });
-
-  return response.content[0].text;
+  return llm({ system: SYSTEM_PROMPT, prompt: prompts[postType], maxTokens: 1024 });
 }
 
 async function generateImagePrompt(postType, data) {
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 300,
+  return llm({
     system: `Genera prompts para DALL-E 3 para Coffee Bunn Café.
 Estilo visual de la marca: ${JSON.stringify(brand.imageStyle)}
 El prompt debe producir imágenes de alta calidad, oscuras y elegantes, con fondo negro profundo, detalles en amarillo cálido, sin texto, fotorrealistas.
 Responde SOLO con el prompt en inglés para DALL-E 3, sin explicaciones.`,
-    messages: [{
-      role: 'user',
-      content: `Genera un prompt de imagen para un post tipo: ${postType}.
+    prompt: `Genera un prompt de imagen para un post tipo: ${postType}.
 Datos del café actual: ${JSON.stringify(data.coffee || {})}.
-El prompt debe especificar: composición, iluminación, props de café, colores de marca.`
-    }]
+El prompt debe especificar: composición, iluminación, props de café, colores de marca.`,
+    maxTokens: 300,
   });
-
-  return response.content[0].text;
 }
 
 async function parseCoffeeUpdate(message) {
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 500,
+  const text = await llm({
+    maxTokens: 500,
     system: `Extrae información de un mensaje de WhatsApp donde Lorena describe un nuevo café de especialidad para las cajas de regalo CBC.
 Devuelve SOLO un objeto JSON válido con esta estructura exacta:
 {
@@ -144,10 +160,12 @@ Devuelve SOLO un objeto JSON válido con esta estructura exacta:
   "story": "una frase que capture la esencia de este café"
 }
 Si algún campo no está en el mensaje, usa null — EXCEPTO "tastingNotes", que siempre debe ser un array con al menos un elemento (usa ["Por confirmar"] si no hay notas). Devuelve solo el JSON, sin markdown ni explicaciones.`,
-    messages: [{ role: 'user', content: message }]
+    prompt: message,
   });
 
-  const parsed = JSON.parse(response.content[0].text);
+  // Strip markdown fences some models add despite instructions
+  const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '');
+  const parsed = JSON.parse(cleaned);
   // The platform's coffee schema requires tastingNotes to be non-empty
   if (!Array.isArray(parsed.tastingNotes) || parsed.tastingNotes.length === 0) {
     parsed.tastingNotes = ['Por confirmar'];
