@@ -5,6 +5,15 @@ import { compare } from 'bcryptjs'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
 
+// The only Google accounts allowed into the admin. Overridable via
+// ADMIN_EMAILS (comma-separated) without a code change.
+const ALLOWED_EMAILS = (
+  process.env.ADMIN_EMAILS || 'thetboard@gmail.com,lorena2114@gmail.com'
+)
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean)
+
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   pages: {
@@ -49,10 +58,11 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    // ─── Block any Google account that isn't the admin email ─────
+    // ─── Block any Google account not on the allowlist ───────────
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
-        if (user.email !== ADMIN_EMAIL) {
+        const email = user.email?.toLowerCase()
+        if (!email || !ALLOWED_EMAILS.includes(email)) {
           // Reject — redirect to login with error
           return `/login?error=AccessDenied`
         }
