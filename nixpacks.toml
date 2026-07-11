@@ -2,7 +2,11 @@
 nixPkgs = ["nodejs_22", "pnpm-9_x", "openssl"]
 
 [phases.install]
-cmds = ["pnpm install --frozen-lockfile"]
+# --prod=false: devDependencies (typescript, tailwind, autoprefixer) are
+# required to BUILD even though NODE_ENV=production is set on the service.
+# Without it pnpm skips devDeps and `next build` fails with
+# "Cannot find module 'autoprefixer'" + broken @/ path aliases.
+cmds = ["pnpm install --frozen-lockfile --prod=false"]
 
 [phases.build]
 cmds = ["pnpm build --filter=@cbc/web"]
