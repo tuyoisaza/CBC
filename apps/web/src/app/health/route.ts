@@ -15,13 +15,25 @@ const ENV_GROUPS: Record<string, { label: string; vars: string[] }> = {
   meta:      { label: 'Meta (IG+FB)', vars: ['META_ACCESS_TOKEN', 'META_INSTAGRAM_ACCOUNT_ID', 'META_FACEBOOK_PAGE_ID'] },
   linkedin:  { label: 'LinkedIn', vars: ['LINKEDIN_ACCESS_TOKEN', 'LINKEDIN_PERSON_URN'] },
   whatsapp:  { label: 'WhatsApp', vars: ['WHATSAPP_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID', 'LORENA_PHONE'] },
-  resend:    { label: 'Resend (Email)', vars: ['RESEND_API_KEY', 'RESEND_FROM_EMAIL'] },
+  email:     { label: 'Email (Brevo o Resend)', vars: [] }, // special-cased in checkEnv
   r2:        { label: 'Cloudflare R2', vars: ['CLOUDFLARE_R2_ACCOUNT_ID', 'CLOUDFLARE_R2_ACCESS_KEY', 'CLOUDFLARE_R2_SECRET_KEY', 'CLOUDFLARE_R2_BUCKET'] },
   google:    { label: 'Google OAuth', vars: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'] },
   engine:    { label: 'Content Engine', vars: ['CBC_ENGINE_URL', 'ENGINE_SECRET_TOKEN'] },
 }
 
 function checkEnv(groupId: string): { configured: boolean; missing: string[] } {
+  // Email needs a sender address and EITHER provider key (Brevo preferred)
+  if (groupId === 'email') {
+    const hasFrom = Boolean(process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL)
+    const hasProvider = Boolean(
+      process.env.BREVO_API_KEY ||
+      (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.length > 5)
+    )
+    const missing: string[] = []
+    if (!hasProvider) missing.push('BREVO_API_KEY (o RESEND_API_KEY)')
+    if (!hasFrom) missing.push('EMAIL_FROM (o RESEND_FROM_EMAIL)')
+    return { configured: hasProvider && hasFrom, missing }
+  }
   const group = ENV_GROUPS[groupId]
   const missing = group.vars.filter(v => !process.env[v])
   return { configured: missing.length === 0, missing }

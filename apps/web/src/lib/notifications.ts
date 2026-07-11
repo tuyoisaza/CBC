@@ -1,24 +1,13 @@
 import axios from 'axios'
-import { Resend } from 'resend'
-
-// Lazy init — avoids throwing at build time when env var isn't set
-const getResend = () => new Resend(process.env.RESEND_API_KEY)
+import { sendEmail } from '@/lib/email'
 
 // ─── Email notifications ──────────────────────────────────────────────────────
+// Provider (Brevo or Resend) is resolved in lib/email.ts
 
 const ADMIN_EMAILS = ['contacto@coffeebunncafe.com', 'lorena2114@gmail.com']
 
 async function sendAdminEmail(subject: string, html: string) {
-  try {
-    await getResend().emails.send({
-      from: process.env.RESEND_FROM_EMAIL!,
-      to: ADMIN_EMAILS,
-      subject,
-      html,
-    })
-  } catch (err) {
-    console.error('Admin email error:', err)
-  }
+  await sendEmail({ to: ADMIN_EMAILS, subject, html })
 }
 
 export async function notifyNewContact(data: {
@@ -207,12 +196,10 @@ export async function sendPaymentLinkToCustomer(opts: {
   await sendWhatsApp(opts.whatsapp, msg)
 
   // Also send email
-  try {
-    await getResend().emails.send({
-      from: process.env.RESEND_FROM_EMAIL!,
-      to: opts.email,
-      subject: `Link de pago — Pedido ${opts.orderCode} | Coffee Bunn Café`,
-      html: `
+  await sendEmail({
+    to: opts.email,
+    subject: `Link de pago — Pedido ${opts.orderCode} | Coffee Bunn Café`,
+    html: `
         <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color: #262626;">
           <div style="background: #262626; padding: 32px; text-align: center;">
             <h1 style="color: #f7b84e; margin: 0; font-size: 24px;">Coffee Bunn Café</h1>
@@ -237,10 +224,7 @@ export async function sendPaymentLinkToCustomer(opts: {
           </div>
         </div>
       `,
-    })
-  } catch (err) {
-    console.error('Email send error:', err)
-  }
+  })
 }
 
 export async function sendCfdiToCustomer(opts: {
@@ -250,12 +234,10 @@ export async function sendCfdiToCustomer(opts: {
   xmlUrl: string
   pdfUrl: string
 }) {
-  try {
-    await getResend().emails.send({
-      from: process.env.RESEND_FROM_EMAIL!,
-      to: opts.email,
-      subject: `Factura CFDI — Pedido ${opts.orderCode} | Coffee Bunn Café`,
-      html: `
+  await sendEmail({
+    to: opts.email,
+    subject: `Factura CFDI — Pedido ${opts.orderCode} | Coffee Bunn Café`,
+    html: `
         <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color: #262626;">
           <div style="background: #262626; padding: 32px; text-align: center;">
             <h1 style="color: #f7b84e; margin: 0; font-size: 24px;">Coffee Bunn Café</h1>
@@ -274,8 +256,5 @@ export async function sendCfdiToCustomer(opts: {
           </div>
         </div>
       `,
-    })
-  } catch (err) {
-    console.error('CFDI email error:', err)
-  }
+  })
 }
