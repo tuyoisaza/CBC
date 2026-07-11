@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getEngineHealth, triggerPost, previewPost } from '@/lib/engine'
-import { db } from '@/lib/db'
 import { z } from 'zod'
 
 const actionSchema = z.discriminatedUnion('action', [
@@ -43,25 +42,10 @@ export async function POST(req: NextRequest) {
     }
 
     case 'publish': {
+      // The engine now owns Post writeback — /trigger saves the actual
+      // published caption/image per platform. Saving here too would
+      // double-insert (and record the stale preview instead of what shipped).
       const result = await triggerPost(data.type as any)
-
-      // Save to Post history in DB
-      const activeCoffee = await db.coffee.findFirst({ where: { active: true } })
-      for (const platform of data.platforms) {
-        await db.post.create({
-          data: {
-            platform,
-            contentType:    data.type,
-            caption:        data.caption || '',
-            imageUrl:       data.imageUrl,
-            status:         'published',
-            publishedAt:    new Date(),
-            platformPostId: (result as any)[platform],
-            coffeeId:       activeCoffee?.id,
-          },
-        })
-      }
-
       return NextResponse.json({ success: true, result })
     }
   }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { createLogger } from '@/lib/logger'
-import { notifyNewQuote } from '@/lib/notifications'
+import { notifyNewQuote, sendLeadAutoAck } from '@/lib/notifications'
 
 const log = createLogger('api/quote/submit')
 
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      return { quoteId: quote.id, quoteCode, companyName: parsed.companyName, contactName: parsed.contactName, email: parsed.email, whatsapp: parsed.whatsapp, total: parsed.total, items: parsed.items }
+      return { quoteId: quote.id, leadId: lead.id, quoteCode, companyName: parsed.companyName, contactName: parsed.contactName, email: parsed.email, whatsapp: parsed.whatsapp, total: parsed.total, items: parsed.items }
     })
 
     notifyNewQuote({
@@ -115,6 +115,31 @@ export async function POST(req: NextRequest) {
       quoteCode: result.quoteCode,
       items: result.items.map((i: any) => `${i.qty}× ${i.methodName}`).join(', '),
     }).catch(() => {})
+
+    // Speed-to-lead: instant acknowledgment in Lorena's voice (never prices).
+    // Recorded as an outbound Message so first-response time is measurable.
+    sendLeadAutoAck({
+      whatsapp: result.whatsapp,
+      contactName: result.contactName,
+      companyName: result.companyName,
+    })
+      .then((body) =>
+        body
+          ? db.message.create({
+              data: {
+                from: 'cbc-auto',
+                to: result.whatsapp,
+                body,
+                direction: 'outbound',
+                platform: 'whatsapp',
+                status: 'read',
+                leadId: result.leadId,
+                sentAt: new Date(),
+              },
+            })
+          : null
+      )
+      .catch(() => {})
 
     return NextResponse.json({ success: true, quoteId: result.quoteId })
   } catch (error) {

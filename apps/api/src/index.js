@@ -1,8 +1,15 @@
-require('dotenv').config()
-const scheduler = require('./scheduler')
+require('dotenv').config();
 
-console.log('CBC Content Engine Scheduler Started')
-scheduler.start()
+const app = require('./server');
+const scheduler = require('./scheduler');
 
-// Keep the process alive
-process.stdin.resume()
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`CBC Content Engine — HTTP on :${PORT}`);
+});
+
+scheduler
+  .start()
+  .then(() => console.log('\n🚀 CBC Content Engine scheduler running\n'))
+  .catch((err) => console.error('Scheduler start failed:', err.message));

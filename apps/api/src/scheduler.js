@@ -1,53 +1,108 @@
+/**
+ * Cron scheduler — DB-driven.
+ * Schedule loads from the platform (Setting.schedule.*) at boot, falls back to
+ * config/schedule.json if the platform is unreachable, and re-registers live
+ * when the admin pushes /config/schedule. All jobs run in CDMX time.
+ *
+ * NOTE: this process must run as a SINGLE replica — in-process cron on N
+ * replicas fires every job N times. The idempotency check in post-runner
+ * would catch it, but don't rely on that.
+ */
 const cron = require('node-cron');
-const schedule = require('../config/schedule.json');
+const platform = require('./platform');
+const scheduleState = require('./schedule-state');
 
-const productPost  = require('./content-types/product-post');
-const coffeeStory  = require('./content-types/coffee-story');
+const productPost = require('./content-types/product-post');
+const coffeeStory = require('./content-types/coffee-story');
 const linkedinPost = require('./content-types/linkedin-post');
-const seasonal     = require('./content-types/seasonal');
+const socialProof = require('./content-types/social-proof');
+const seasonal = require('./content-types/seasonal');
 
-function start() {
-  const tz = schedule.timezone;
+const RUNNERS = {
+  productPost: (cfg) => productPost.run(cfg.platforms),
+  coffeeStory: (cfg) => coffeeStory.run(cfg.platforms),
+  linkedinPost: (cfg) => linkedinPost.run(cfg.platforms, { requireApproval: cfg.requireApproval !== false }),
+  socialProof: (cfg) => socialProof.run(cfg.platforms),
+};
 
-  // Weekly product post — Monday 10am
-  if (schedule.posts.productPost.active) {
-    cron.schedule(schedule.posts.productPost.cron, async () => {
-      console.log(`[${new Date().toISOString()}] Cron: product post`);
-      try { await productPost.run(schedule.posts.productPost.platforms); }
-      catch (e) { console.error('Product post failed:', e.message); }
-    }, { timezone: tz });
-    console.log('✓ Scheduled: product post (Monday 10am)');
+let jobs = [];
+let seasonalJob = null;
+
+async function start() {
+  try {
+    const fromDb = await platform.getSchedule();
+    scheduleState.setPosts(fromDb);
+    console.log('✓ Schedule loaded from platform DB');
+  } catch (err) {
+    console.warn(`Schedule load from platform failed (${err.message}) — using file defaults`);
   }
+  registerJobs();
 
-  // Weekly coffee story — Wednesday 10am
-  if (schedule.posts.coffeeStory.active) {
-    cron.schedule(schedule.posts.coffeeStory.cron, async () => {
-      console.log(`[${new Date().toISOString()}] Cron: coffee story`);
-      try { await coffeeStory.run(schedule.posts.coffeeStory.platforms); }
-      catch (e) { console.error('Coffee story failed:', e.message); }
-    }, { timezone: tz });
-    console.log('✓ Scheduled: coffee story (Wednesday 10am)');
+  // Seasonal check — daily at 8am CDMX; only posts inside a campaign window,
+  // rate-limited by season.minDaysBetween (see content-types/seasonal.js)
+  if (!seasonalJob) {
+    seasonalJob = cron.schedule(
+      '0 8 * * *',
+      async () => {
+        console.log(`[${new Date().toISOString()}] Cron: seasonal check`);
+        try {
+          await seasonal.run({ requireApproval: true });
+        } catch (e) {
+          console.error('Seasonal post failed:', e.message);
+        }
+      },
+      { timezone: scheduleState.getTimezone() }
+    );
+    console.log('✓ Scheduled: seasonal check (daily 8am)');
   }
-
-  // Bi-weekly LinkedIn — 1st and 15th at 9am
-  if (schedule.posts.linkedinPost.active) {
-    cron.schedule(schedule.posts.linkedinPost.cron, async () => {
-      console.log(`[${new Date().toISOString()}] Cron: LinkedIn post`);
-      try { await linkedinPost.run(); }
-      catch (e) { console.error('LinkedIn post failed:', e.message); }
-    }, { timezone: tz });
-    console.log('✓ Scheduled: LinkedIn post (1st and 15th at 9am)');
-  }
-
-  // Seasonal check — daily at 8am, runs content if a season is active
-  cron.schedule('0 8 * * *', async () => {
-    console.log(`[${new Date().toISOString()}] Cron: seasonal check`);
-    try { await seasonal.run(); }
-    catch (e) { console.error('Seasonal post failed:', e.message); }
-  }, { timezone: tz });
-  console.log('✓ Scheduled: seasonal check (daily 8am)');
-
-  console.log('\n🚀 CBC Content Engine scheduler running\n');
 }
 
-module.exports = { start };
+/** (Re-)register all post jobs from current state. Called at boot and on /config/schedule. */
+function registerJobs() {
+  jobs.forEach((j) => j.stop());
+  jobs = [];
+
+  const tz = scheduleState.getTimezone();
+  for (const [key, cfg] of Object.entries(scheduleState.getPosts())) {
+    if (!cfg.active) continue;
+    const runner = RUNNERS[key];
+    if (!runner) {
+      console.warn(`No runner for schedule key "${key}" — skipping`);
+      continue;
+    }
+    if (!cron.validate(cfg.cron)) {
+      console.warn(`Invalid cron "${cfg.cron}" for "${key}" — skipping`);
+      continue;
+    }
+    const job = cron.schedule(
+      cfg.cron,
+      async () => {
+        console.log(`[${new Date().toISOString()}] Cron: ${key}`);
+        try {
+          await runner(cfg);
+        } catch (e) {
+          console.error(`${key} failed:`, e.message);
+        }
+      },
+      { timezone: tz }
+    );
+    jobs.push(job);
+    console.log(`✓ Scheduled: ${key} (${cfg.cron} ${tz})`);
+  }
+}
+
+/** Live reschedule from the admin (POST /config/schedule). */
+function reschedule(posts) {
+  scheduleState.setPosts(posts);
+  registerJobs();
+  console.log('↻ Schedule re-registered from admin push');
+}
+
+/** Upcoming posts summary for /health. */
+function nextPosts() {
+  return Object.entries(scheduleState.getPosts())
+    .filter(([, cfg]) => cfg.active)
+    .map(([type, cfg]) => ({ type, at: cfg.label || cfg.cron }));
+}
+
+module.exports = { start, reschedule, nextPosts };

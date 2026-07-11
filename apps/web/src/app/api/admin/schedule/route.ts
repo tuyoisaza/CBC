@@ -3,7 +3,18 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { setEngineSchedule } from '@/lib/engine'
+import { isEngineRequest } from '@/lib/engine-auth'
+import { loadSchedule } from '@/lib/schedule'
 import { z } from 'zod'
+
+// Engine loads the merged schedule at boot; admin session can read it too
+export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session && !isEngineRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  return NextResponse.json(await loadSchedule())
+}
 
 const schema = z.object({
   key:   z.string(),

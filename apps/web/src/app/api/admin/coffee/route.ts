@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { updateEngineCoffee } from '@/lib/engine'
+import { isEngineRequest } from '@/lib/engine-auth'
 
 const coffeeSchema = z.object({
   name:          z.string().min(2),
@@ -32,8 +33,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // Session (admin UI) or engine token (WhatsApp coffee updates via the engine)
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session && !isEngineRequest(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const body = await req.json()
   const data = coffeeSchema.parse(body)

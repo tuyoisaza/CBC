@@ -87,7 +87,15 @@ Tono: profesional pero personal. Lorena como experta, no como marca. Termina con
     seasonal: `Genera contenido para la campaña de temporada: ${data.season.name}.
 La temporada se acerca. Las empresas están buscando regalos para colaboradores y clientes.
 Enfoque: urgencia de temporada + el diferencial de CBC (micro-lote curado, branding incluido, clase en vivo a 15+).
-Plataforma: ${data.platform}. Tono según la plataforma (más casual en IG/FB, más profesional en LinkedIn).`
+Plataforma: ${data.platform}. Tono según la plataforma (más casual en IG/FB, más profesional en LinkedIn).`,
+
+    socialProof: `Genera un caption para Instagram/Facebook del Pillar 3 — LA EXPERIENCIA (social proof).
+Enfoque: el momento humano alrededor del regalo — un equipo recibiendo sus cajas, el unboxing en la oficina,
+la clase en vivo con Lorena, la Tarjeta de Curaduría pasando de mano en mano.
+IMPORTANTE: NO inventes citas textuales de clientes, ni nombres de empresas cliente, ni testimonios específicos.
+Habla de la experiencia en general, o desde la voz de Lorena describiendo lo que ve al entregar.
+Café actual (para contexto): ${JSON.stringify(data.coffee || {})}
+Termina con CTA a WhatsApp para cotizar.`
   };
 
   const response = await client.messages.create({
@@ -135,11 +143,16 @@ Devuelve SOLO un objeto JSON válido con esta estructura exacta:
   "brewingMethods": ["método1", "método2"],
   "story": "una frase que capture la esencia de este café"
 }
-Si algún campo no está en el mensaje, usa null. Devuelve solo el JSON, sin markdown ni explicaciones.`,
+Si algún campo no está en el mensaje, usa null — EXCEPTO "tastingNotes", que siempre debe ser un array con al menos un elemento (usa ["Por confirmar"] si no hay notas). Devuelve solo el JSON, sin markdown ni explicaciones.`,
     messages: [{ role: 'user', content: message }]
   });
 
-  return JSON.parse(response.content[0].text);
+  const parsed = JSON.parse(response.content[0].text);
+  // The platform's coffee schema requires tastingNotes to be non-empty
+  if (!Array.isArray(parsed.tastingNotes) || parsed.tastingNotes.length === 0) {
+    parsed.tastingNotes = ['Por confirmar'];
+  }
+  return parsed;
 }
 
 module.exports = { generateCaption, generateImagePrompt, parseCoffeeUpdate };

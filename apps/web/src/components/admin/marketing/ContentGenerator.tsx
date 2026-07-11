@@ -6,6 +6,7 @@ import { Sparkles, Send, RefreshCw, Instagram, Linkedin, Facebook } from 'lucide
 const POST_TYPES = [
   { value: 'product-post',  label: 'Post de producto',    desc: 'Muestra la caja y sus características', platforms: ['instagram', 'facebook'] },
   { value: 'coffee-story',  label: 'Historia del café',   desc: 'Lorena habla del micro-lote actual',    platforms: ['instagram', 'facebook'] },
+  { value: 'social-proof',  label: 'Experiencia',         desc: 'El momento humano alrededor del regalo', platforms: ['instagram', 'facebook'] },
   { value: 'linkedin-post', label: 'Post de LinkedIn',    desc: 'Contenido para el perfil de Lorena',   platforms: ['linkedin'] },
   { value: 'seasonal',      label: 'Campaña temporal',    desc: 'Post de temporada activa',              platforms: ['instagram', 'facebook', 'linkedin'] },
 ]

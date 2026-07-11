@@ -1,4 +1,5 @@
 {
+  "_note": "Fallback defaults only — the live schedule is DB-driven (Setting.schedule.* via the admin). Cadence per plan: IG/FB 3x/week, LinkedIn weekly.",
   "timezone": "America/Mexico_City",
   "posts": {
     "productPost": {
@@ -13,11 +14,18 @@
       "platforms": ["instagram", "facebook"],
       "active": true
     },
-    "linkedinPost": {
-      "cron": "0 9 1,15 * *",
-      "description": "Bi-weekly LinkedIn post — 1st and 15th of each month at 9am CDMX",
-      "platforms": ["linkedin"],
+    "socialProof": {
+      "cron": "0 10 * * 5",
+      "description": "Weekly experience/social-proof post — every Friday at 10am CDMX",
+      "platforms": ["instagram", "facebook"],
       "active": true
+    },
+    "linkedinPost": {
+      "cron": "0 9 * * 2",
+      "description": "Weekly LinkedIn post — every Tuesday at 9am CDMX (approval-gated)",
+      "platforms": ["linkedin"],
+      "active": true,
+      "requireApproval": true
     }
   },
   "seasons": [
@@ -26,6 +34,7 @@
       "campaignStartDate": "10-15",
       "peakDate": "12-15",
       "platforms": ["instagram", "facebook", "linkedin"],
+      "minDaysBetween": 3,
       "active": true
     },
     {
@@ -33,6 +42,7 @@
       "campaignStartDate": "01-02",
       "peakDate": "02-14",
       "platforms": ["instagram", "facebook", "linkedin"],
+      "minDaysBetween": 3,
       "active": true
     },
     {
@@ -40,6 +50,15 @@
       "campaignStartDate": "03-20",
       "peakDate": "05-01",
       "platforms": ["instagram", "facebook", "linkedin"],
+      "minDaysBetween": 3,
+      "active": true
+    },
+    {
+      "name": "Regreso a oficina / Onboarding",
+      "campaignStartDate": "08-01",
+      "peakDate": "09-30",
+      "platforms": ["instagram", "facebook", "linkedin"],
+      "minDaysBetween": 5,
       "active": true
     }
   ]

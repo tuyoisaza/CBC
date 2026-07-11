@@ -1,15 +1,14 @@
-const { generateCaption, generateImagePrompt } = require('../generators/copy');
-const { generateImage, cleanupImage } = require('../generators/image');
-const { publishToInstagram, publishToFacebook } = require('../publishers/meta');
-const { publishToLinkedIn } = require('../publishers/linkedin');
-const schedule = require('../../config/schedule.json');
+const { runPost, preview } = require('../post-runner');
+const scheduleState = require('../schedule-state');
 
 function getActiveSeason() {
   const today = new Date();
-  const mmdd = String(today.getMonth() + 1).padStart(2, '0') + '-' +
-               String(today.getDate()).padStart(2, '0');
+  const mmdd =
+    String(today.getMonth() + 1).padStart(2, '0') +
+    '-' +
+    String(today.getDate()).padStart(2, '0');
 
-  for (const season of schedule.seasons) {
+  for (const season of scheduleState.getSeasons()) {
     if (!season.active) continue;
     // Simple range check — campaign runs from start date to peak date
     if (mmdd >= season.campaignStartDate && mmdd <= season.peakDate) {
@@ -19,39 +18,37 @@ function getActiveSeason() {
   return null;
 }
 
-async function run() {
+/**
+ * Daily 8am check. Only posts when a season window is active, and at most
+ * once per `minDaysBetween` days (default 3) — the old behavior posted every
+ * single day of a 60-day campaign window, which is spam, not marketing.
+ */
+async function run({ requireApproval = true } = {}) {
   const season = getActiveSeason();
   if (!season) {
     console.log('No active season today, skipping seasonal post');
-    return;
+    return { skipped: true };
   }
 
-  console.log(`▶ Running seasonal post for: ${season.name}`);
-  let imagePath = null;
-
-  try {
-    const coffee = require('../../config/coffee.json').current;
-
-    for (const platform of season.platforms) {
-      const [caption, imagePromptRaw] = await Promise.all([
-        generateCaption('seasonal', { season, coffee, platform }),
-        generateImagePrompt('seasonal', { season, coffee })
-      ]);
-
-      imagePath = await generateImage(imagePromptRaw);
-
-      if (platform === 'instagram') await publishToInstagram(imagePath, caption);
-      if (platform === 'facebook') await publishToFacebook(imagePath, caption);
-      if (platform === 'linkedin') await publishToLinkedIn(imagePath, caption);
-
-      if (imagePath) { cleanupImage(imagePath); imagePath = null; }
-    }
-
-    console.log(`✓ Seasonal posts published for ${season.name}`);
-
-  } finally {
-    if (imagePath) cleanupImage(imagePath);
+  const minDays = season.minDaysBetween ?? 3;
+  const results = {};
+  for (const platform of season.platforms) {
+    results[platform] = await runPost({
+      contentType: 'seasonal',
+      promptKey: 'seasonal',
+      platforms: [platform],
+      data: { season, platform },
+      requireApproval,
+      windowHours: minDays * 24,
+    });
   }
+  return results;
 }
 
-module.exports = { run, getActiveSeason };
+function previewSeasonal() {
+  const season = getActiveSeason() ||
+    scheduleState.getSeasons()[0] || { name: 'Fin de año', platforms: ['instagram'] };
+  return preview('seasonal', { season, platform: season.platforms?.[0] || 'instagram' });
+}
+
+module.exports = { run, preview: previewSeasonal, getActiveSeason };

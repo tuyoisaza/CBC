@@ -1,14 +1,24 @@
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+/**
+ * WhatsApp inbound webhook (Meta Cloud API).
+ *
+ * Security layers (both required):
+ *  1. X-Hub-Signature-256 — HMAC-SHA256 of the RAW body with the Meta App
+ *     Secret, compared timing-safe. Without this, anyone who learns the URL
+ *     can forge a "from Lorena" payload and poison the active coffee.
+ *  2. Sender allowlist — only LORENA_PHONE triggers actions.
+ *
+ * Commands (from Lorena):
+ *  - "café nuevo …"        → Claude parses → Coffee row in the platform DB
+ *  - "publicar" / "aprobar" → publish the pending 'scheduled' posts
+ *  - "descartar" / "rechazar" → discard the pending queue
+ */
+const crypto = require('crypto');
+const platformClient = require('../platform');
 const { parseCoffeeUpdate } = require('../generators/copy');
+const { sendWhatsAppMessage } = require('../wa');
+const postRunner = require('../post-runner');
 
-const COFFEE_CONFIG_PATH = path.join(__dirname, '../../config/coffee.json');
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
-const WA_TOKEN = process.env.WHATSAPP_TOKEN;
-const WA_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
-// Only messages from Lorena's number trigger updates
-const LORENA_PHONE = process.env.LORENA_PHONE;
 
 // Webhook verification (required by Meta on setup)
 function verifyWebhook(req, res) {
@@ -24,36 +34,73 @@ function verifyWebhook(req, res) {
   }
 }
 
+/** HMAC-SHA256 signature check over the raw body (timing-safe). */
+function verifySignature(req) {
+  const secret = process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET;
+  if (!secret) {
+    console.warn('META_APP_SECRET not set — webhook signature NOT verified (set it in production)');
+    return true;
+  }
+  const header = req.headers['x-hub-signature-256'];
+  if (!header || !req.rawBody) return false;
+
+  const expected =
+    'sha256=' + crypto.createHmac('sha256', secret).update(req.rawBody).digest('hex');
+  const a = Buffer.from(header);
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 // Incoming message handler
 async function handleWebhook(req, res) {
-  res.sendStatus(200); // always ack immediately
+  // Authenticate the payload BEFORE any processing
+  if (!verifySignature(req)) {
+    console.warn('WhatsApp webhook: invalid X-Hub-Signature-256 — rejected');
+    return res.sendStatus(403);
+  }
+  res.sendStatus(200); // ack fast; process async
 
-  const body = req.body;
-  if (body.object !== 'whatsapp_business_account') return;
+  try {
+    const body = req.body;
+    if (body.object !== 'whatsapp_business_account') return;
 
-  const entry = body.entry?.[0];
-  const changes = entry?.changes?.[0];
-  const message = changes?.value?.messages?.[0];
+    const entry = body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const message = changes?.value?.messages?.[0];
 
-  if (!message || message.type !== 'text') return;
+    if (!message || message.type !== 'text') return;
 
-  const senderPhone = message.from;
-  const text = message.text.body.trim();
+    const senderPhone = message.from;
+    const text = message.text.body.trim();
 
-  // Only process messages from Lorena
-  if (senderPhone !== LORENA_PHONE) return;
+    // Only Lorena can drive the engine
+    if (senderPhone !== process.env.LORENA_PHONE) return;
 
-  console.log(`WhatsApp message from Lorena: ${text}`);
+    console.log(`WhatsApp message from Lorena: ${text}`);
 
-  // Check if this is a coffee update
-  const isCoffeeUpdate = text.toLowerCase().includes('café nuevo') ||
-    text.toLowerCase().includes('cafe nuevo') ||
-    text.toLowerCase().includes('nuevo café') ||
-    text.toLowerCase().includes('nuevo cafe') ||
-    text.toLowerCase().includes('new coffee');
+    const lower = text.toLowerCase();
 
-  if (isCoffeeUpdate) {
-    await handleCoffeeUpdate(text, senderPhone);
+    const isCoffeeUpdate =
+      lower.includes('café nuevo') ||
+      lower.includes('cafe nuevo') ||
+      lower.includes('nuevo café') ||
+      lower.includes('nuevo cafe') ||
+      lower.includes('new coffee');
+
+    const isApprove = /^(publicar|aprobar|aprueba|s[ií],? publicar)\b/.test(lower);
+    const isDiscard = /^(descartar|rechazar|no publicar|cancelar)\b/.test(lower);
+
+    if (isCoffeeUpdate) {
+      await handleCoffeeUpdate(text, senderPhone);
+    } else if (isApprove) {
+      const summary = await postRunner.publishScheduled();
+      await sendWhatsAppMessage(senderPhone, `📤 *Resultado:*\n${summary}`);
+    } else if (isDiscard) {
+      const summary = await postRunner.discardScheduled();
+      await sendWhatsAppMessage(senderPhone, `🗑 ${summary}`);
+    }
+  } catch (err) {
+    console.error('WhatsApp webhook processing error:', err.message);
   }
 }
 
@@ -61,50 +108,41 @@ async function handleCoffeeUpdate(message, senderPhone) {
   try {
     console.log('Processing coffee update...');
 
-    // Use Claude to parse the free-form message into structured data
-    const coffeeData = await parseCoffeeUpdate(message);
+    // Claude parses the free-form message into structured data
+    const c = await parseCoffeeUpdate(message);
 
-    // Load existing config
-    const config = JSON.parse(fs.readFileSync(COFFEE_CONFIG_PATH, 'utf8'));
+    // Write to the platform DB — the single source of truth.
+    // (Maps the parser's nested origin shape onto the Coffee columns.)
+    const saved = await platformClient.upsertCoffee({
+      name: c.name || 'Café de Especialidad CBC',
+      originCountry: c.origin?.country || 'México',
+      originRegion: c.origin?.region || 'Por confirmar',
+      originFarm: c.origin?.farm || undefined,
+      variety: c.variety || undefined,
+      process: c.process || undefined,
+      roast: c.roast || undefined,
+      tastingNotes: c.tastingNotes,
+      story: c.story || undefined,
+    });
 
-    // Update with new coffee data
-    config.current = coffeeData;
-    config._lastUpdated = new Date().toISOString().split('T')[0];
+    console.log(`✓ Coffee updated in DB: ${saved.name}`);
 
-    // Save back to file
-    fs.writeFileSync(COFFEE_CONFIG_PATH, JSON.stringify(config, null, 2));
-
-    console.log(`✓ Coffee config updated: ${coffeeData.name}`);
-
-    // Send confirmation back to Lorena via WhatsApp
-    await sendWhatsAppMessage(senderPhone,
-      `✓ Café actualizado: *${coffeeData.name}*\n` +
-      `Origen: ${coffeeData.origin?.region}, ${coffeeData.origin?.country}\n` +
-      `Variedad: ${coffeeData.variety}\n` +
-      `Proceso: ${coffeeData.process}\n` +
-      `Notas: ${coffeeData.tastingNotes?.join(', ')}\n\n` +
-      `El próximo contenido usará este café. 🎉`
+    await sendWhatsAppMessage(
+      senderPhone,
+      `✓ Café actualizado: *${saved.name}*\n` +
+        `Origen: ${saved.originRegion}, ${saved.originCountry}\n` +
+        `Variedad: ${saved.variety || '—'}\n` +
+        `Proceso: ${saved.process || '—'}\n` +
+        `Notas: ${(saved.tastingNotes || []).join(', ')}\n\n` +
+        `El próximo contenido usará este café. 🎉`
     );
-
   } catch (err) {
     console.error('Error processing coffee update:', err.message);
-    await sendWhatsAppMessage(senderPhone,
+    await sendWhatsAppMessage(
+      senderPhone,
       '❌ No pude procesar el café. Intenta de nuevo con más detalles: nombre, origen, variedad, proceso y notas de cata.'
     );
   }
-}
-
-async function sendWhatsAppMessage(to, text) {
-  await axios.post(
-    `https://graph.facebook.com/v21.0/${WA_PHONE_NUMBER_ID}/messages`,
-    {
-      messaging_product: 'whatsapp',
-      to,
-      type: 'text',
-      text: { body: text }
-    },
-    { headers: { Authorization: `Bearer ${WA_TOKEN}` } }
-  );
 }
 
 module.exports = { verifyWebhook, handleWebhook };

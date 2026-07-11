@@ -123,7 +123,25 @@ LINKEDIN_ACCESS_TOKEN=
 LINKEDIN_PERSON_URN=urn:li:person:...
 WHATSAPP_TOKEN=
 WHATSAPP_PHONE_NUMBER_ID=
+# REQUIRED in production — verifies X-Hub-Signature-256 on the inbound
+# WhatsApp webhook (Meta app → Settings → Basic → App secret).
+# Without it the webhook logs a warning and skips signature verification.
+WHATSAPP_APP_SECRET=
 ```
+
+### Engine notes (v1.4 rework)
+
+- **Single replica only.** The engine runs in-process cron; N replicas would
+  fire every job N times. Keep Railway replicas at 1.
+- **Point Meta's WhatsApp webhook** at `https://<cbc-engine-public-domain>/webhooks/whatsapp`
+  (verify token = `WHATSAPP_VERIFY_TOKEN`). The engine now hosts the webhook —
+  it must have a public domain for Meta to reach it.
+- `PLATFORM_URL` can use Railway private networking
+  (`https://cbc-platform.railway.internal`) so engine↔platform token traffic
+  stays off the public internet.
+- `config/coffee.json` no longer exists — the active coffee lives in the
+  Coffee table (updated via admin or Lorena's WhatsApp) and posts are written
+  back to the Post table. Post images persist to R2 via the platform.
 
 ---
 

@@ -1,13 +1,13 @@
 /**
  * Public(ish) endpoint — the cbc-engine reads this to get the current active coffee.
- * Protected by a shared secret token, not user auth.
+ * Protected by the shared engine token (timing-safe compare), not user auth.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db, withDbRetry } from '@/lib/db'
+import { isEngineRequest } from '@/lib/engine-auth'
 
 export async function GET(req: NextRequest) {
-  const token = req.headers.get('x-engine-token')
-  if (token !== process.env.ENGINE_SECRET_TOKEN) {
+  if (!isEngineRequest(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

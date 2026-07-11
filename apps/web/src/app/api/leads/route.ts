@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { createLogger } from '@/lib/logger'
-import { notifyNewContact, notifyLorenaNewLead } from '@/lib/notifications'
+import { notifyNewContact, notifyLorenaNewLead, sendLeadAutoAck } from '@/lib/notifications'
 
 const log = createLogger('api/leads')
 
@@ -96,6 +96,31 @@ export async function POST(req: NextRequest) {
       boxType: data.boxType,
       quantity: quantityNum,
     }).catch(() => {})
+
+    // Speed-to-lead: instant acknowledgment in Lorena's voice (never prices).
+    // Recorded as an outbound Message so first-response time is measurable.
+    sendLeadAutoAck({
+      whatsapp: data.whatsapp,
+      contactName: data.contactName,
+      companyName: data.companyName,
+    })
+      .then((body) =>
+        body
+          ? db.message.create({
+              data: {
+                from: 'cbc-auto',
+                to: data.whatsapp,
+                body,
+                direction: 'outbound',
+                platform: 'whatsapp',
+                status: 'read',
+                leadId: lead.id,
+                sentAt: new Date(),
+              },
+            })
+          : null
+      )
+      .catch(() => {})
 
     return NextResponse.json({ success: true, leadId: lead.id }, { status: 201 })
 

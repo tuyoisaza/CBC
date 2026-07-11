@@ -18,6 +18,7 @@ interface ScheduleEntry {
 const POST_TYPE_LABELS: Record<string, string> = {
   productPost:  'Post de producto',
   coffeeStory:  'Historia del café',
+  socialProof:  'Experiencia / social proof',
   linkedinPost: 'Post de LinkedIn',
 }
 

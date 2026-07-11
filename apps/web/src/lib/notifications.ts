@@ -77,7 +77,7 @@ export async function notifyNewQuote(data: {
 
 // ─── WhatsApp ────────────────────────────────────────────────────────────────
 
-async function sendWhatsApp(to: string, message: string) {
+async function sendWhatsApp(to: string, message: string): Promise<boolean> {
   try {
     await axios.post(
       `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
@@ -89,9 +89,34 @@ async function sendWhatsApp(to: string, message: string) {
       },
       { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` } }
     )
+    return true
   } catch (err) {
     console.error('WhatsApp send error:', err)
+    return false
   }
+}
+
+// ─── Speed-to-lead auto-acknowledgment ───────────────────────────────────────
+// Replying within 5 minutes multiplies qualification ~21x; Lorena is often
+// mid-class or sourcing coffee, so the platform captures that window with an
+// instant acknowledgment in her voice. It NEVER quotes prices — the
+// consultative close stays human. Returns the message body if the WhatsApp
+// send succeeded (so callers can record it as an outbound Message), else null.
+export async function sendLeadAutoAck(opts: {
+  whatsapp: string
+  contactName: string
+  companyName?: string
+}): Promise<string | null> {
+  const firstName = opts.contactName.split(' ')[0]
+  const body =
+    `Hola ${firstName} 👋 Soy Lorena, de Coffee Bunn Café.\n\n` +
+    `Recibí tu solicitud${opts.companyName ? ` para ${opts.companyName}` : ''} — ` +
+    `gracias por pensar en nosotros. Hoy mismo te preparo la cotización.\n\n` +
+    `Mientras tanto, ¿me cuentas para qué ocasión es el regalo y para cuántas personas? ` +
+    `Así elijo mejor el café. ☕`
+
+  const sent = await sendWhatsApp(opts.whatsapp, body)
+  return sent ? body : null
 }
 
 // ─── Lorena alerts ───────────────────────────────────────────────────────────
