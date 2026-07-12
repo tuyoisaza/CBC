@@ -50,6 +50,32 @@ app.use(
 app.get('/webhooks/whatsapp', verifyWebhook);
 app.post('/webhooks/whatsapp', handleWebhook);
 
+// ─── Health — PUBLIC (no token) ──────────────────────────────────────────────
+// Used by Railway's healthcheck, browser checks, and the platform's
+// lib/engine.ts (which sends the token; harmless here). Exposes only
+// non-sensitive info — the current coffee is public marketing content.
+app.get('/health', async (_req, res) => {
+  let currentCoffee = '—';
+  let lastUpdated = '—';
+  let platformReachable = false;
+  try {
+    const coffee = await platform.getCurrentCoffee();
+    currentCoffee = coffee.name;
+    lastUpdated = coffee.updatedAt || '—';
+    platformReachable = true;
+  } catch {
+    // platform unreachable, bad token, or no active coffee — engine still runs
+  }
+  res.json({
+    status: 'running',
+    uptime_seconds: Math.floor(process.uptime()),
+    platformReachable,
+    currentCoffee,
+    lastUpdated,
+    nextPosts: scheduler.nextPosts(),
+  });
+});
+
 // ─── Engine token guard for everything else ──────────────────────────────────
 function tokenMatches(header) {
   const secret = process.env.ENGINE_SECRET_TOKEN;
@@ -67,24 +93,6 @@ app.use((req, res, next) => {
 });
 
 // ─── Control routes ───────────────────────────────────────────────────────────
-app.get('/health', async (_req, res) => {
-  let currentCoffee = '—';
-  let lastUpdated = '—';
-  try {
-    const coffee = await platform.getCurrentCoffee();
-    currentCoffee = coffee.name;
-    lastUpdated = coffee.updatedAt || '—';
-  } catch {
-    // platform unreachable or no active coffee — health still reports running
-  }
-  res.json({
-    status: 'running',
-    currentCoffee,
-    lastUpdated,
-    nextPosts: scheduler.nextPosts(),
-  });
-});
-
 app.post('/trigger/:type', async (req, res) => {
   const mod = CONTENT_TYPES[req.params.type];
   if (!mod) return res.status(400).json({ error: `Unknown type: ${req.params.type}` });
