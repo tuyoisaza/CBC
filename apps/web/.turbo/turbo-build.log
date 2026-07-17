@@ -5,59 +5,162 @@ $ next build
  ✓ Compiled successfully
    Linting and checking validity of types ...
    Collecting page data ...
-   Generating static pages (0/34) ...
-   Generating static pages (8/34) 
-   Generating static pages (16/34) 
-   Generating static pages (25/34) 
- ✓ Generating static pages (34/34)
+❌ Invalid environment variables:
+{
+  NEXT_PUBLIC_APP_URL: [ 'Required' ],
+  DATABASE_URL: [ 'Required' ],
+  NEXTAUTH_SECRET: [ 'Required' ],
+  NEXTAUTH_URL: [ 'Required' ],
+  ADMIN_EMAIL: [ 'Required' ],
+  ADMIN_PASSWORD_HASH: [ 'Required' ]
+}
+❌ Invalid environment variables:
+{
+  NEXT_PUBLIC_APP_URL: [ 'Required' ],
+  DATABASE_URL: [ 'Required' ],
+  NEXTAUTH_SECRET: [ 'Required' ],
+  NEXTAUTH_URL: [ 'Required' ],
+  ADMIN_EMAIL: [ 'Required' ],
+  ADMIN_PASSWORD_HASH: [ 'Required' ]
+}
+❌ Invalid environment variables:
+{
+  NEXT_PUBLIC_APP_URL: [ 'Required' ],
+  DATABASE_URL: [ 'Required' ],
+  NEXTAUTH_SECRET: [ 'Required' ],
+  NEXTAUTH_URL: [ 'Required' ],
+  ADMIN_EMAIL: [ 'Required' ],
+  ADMIN_PASSWORD_HASH: [ 'Required' ]
+}
+❌ Invalid environment variables:
+{
+  NEXT_PUBLIC_APP_URL: [ 'Required' ],
+  DATABASE_URL: [ 'Required' ],
+  NEXTAUTH_SECRET: [ 'Required' ],
+  NEXTAUTH_URL: [ 'Required' ],
+  ADMIN_EMAIL: [ 'Required' ],
+  ADMIN_PASSWORD_HASH: [ 'Required' ]
+}
+   Generating static pages (0/54) ...
+   Generating static pages (13/54) 
+❌ Invalid environment variables:
+{
+  NEXT_PUBLIC_APP_URL: [ 'Required' ],
+  DATABASE_URL: [ 'Required' ],
+  NEXTAUTH_SECRET: [ 'Required' ],
+  NEXTAUTH_URL: [ 'Required' ],
+  ADMIN_EMAIL: [ 'Required' ],
+  ADMIN_PASSWORD_HASH: [ 'Required' ]
+}
+❌ Invalid environment variables:
+{
+  NEXT_PUBLIC_APP_URL: [ 'Required' ],
+  DATABASE_URL: [ 'Required' ],
+  NEXTAUTH_SECRET: [ 'Required' ],
+  NEXTAUTH_URL: [ 'Required' ],
+  ADMIN_EMAIL: [ 'Required' ],
+  ADMIN_PASSWORD_HASH: [ 'Required' ]
+}
+   Generating static pages (26/54) 
+   Generating static pages (40/54) 
+❌ Invalid environment variables:
+{
+  NEXT_PUBLIC_APP_URL: [ 'Required' ],
+  DATABASE_URL: [ 'Required' ],
+  NEXTAUTH_SECRET: [ 'Required' ],
+  NEXTAUTH_URL: [ 'Required' ],
+  ADMIN_EMAIL: [ 'Required' ],
+  ADMIN_PASSWORD_HASH: [ 'Required' ]
+}
+ ✓ Generating static pages (54/54)
    Finalizing page optimization ...
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
-┌ ○ /                                    152 B          87.4 kB
-├ ○ /_not-found                          871 B          88.1 kB
-├ ƒ /admin/dashboard                     182 B          96.1 kB
-├ ƒ /admin/marketing                     182 B          96.1 kB
-├ ƒ /admin/marketing/coffee              2.9 kB         90.2 kB
-├ ƒ /admin/marketing/generator           2.98 kB        90.3 kB
-├ ƒ /admin/marketing/history             152 B          87.4 kB
-├ ƒ /admin/marketing/schedule            2.14 kB        89.4 kB
-├ ƒ /admin/sales                         152 B          87.4 kB
-├ ƒ /admin/sales/leads                   182 B          96.1 kB
-├ ƒ /admin/sales/leads/[id]              867 B          96.8 kB
-├ ƒ /admin/sales/orders                  182 B          96.1 kB
-├ ƒ /admin/sales/orders/[id]             783 B          96.7 kB
-├ ƒ /admin/sales/revenue                 152 B          87.4 kB
-├ ƒ /admin/service                       3.54 kB        90.8 kB
-├ ƒ /admin/settings                      3.07 kB        90.3 kB
+┌ ƒ /                                    188 B          96.2 kB
+├ ○ /_not-found                          875 B          88.2 kB
+├ ƒ /admin/dashboard                     192 B          96.2 kB
+├ ƒ /admin/marketing                     188 B          96.2 kB
+├ ƒ /admin/marketing/coffee              2.91 kB        90.2 kB
+├ ƒ /admin/marketing/connections         3.26 kB        90.6 kB
+├ ƒ /admin/marketing/generator           3.03 kB        90.4 kB
+├ ƒ /admin/marketing/history             155 B          87.5 kB
+├ ƒ /admin/marketing/schedule            2.17 kB        89.5 kB
+├ ƒ /admin/sales                         155 B          87.5 kB
+├ ƒ /admin/sales/extras                  138 B          90.3 kB
+├ ƒ /admin/sales/leads                   192 B          96.2 kB
+├ ƒ /admin/sales/leads/[id]              872 B          96.9 kB
+├ ƒ /admin/sales/methods                 138 B          90.3 kB
+├ ƒ /admin/sales/orders                  188 B          96.2 kB
+├ ƒ /admin/sales/orders/[id]             951 B            97 kB
+├ ƒ /admin/sales/products                1.18 kB        97.2 kB
+├ ƒ /admin/sales/products/[id]           143 B           101 kB
+├ ƒ /admin/sales/products/new            143 B           101 kB
+├ ƒ /admin/sales/revenue                 155 B          87.5 kB
+├ ƒ /admin/sales/shipping-zones          137 B          90.3 kB
+├ ƒ /admin/sales/volume-discounts        138 B          90.3 kB
+├ ƒ /admin/service                       3.54 kB        90.9 kB
+├ ƒ /admin/settings                      4.63 kB          92 kB
 ├ ƒ /api/admin/cfdi                      0 B                0 B
 ├ ƒ /api/admin/coffee                    0 B                0 B
 ├ ƒ /api/admin/engine                    0 B                0 B
+├ ƒ /api/admin/extras                    0 B                0 B
+├ ƒ /api/admin/extras/[id]               0 B                0 B
 ├ ƒ /api/admin/leads/[id]                0 B                0 B
 ├ ƒ /api/admin/messages                  0 B                0 B
+├ ƒ /api/admin/methods                   0 B                0 B
+├ ƒ /api/admin/methods/[id]              0 B                0 B
 ├ ƒ /api/admin/orders                    0 B                0 B
 ├ ƒ /api/admin/posts                     0 B                0 B
+├ ƒ /api/admin/posts/[id]                0 B                0 B
+├ ƒ /api/admin/posts/image               0 B                0 B
+├ ƒ /api/admin/products                  0 B                0 B
 ├ ƒ /api/admin/quotes                    0 B                0 B
 ├ ƒ /api/admin/schedule                  0 B                0 B
 ├ ƒ /api/admin/settings                  0 B                0 B
+├ ƒ /api/admin/shipping-zones            0 B                0 B
+├ ƒ /api/admin/shipping-zones/[id]       0 B                0 B
+├ ƒ /api/admin/social                    0 B                0 B
+├ ƒ /api/admin/social/credentials        0 B                0 B
+├ ƒ /api/admin/volume-discounts          0 B                0 B
+├ ƒ /api/admin/volume-discounts/[id]     0 B                0 B
 ├ ƒ /api/auth/[...nextauth]              0 B                0 B
+├ ƒ /api/auth/social/linkedin            0 B                0 B
+├ ƒ /api/auth/social/linkedin/callback   0 B                0 B
+├ ƒ /api/auth/social/meta                0 B                0 B
+├ ƒ /api/auth/social/meta/callback       0 B                0 B
 ├ ƒ /api/coffee/current                  0 B                0 B
+├ ƒ /api/debug-dump                      0 B                0 B
+├ ƒ /api/extras                          0 B                0 B
 ├ ƒ /api/health                          0 B                0 B
 ├ ƒ /api/leads                           0 B                0 B
+├ ƒ /api/methods                         0 B                0 B
+├ ƒ /api/quote/calculate                 0 B                0 B
+├ ƒ /api/quote/submit                    0 B                0 B
+├ ƒ /api/settings/public                 0 B                0 B
+├ ƒ /api/shipping-zones                  0 B                0 B
+├ ƒ /api/single-checkout                 0 B                0 B
 ├ ƒ /api/tracking/[code]                 0 B                0 B
 ├ ƒ /api/upload                          0 B                0 B
+├ ƒ /api/uploads/[...path]               0 B                0 B
+├ ƒ /api/volume-discounts                0 B                0 B
+├ ƒ /api/webhooks/mercadopago            0 B                0 B
 ├ ƒ /api/webhooks/stripe                 0 B                0 B
 ├ ƒ /api/webhooks/whatsapp               0 B                0 B
-├ ○ /cotizar                             2.13 kB        89.4 kB
-├ ○ /en                                  152 B          87.4 kB
-├ ○ /en/cotizar                          2.07 kB        89.3 kB
-├ ƒ /en/tracking/[code]                  2.87 kB        90.1 kB
-├ ○ /login                               1.53 kB        98.4 kB
-└ ƒ /tracking/[code]                     2.93 kB        90.2 kB
+├ ○ /contacto                            2.48 kB        89.8 kB
+├ ƒ /cotizar                             142 B           102 kB
+├ ƒ /en                                  155 B          87.5 kB
+├ ○ /en/contacto                         2.46 kB        89.8 kB
+├ ƒ /en/cotizar                          143 B           102 kB
+├ ƒ /en/tracking/[code]                  2.84 kB        90.2 kB
+├ ƒ /health                              0 B                0 B
+├ ○ /login                               1.53 kB        98.6 kB
+├ ƒ /productos/[slug]                    2.43 kB        98.4 kB
+└ ƒ /tracking/[code]                     2.9 kB         90.2 kB
 + First Load JS shared by all            87.3 kB
-  ├ chunks/414-3b276aece053abc2.js       31.7 kB
-  ├ chunks/74e89571-84a0e0ccea6119ae.js  53.6 kB
-  └ other shared chunks (total)          1.92 kB
+  ├ chunks/7414-1fb39cc298d08dae.js      31.7 kB
+  ├ chunks/74e89571-08a98abf29b7e859.js  53.6 kB
+  └ other shared chunks (total)          1.97 kB
 
 
 ○  (Static)   prerendered as static content
