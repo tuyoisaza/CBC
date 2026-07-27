@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@cbc/db'
+import { withDbRetry } from '@/lib/db'
 import { S3Client, ListBucketsCommand } from '@aws-sdk/client-s3'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const ENV_GROUPS: Record<string, { label: string; vars: string[] }> = {
-  database:  { label: 'PostgreSQL', vars: ['DATABASE_URL'] },
-  auth:      { label: 'Auth', vars: ['NEXTAUTH_SECRET', 'NEXTAUTH_URL', 'ADMIN_EMAIL'] },
-  app:       { label: 'App', vars: ['NEXT_PUBLIC_APP_URL'] },
-  stripe:    { label: 'Stripe', vars: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'] },
-  facturapi: { label: 'Facturapi (CFDI)', vars: ['FACTURAPI_KEY', 'CBC_RFC', 'CBC_RAZON_SOCIAL', 'CBC_CODIGO_POSTAL_FISCAL'] },
+  database:    { label: 'PostgreSQL', vars: ['DATABASE_URL'] },
+  auth:        { label: 'Auth', vars: ['NEXTAUTH_SECRET', 'NEXTAUTH_URL', 'ADMIN_EMAIL'] },
+  app:         { label: 'App', vars: ['NEXT_PUBLIC_APP_URL'] },
+  stripe:      { label: 'Stripe', vars: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'] },
+  mercadopago: { label: 'Mercado Pago', vars: ['MERCADOPAGO_ACCESS_TOKEN'] },
+  facturapi:   { label: 'Facturapi (CFDI)', vars: ['FACTURAPI_KEY', 'CBC_RFC', 'CBC_RAZON_SOCIAL', 'CBC_CODIGO_POSTAL_FISCAL'] },
   ai:        { label: 'AI (Claude / OpenAI)', vars: ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY'] },
   meta:      { label: 'Meta (IG+FB)', vars: ['META_ACCESS_TOKEN', 'META_INSTAGRAM_ACCOUNT_ID', 'META_FACEBOOK_PAGE_ID'] },
   linkedin:  { label: 'LinkedIn', vars: ['LINKEDIN_ACCESS_TOKEN', 'LINKEDIN_PERSON_URN'] },
@@ -45,9 +47,11 @@ export async function GET() {
   const errors: { service: string; message: string }[] = []
 
   // ── 1. Database ──────────────────────────────────────────────────────────
+  // Retry so a Postgres cold start ("the database system is starting up")
+  // doesn't flip health to degraded on the first probe after a wake/deploy.
   try {
     const dbStart = Date.now()
-    await prisma.$queryRaw`SELECT 1`
+    await withDbRetry(() => prisma.$queryRaw`SELECT 1`, 2, 300)
     checks.database = { status: 'ok', latency_ms: Date.now() - dbStart }
   } catch (e) {
     checks.database = { status: 'error' }
