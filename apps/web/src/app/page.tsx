@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { t } from '@/lib/i18n'
+import { getSingleMarkupPct, markedUpPrice } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,7 +38,11 @@ async function getSiteSettings() {
 }
 
 export default async function HomePage() {
-  const [products, { logoUrl, logoSize, logoAlignment, logoLink }] = await Promise.all([getActiveProducts(), getSiteSettings()])
+  const [products, { logoUrl, logoSize, logoAlignment, logoLink }, markupPct] = await Promise.all([
+    getActiveProducts(),
+    getSiteSettings(),
+    withDbRetry(() => getSingleMarkupPct()),
+  ])
   const logoAlignClass = logoAlignment === 'center' ? 'text-center' : logoAlignment === 'right' ? 'text-right' : 'text-left'
   const logoSizeClass = logoSize === 'small' ? 'h-12 sm:h-16' : logoSize === 'large' ? 'h-20 sm:h-24' : 'h-16 sm:h-20'
   const tr = (path: string) => t('es', path)
@@ -86,6 +91,7 @@ export default async function HomePage() {
                 {products.map((product) => {
                   const videos = (Array.isArray(product.videos) ? product.videos : []) as { url: string; title?: string }[]
                   const extraImages = product.images.slice(1, 4)
+                  const finalPrice = markedUpPrice(product.price, markupPct)
                   return (
                   <div key={product.id} className="rounded-2xl border border-gray-800 bg-[#1e1e1e] overflow-hidden hover:border-cbc-yellow/30 transition-all group">
                     <Link href={`/productos/${product.slug}`}>
@@ -141,7 +147,7 @@ export default async function HomePage() {
                       )}
                       <div className="mt-8 flex items-center justify-between">
                         <span className="text-3xl font-bold text-white">
-                          ${product.price.toLocaleString('es-MX')}
+                          ${finalPrice.toLocaleString('es-MX')}
                           <span className="text-sm font-normal text-gray-500 ml-1">MXN</span>
                         </span>
                         <div className="flex gap-2">

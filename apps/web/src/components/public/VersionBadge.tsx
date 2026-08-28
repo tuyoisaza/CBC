@@ -20,7 +20,7 @@ export function VersionBadge({ version }: { version: string }) {
     <button
       onClick={handleCopy}
       title="Copiar diagnóstico"
-      className="fixed bottom-2 right-2 z-50 text-[9px] font-mono text-muted-foreground/30 hover:text-muted-foreground/70 transition-colors select-none"
+      className="fixed bottom-3 left-3 z-50 text-[10px] font-mono text-muted-foreground/70 hover:text-muted-foreground transition-colors select-none"
     >
       {copied ? 'OK ✓' : version}
     </button>
