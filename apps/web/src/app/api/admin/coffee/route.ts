@@ -3,8 +3,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
-import { updateEngineCoffee } from '@/lib/engine'
-import { isEngineRequest } from '@/lib/engine-auth'
 
 const coffeeSchema = z.object({
   name:          z.string().min(2),
@@ -33,9 +31,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  // Session (admin UI) or engine token (WhatsApp coffee updates via the engine)
   const session = await getServerSession(authOptions)
-  if (!session && !isEngineRequest(req)) {
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -49,9 +46,6 @@ export async function POST(req: NextRequest) {
   const coffee = await db.coffee.create({
     data: { ...data, active: true },
   })
-
-  // Sync to engine (non-fatal if engine is offline)
-  await updateEngineCoffee(coffee as any)
 
   return NextResponse.json(coffee, { status: 201 })
 }
@@ -72,10 +66,6 @@ export async function PATCH(req: NextRequest) {
   }
 
   const coffee = await db.coffee.update({ where: { id }, data: body })
-
-  if (coffee.active) {
-    await updateEngineCoffee(coffee as any)
-  }
 
   return NextResponse.json(coffee)
 }

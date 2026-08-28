@@ -13,14 +13,11 @@ const ENV_GROUPS: Record<string, { label: string; vars: string[] }> = {
   stripe:      { label: 'Stripe', vars: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'] },
   mercadopago: { label: 'Mercado Pago', vars: ['MERCADOPAGO_ACCESS_TOKEN'] },
   facturapi:   { label: 'Facturapi (CFDI)', vars: ['FACTURAPI_KEY', 'CBC_RFC', 'CBC_RAZON_SOCIAL', 'CBC_CODIGO_POSTAL_FISCAL'] },
-  ai:        { label: 'AI (Claude / OpenAI)', vars: ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY'] },
-  meta:      { label: 'Meta (IG+FB)', vars: ['META_ACCESS_TOKEN', 'META_INSTAGRAM_ACCOUNT_ID', 'META_FACEBOOK_PAGE_ID'] },
-  linkedin:  { label: 'LinkedIn', vars: ['LINKEDIN_ACCESS_TOKEN', 'LINKEDIN_PERSON_URN'] },
-  whatsapp:  { label: 'WhatsApp', vars: ['WHATSAPP_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID', 'LORENA_PHONE'] },
-  email:     { label: 'Email (Brevo o Resend)', vars: [] }, // special-cased in checkEnv
-  r2:        { label: 'Cloudflare R2', vars: ['CLOUDFLARE_R2_ACCOUNT_ID', 'CLOUDFLARE_R2_ACCESS_KEY', 'CLOUDFLARE_R2_SECRET_KEY', 'CLOUDFLARE_R2_BUCKET'] },
-  google:    { label: 'Google OAuth', vars: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'] },
-  engine:    { label: 'Content Engine', vars: ['CBC_ENGINE_URL', 'ENGINE_SECRET_TOKEN'] },
+  ai:          { label: 'AI (Claude / OpenAI)', vars: ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY'] },
+  whatsapp:    { label: 'WhatsApp', vars: ['WHATSAPP_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID', 'LORENA_PHONE'] },
+  email:       { label: 'Email (Brevo o Resend)', vars: [] }, // special-cased in checkEnv
+  r2:          { label: 'Cloudflare R2', vars: ['CLOUDFLARE_R2_ACCOUNT_ID', 'CLOUDFLARE_R2_ACCESS_KEY', 'CLOUDFLARE_R2_SECRET_KEY', 'CLOUDFLARE_R2_BUCKET'] },
+  google:      { label: 'Google OAuth', vars: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'] },
 }
 
 function checkEnv(groupId: string): { configured: boolean; missing: string[] } {
@@ -80,31 +77,7 @@ export async function GET() {
     checks.r2 = { status: 'not_configured' }
   }
 
-  // ── 3. Content Engine ───────────────────────────────────────────────────
-  if (process.env.CBC_ENGINE_URL) {
-    try {
-      const engStart = Date.now()
-      const res = await fetch(`${process.env.CBC_ENGINE_URL}/health`, {
-        headers: { 'x-engine-token': process.env.ENGINE_SECRET_TOKEN || '' },
-        signal: AbortSignal.timeout(5000),
-      })
-      const body = res.ok ? await res.json().catch(() => null) : null
-      checks.engine = {
-        status: res.ok ? 'ok' : 'error',
-        latency_ms: Date.now() - engStart,
-        data: body,
-      }
-      if (!res.ok) {
-        errors.push({ service: 'engine', message: `HTTP ${res.status}` })
-      }
-    } catch (e) {
-      checks.engine = { status: 'offline' }
-    }
-  } else {
-    checks.engine = { status: 'not_configured' }
-  }
-
-  // ── 4. Environment variables ───────────────────────────────────────────
+  // ── 3. Environment variables ───────────────────────────────────────────
   const envStatus: Record<string, { configured: boolean; missing: string[] }> = {}
   for (const key of Object.keys(ENV_GROUPS)) {
     envStatus[key] = checkEnv(key)

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
+import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +40,7 @@ export default async function HomePage() {
   const [products, { logoUrl, logoSize, logoAlignment, logoLink }] = await Promise.all([getActiveProducts(), getSiteSettings()])
   const logoAlignClass = logoAlignment === 'center' ? 'text-center' : logoAlignment === 'right' ? 'text-right' : 'text-left'
   const logoSizeClass = logoSize === 'small' ? 'h-12 sm:h-16' : logoSize === 'large' ? 'h-20 sm:h-24' : 'h-16 sm:h-20'
+  const tr = (path: string) => t('es', path)
 
   return (
     <>
@@ -58,13 +60,13 @@ export default async function HomePage() {
                 </div>
               )}
               <p className="mb-3 text-sm font-semibold tracking-widest uppercase text-cbc-yellow">
-                B2B / Regalos Corporativos
+                {tr('home.eyebrow')}
               </p>
               <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                Eleva la <span className="text-cbc-yellow">Experiencia</span> de tu Marca
+                {tr('home.titleStart')} <span className="text-cbc-yellow">{tr('home.titleHighlight')}</span> {tr('home.titleEnd')}
               </h1>
               <p className="mt-4 text-lg leading-relaxed text-gray-400">
-                Regalos corporativos premium con café de especialidad mexicano. Diseñamos cajas personalizadas que tus clientes y equipo realmente recordarán.
+                {tr('home.heroDesc')}
               </p>
 
             </div>
@@ -75,9 +77,9 @@ export default async function HomePage() {
           <section className="py-12 bg-cbc-black">
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-12">
-                <h2 className="text-4xl font-bold text-white">Nuestras Cajas</h2>
+                <h2 className="text-4xl font-bold text-white">{tr('home.ourBoxes')}</h2>
                 <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-                  Elige la experiencia que mejor se adapte a tu equipo o clientes.
+                  {tr('home.ourBoxesDesc')}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-8">
@@ -97,7 +99,7 @@ export default async function HomePage() {
                           {videos.length > 0 && (
                             <span className="absolute top-2 left-2 rounded-full bg-black/60 text-white text-xs px-2 py-0.5 flex items-center gap-1">
                               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                              Video
+                              {tr('home.video')}
                             </span>
                           )}
                           {extraImages.length > 0 && (
@@ -112,7 +114,7 @@ export default async function HomePage() {
                         </div>
                       ) : (
                         <div className="aspect-[16/9] bg-muted flex items-center justify-center text-muted-foreground text-sm">
-                          Sin imagen
+                          {tr('home.noImage')}
                         </div>
                       )}
                     </Link>
@@ -133,7 +135,7 @@ export default async function HomePage() {
                             </li>
                           ))}
                           {product.features.length > 3 && (
-                            <li className="text-sm text-gray-500">+{product.features.length - 3} más</li>
+                            <li className="text-sm text-gray-500">+{product.features.length - 3} {tr('home.more')}</li>
                           )}
                         </ul>
                       )}
@@ -147,13 +149,13 @@ export default async function HomePage() {
                             href={`/productos/${product.slug}`}
                             className="inline-flex items-center gap-2 rounded-md border border-cbc-yellow/40 px-4 py-3 text-sm font-semibold text-cbc-yellow hover:bg-cbc-yellow/10 transition-all"
                           >
-                            Ver producto
+                            {tr('home.viewProduct')}
                           </Link>
                           <Link
                             href={`/cotizar?product=${product.slug}`}
                             className="inline-flex items-center gap-2 rounded-md bg-cbc-yellow px-4 py-3 text-sm font-semibold text-black hover:bg-cbc-yellow/90 transition-all"
                           >
-                            Cotizar
+                            {tr('home.getQuote')}
                           </Link>
                         </div>
                       </div>
@@ -166,11 +168,11 @@ export default async function HomePage() {
               <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
                 <a href={WA_SALES} target="_blank" rel="noopener noreferrer"
                    className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all hover:shadow-lg focus-visible:ring-2 focus-visible:ring-cbc-yellow">
-                  Hablar con Ventas
+                  {tr('home.talkToSales')}
                 </a>
                 <a href="/cotizar"
                    className="inline-flex items-center justify-center rounded-md border border-cbc-yellow/40 px-8 py-4 text-base font-semibold text-cbc-yellow hover:bg-cbc-yellow/10 transition-colors">
-                  Ver Catálogo B2B
+                  {tr('home.viewCatalog')}
                 </a>
               </div>
             </div>
@@ -181,16 +183,16 @@ export default async function HomePage() {
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
               <div>
-                <h3 className="text-xl font-bold text-cbc-yellow mb-4">Café de Especialidad</h3>
-                <p className="text-gray-400">Seleccionamos los mejores granos de México, tostados bajo demanda para garantizar máxima frescura.</p>
+                <h3 className="text-xl font-bold text-cbc-yellow mb-4">{tr('home.specialtyCoffee')}</h3>
+                <p className="text-gray-400">{tr('home.specialtyCoffeeDesc')}</p>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-cbc-yellow mb-4">Diseño Personalizado</h3>
-                <p className="text-gray-400">Tu logo y branding integrados de forma elegante en cada elemento de la caja de regalo.</p>
+                <h3 className="text-xl font-bold text-cbc-yellow mb-4">{tr('home.customDesign')}</h3>
+                <p className="text-gray-400">{tr('home.customDesignDesc')}</p>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-cbc-yellow mb-4">Logística Integral</h3>
-                <p className="text-gray-400">Entregamos en volumen a tus oficinas o directamente a la puerta de cada uno de tus clientes.</p>
+                <h3 className="text-xl font-bold text-cbc-yellow mb-4">{tr('home.logistics')}</h3>
+                <p className="text-gray-400">{tr('home.logisticsDesc')}</p>
               </div>
             </div>
           </div>

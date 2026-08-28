@@ -44,3 +44,6 @@ tmp/
 
 # Worktrees
 .worktrees/
+
+# Agent session state (internal, not project source)
+.omo/

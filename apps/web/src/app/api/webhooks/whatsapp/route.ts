@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { updateEngineCoffee, approveScheduledPosts, discardScheduledPosts } from '@/lib/engine'
 import { generateText, stripJsonFences } from '@/lib/llm'
 import axios from 'axios'
 import crypto from 'crypto'
@@ -48,27 +47,12 @@ async function handleMessage(body: any) {
   const from = message.from
   const text = (message.text.body as string).trim()
 
-  const isLorena = from === process.env.LORENA_PHONE?.replace(/\D/g, '')
-
   // ─── Lorena's coffee update ───────────────────────────────────
   const isCoffeeUpdate = /café nuevo|cafe nuevo|nuevo café|nuevo cafe|new coffee/i.test(text)
+  const isLorena = from === process.env.LORENA_PHONE?.replace(/\D/g, '')
 
   if (isLorena && isCoffeeUpdate) {
     await handleCoffeeUpdate(text, from)
-    return
-  }
-
-  // ─── Lorena's approval replies → forwarded to the engine ─────
-  // The engine queues LinkedIn/seasonal posts as 'scheduled'; Lorena approves
-  // or discards them by replying here (Meta's webhook points at this route).
-  if (isLorena && /^(publicar|aprobar|aprueba|s[ií],? publicar)\b/i.test(text)) {
-    const summary = await approveScheduledPosts()
-    await sendWhatsApp(from, `📤 *Resultado:*\n${summary}`)
-    return
-  }
-  if (isLorena && /^(descartar|rechazar|no publicar|cancelar)\b/i.test(text)) {
-    const summary = await discardScheduledPosts()
-    await sendWhatsApp(from, `🗑 ${summary}`)
     return
   }
 
@@ -110,9 +94,6 @@ Si un campo no está, usa null. Devuelve solo el JSON, sin markdown.`,
       },
     })
 
-    // Sync to engine
-    await updateEngineCoffee(coffee as any)
-
     // Confirm back to Lorena
     await sendWhatsApp(from,
       `✅ *Café actualizado*\n\n` +
@@ -121,8 +102,7 @@ Si un campo no está, usa null. Devuelve solo el JSON, sin markdown.`,
       (coffee.originFarm ? ` · ${coffee.originFarm}` : '') + `\n` +
       (coffee.variety ? `Variedad: ${coffee.variety}\n` : '') +
       (coffee.process ? `Proceso: ${coffee.process}\n` : '') +
-      `Notas: ${coffee.tastingNotes.join(', ')}\n\n` +
-      `El motor de contenido usará este café en el próximo post. 🎉`
+      `Notas: ${coffee.tastingNotes.join(', ')}`
     )
   } catch (err) {
     log.error({ error: err, from }, 'Coffee update failed')

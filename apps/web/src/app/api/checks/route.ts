@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
  * Probes the critical public routes + payment webhooks from inside the
  * container (via 127.0.0.1:$PORT, bypassing Cloudflare) and reports whether
  * each responds with the status we expect. Complements /health, which checks
- * env vars and downstream services (DB, R2, engine).
+ * env vars and downstream services (DB, R2).
  *
  * - GET routes expect 200.
  * - The Stripe webhook expects 400 on an unsigned POST — that proves it's

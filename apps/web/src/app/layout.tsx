@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Raleway } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { DebugCaptureInit } from '@/components/DebugCaptureInit'
+import { VersionBadge } from '@/components/public/VersionBadge'
 import '@/lib/env'
 import './globals.css'
 
@@ -33,6 +34,7 @@ export default function RootLayout({
         >
           <DebugCaptureInit />
           {children}
+          <VersionBadge version={process.env.NEXT_PUBLIC_APP_VERSION || ''} />
         </ThemeProvider>
       </body>
     </html>

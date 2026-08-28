@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { CotizadorWizard } from '@/app/cotizar/components/CotizadorWizard'
+import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,7 @@ export default async function CotizarPageEn({
   const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]))
 
   const params = await searchParams
+  const tr = (path: string) => t('en', path)
 
   return (
     <main className="min-h-screen bg-cbc-black py-24">
@@ -34,11 +36,11 @@ export default async function CotizarPageEn({
           className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          Back to home
+          {tr('cotizar.backToHome')}
         </Link>
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-cbc-cream mb-4">Get a Quote</h1>
-          <p className="text-gray-400">Configure your order and get an instant automatic quote.</p>
+          <h1 className="text-4xl font-bold text-cbc-cream mb-4">{tr('cotizar.title')}</h1>
+          <p className="text-gray-400">{tr('cotizar.subtitle')}</p>
         </div>
         <CotizadorWizard
           methods={JSON.parse(JSON.stringify(methods))}

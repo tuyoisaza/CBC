@@ -192,28 +192,8 @@ model Coffee {
   brewGuide     Json?     // {prensa: "...", moka: "..."}
   active        Boolean   @default(false)
   orders        Order[]
-  posts         Post[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-}
-
-// ─── Marketing / Content ──────────────────────────────────────────────────────
-
-model Post {
-  id           String    @id @default(cuid())
-  platform     String    // instagram | facebook | linkedin
-  contentType  String    // product-post | coffee-story | linkedin-post | seasonal | social-proof
-  caption      String
-  imageUrl     String?
-  imagePrompt  String?
-  status       String    @default("draft") // draft | scheduled | published | failed
-  publishedAt  DateTime?
-  scheduledFor DateTime?
-  errorMsg     String?
-  coffee       Coffee?   @relation(fields: [coffeeId], references: [id])
-  coffeeId     String?
-  platformPostId String? // ID returned from IG/FB/LinkedIn after publishing
-  createdAt    DateTime  @default(now())
 }
 
 // ─── Customer Service ─────────────────────────────────────────────────────────
@@ -317,4 +297,45 @@ model VolumeDiscount {
   discountPct Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ─── Auth & Access Control ────────────────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // admin | operator | viewer | ...
+  description String?
+  permissions String[] @default([]) // 'users:read' | 'users:write' | 'roles:write' | 'audit:read' | ...
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  image     String?
+  role      Role?      @relation(fields: [roleId], references: [id])
+  roleId    String?
+  active    Boolean    @default(true)
+  auditLogs AuditLog[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?  @db.VarChar(64)
+  actorEmail String?
+  action     String        // create | update | delete | login | ...
+  entity     String        // user | role | product | quote | order | settings | ...
+  entityId   String?
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [actorId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([createdAt])
 }

@@ -102,6 +102,51 @@ async function main() {
     })
   }
 
+  // Seed Roles (default access-control matrix)
+  const roleData: { name: string; description: string; permissions: string[] }[] = [
+    {
+      name: 'admin',
+      description: 'Acceso total a todas las secciones del panel.',
+      permissions: [
+        'dashboard:read',
+        'sales:read', 'sales:write',
+        'service:read', 'service:write',
+        'users:read', 'users:write',
+        'roles:read', 'roles:write',
+        'audit:read',
+        'settings:read', 'settings:write',
+        'debug:read',
+        'system:read',
+      ],
+    },
+    {
+      name: 'operator',
+      description: 'Gestión de ventas y servicio al cliente.',
+      permissions: [
+        'dashboard:read',
+        'sales:read', 'sales:write',
+        'service:read', 'service:write',
+      ],
+    },
+    {
+      name: 'viewer',
+      description: 'Acceso de solo lectura.',
+      permissions: [
+        'dashboard:read',
+        'sales:read',
+        'service:read',
+      ],
+    },
+  ]
+  for (const r of roleData) {
+    const existing = await prisma.role.findUnique({ where: { name: r.name } })
+    if (existing) {
+      await prisma.role.update({ where: { id: existing.id }, data: r })
+    } else {
+      await prisma.role.create({ data: r })
+    }
+  }
+
   // Seed Products (cajas predefinidas)
   const products: ProductSeed[] = [
     {

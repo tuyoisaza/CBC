@@ -5,7 +5,6 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   NEXT_PUBLIC_APP_URL: z.string().url(),
   NEXT_PUBLIC_ADMIN_URL: z.string().url().optional(),
-  CBC_ENGINE_URL: z.string().url().optional(),
 
   // ─── Database ─────────────────────────────────────────────────────────────
   DATABASE_URL: z.string().min(1),
@@ -31,19 +30,12 @@ const envSchema = z.object({
   CBC_CSD_KEY_BASE64: z.string().min(1).optional(),
   CBC_CSD_PASSWORD: z.string().min(1).optional(),
 
-  // ─── AI ───────────────────────────────────────────────────────────────────
+  // ─── AI (used by customer-service LLM drafts) ─────────────────────────────
   ANTHROPIC_API_KEY: z.string().startsWith('sk-ant-').optional(),
   OPENAI_API_KEY: z.string().startsWith('sk-').optional(),
 
-  // ─── Meta (Instagram / Facebook) ──────────────────────────────────────────
-  META_ACCESS_TOKEN: z.string().min(1).optional(),
-  META_INSTAGRAM_ACCOUNT_ID: z.string().min(1).optional(),
-  META_FACEBOOK_PAGE_ID: z.string().min(1).optional(),
+  // ─── Meta (WhatsApp signature verification) ──────────────────────────────
   META_APP_SECRET: z.string().min(1).optional(),
-
-  // ─── LinkedIn ─────────────────────────────────────────────────────────────
-  LINKEDIN_ACCESS_TOKEN: z.string().min(1).optional(),
-  LINKEDIN_PERSON_URN: z.string().startsWith('urn:li:').optional(),
 
   // ─── WhatsApp ─────────────────────────────────────────────────────────────
   WHATSAPP_TOKEN: z.string().min(1).optional(),
@@ -73,6 +65,11 @@ const parsed = envSchema.safeParse(process.env)
 if (!parsed.success) {
   console.error('❌ Invalid environment variables:')
   console.error(parsed.error.flatten().fieldErrors)
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      `Invalid environment variables: ${JSON.stringify(parsed.error.flatten().fieldErrors)}`
+    )
+  }
 }
 
 export const env = (parsed.data ?? {}) as z.infer<typeof envSchema>

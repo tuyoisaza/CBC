@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ProductGallery } from '@/components/productos/ProductGallery'
 import { ComprarUnoButton } from '@/components/productos/ComprarUnoButton'
+import { getSingleMarkupPct, markedUpPrice } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,11 +21,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   )
   if (!product) notFound()
 
-  const markupSetting = await withDbRetry(() =>
-    db.setting.findUnique({ where: { key: 'single_purchase_markup' } }),
-  )
-  const markupPct = parseFloat(markupSetting?.value || '20')
-  const markedUpPrice = Math.round(product.price * (1 + markupPct / 100) * 100) / 100
+  const markupPct = await withDbRetry(() => getSingleMarkupPct())
+  const finalPrice = markedUpPrice(product.price, markupPct)
 
   const videos = (Array.isArray(product.videos) ? product.videos : []) as { url: string; title?: string }[]
 
@@ -74,13 +72,14 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
             <div className="mt-8 pt-8 border-t border-gray-800">
               <p className="text-4xl font-bold text-white">
-                ${product.price.toLocaleString('es-MX')}
+                ${finalPrice.toLocaleString('es-MX')}
                 <span className="text-base font-normal text-gray-500 ml-2">MXN</span>
               </p>
+              <p className="mt-1 text-sm text-gray-500">Precio final, impuestos incluidos</p>
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <ComprarUnoButton slug={product.slug} markedUpPrice={markedUpPrice} />
+              <ComprarUnoButton slug={product.slug} markedUpPrice={finalPrice} />
               <Link
                 href={`/cotizar?product=${product.slug}`}
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all"

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { CotizadorWizard } from './components/CotizadorWizard'
+import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,7 @@ export default async function CotizarPage({
   const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]))
 
   const params = await searchParams
+  const tr = (path: string) => t('es', path)
 
   return (
     <main className="min-h-screen bg-cbc-black py-24">
@@ -34,11 +36,11 @@ export default async function CotizarPage({
           className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          {params.product ? 'Volver al producto' : 'Volver al inicio'}
+          {params.product ? tr('cotizar.backToProduct') : tr('cotizar.backToHome')}
         </Link>
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-cbc-cream mb-4">Cotiza tus Regalos</h1>
-          <p className="text-gray-400">Configura tu pedido y recibe una cotización automática al instante.</p>
+          <h1 className="text-4xl font-bold text-cbc-cream mb-4">{tr('cotizar.title')}</h1>
+          <p className="text-gray-400">{tr('cotizar.subtitle')}</p>
         </div>
         <CotizadorWizard
           methods={JSON.parse(JSON.stringify(methods))}

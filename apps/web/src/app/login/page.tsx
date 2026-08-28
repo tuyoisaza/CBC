@@ -127,6 +127,11 @@ function LoginForm() {
           style={{ color: '#444' }}
         >
           Coffee Bunn Café · Regalos corporativos de café
+          {process.env.NEXT_PUBLIC_APP_VERSION && (
+            <span className="block mt-1" style={{ color: '#333' }}>
+              {process.env.NEXT_PUBLIC_APP_VERSION}
+            </span>
+          )}
         </p>
       </div>
     </div>

@@ -6,9 +6,10 @@ import { signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 import {
-  LayoutDashboard, ShoppingBag, Megaphone,
+  LayoutDashboard, ShoppingBag,
   MessageCircle, Settings, LogOut, Sun, Moon, Coffee, Package,
-  Beaker, Puzzle, MapPin, Percent, Clipboard
+  Beaker, Puzzle, MapPin, Percent, Clipboard, Bug, Activity,
+  Users, Shield, ScrollText
 } from 'lucide-react'
 import { getDebugDump, downloadDebugDump } from '@/lib/debug-capture'
 
@@ -20,8 +21,12 @@ const NAV_ITEMS = [
   { href: '/admin/sales/extras', label: 'Extras', icon: Puzzle },
   { href: '/admin/sales/shipping-zones', label: 'Zonas de envío', icon: MapPin },
   { href: '/admin/sales/volume-discounts', label: 'Descuentos', icon: Percent },
-  { href: '/admin/marketing', label: 'Marketing',   icon: Megaphone },
   { href: '/admin/service',   label: 'Servicio',    icon: MessageCircle },
+  { href: '/admin/users',     label: 'Usuarios',    icon: Users },
+  { href: '/admin/roles',     label: 'Roles',       icon: Shield },
+  { href: '/admin/audit',     label: 'Auditoría',   icon: ScrollText },
+  { href: '/admin/debug',     label: 'Debug',       icon: Bug },
+  { href: '/admin/system',    label: 'Sistema',     icon: Activity },
   { href: '/admin/settings',  label: 'Config',      icon: Settings },
 ]
 

@@ -382,41 +382,6 @@ el café que reciben y cómo prepararlo. ¿Quieres que lo incluya en la cotizaci
 
 # PART III — CONTENT SYSTEM
 
-## The Content Engine (Automated)
-
-CBC uses an autonomous content engine that posts to Instagram, Facebook, and LinkedIn without manual intervention. It runs on Railway and uses:
-- **Claude** to generate captions and image prompts
-- **DALL-E 3** to generate brand-style images
-- **Meta Graph API** to publish to Instagram and Facebook
-- **LinkedIn API** to publish to LinkedIn
-
-Lorena's only interaction: send a WhatsApp message to update the current coffee when she changes the micro-lot. Everything else is automatic.
-
-### Automated Schedule
-
-| Day | Platform | Content Type | Pillar |
-|-----|----------|-------------|--------|
-| Monday | IG + FB | Product post | El Regalo |
-| Wednesday | IG + FB | Coffee story | El Café |
-| 1st of month | LinkedIn | Lorena post | Thought leadership |
-| 15th of month | LinkedIn | Lorena post | Thought leadership |
-| Daily (if season active) | All | Seasonal campaign | Seasonal |
-
-### Coffee Update Flow (Lorena's input)
-
-When Lorena selects a new micro-lot, she sends one WhatsApp message to the CBC business number:
-
-**Format (free text — Claude parses it):**
-```
-Café nuevo: [Name]. Origen: [Region, Country], Finca [Farm name].
-Variedad [Variety]. Proceso [process]. Notas de cata: [note 1, note 2, note 3].
-[Optional: any story or context she wants used]
-```
-
-**System response:** Confirmation with parsed data. Next content cycle uses the new coffee.
-
----
-
 ## Manual Content (When Lorena or the Team Creates)
 
 For social proof posts, class recaps, and special moments — content that requires real photos or real events — the team creates manually.
@@ -439,7 +404,7 @@ For social proof posts, class recaps, and special moments — content that requi
 - Week 3: Social proof / class recap (if available) + product post
 - Week 4: Seasonal content (if applicable) + coffee post
 
-**If no real photography is available:** Use AI-generated images from the content engine
+**If no real photography is available:** Use product photography or styled stock shots
 **If a class just happened:** Prioritize real content — it outperforms everything
 
 ---
@@ -640,28 +605,22 @@ These are passive channels — they require setup, not maintenance.
 
 | Day | Action |
 |-----|--------|
-| Monday | Content engine posts product post automatically |
+| Monday | Post product content (IG + FB) |
 | Tuesday | Review last week's metrics. Any leads that need follow-up? |
-| Wednesday | Content engine posts coffee story automatically |
+| Wednesday | Post coffee story (IG + FB) |
 | Thursday | LinkedIn outreach: 15 connections + follow-ups |
 | Friday | Any manual social proof post if an order was delivered this week |
 | Ongoing | WhatsApp responses within 2 hours |
-| 1st/15th | Content engine posts LinkedIn automatically |
+| 1st/15th | LinkedIn thought leadership post |
 
 ---
-
-## The Content Engine Handles
-
-- Monday product post (IG + FB)
-- Wednesday coffee story (IG + FB)
-- Bi-weekly LinkedIn post
-- Seasonal campaign content (when season is active)
 
 ## The Team Handles
 
 - WhatsApp responses and sales conversations
+- Content creation and posting (IG + FB + LinkedIn)
 - Manual social proof posts after deliveries
 - LinkedIn cold outreach (15 DMs/day during active phases)
 - Referral requests after every delivery
-- Coffee micro-lot update (Lorena → WhatsApp → automatic)
+- Coffee micro-lot update (Lorena → WhatsApp → platform)
 - Seasonal campaign strategy and timing decisions

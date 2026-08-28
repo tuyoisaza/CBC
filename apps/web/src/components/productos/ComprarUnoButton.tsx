@@ -22,7 +22,10 @@ export function ComprarUnoButton({ slug, markedUpPrice }: { slug: string; marked
         body: JSON.stringify({ slug, name, email, whatsapp }),
       })
       const body = await res.json()
-      if (!res.ok) throw new Error(body.error || 'Error')
+      if (!res.ok) {
+        const detail = body?.code ? ` (${body.code})` : ''
+        throw new Error(`${body?.error || 'Error al procesar'}${detail}`)
+      }
       window.location.href = body.url
     } catch (err: any) {
       setError(err.message || 'Error al procesar')

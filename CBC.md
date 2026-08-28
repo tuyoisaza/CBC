@@ -73,9 +73,6 @@ What corporate buyers see. Landing page for gift boxes. Quote request form. Orde
 ### Admin Platform — `admin.coffeebunncafe.com`
 What Lorena and the team use to run the business. Four modules:
 
-**Marketing Engine**
-Autonomous. Posts to Instagram, Facebook, and LinkedIn on a fixed schedule — product posts, coffee story posts, LinkedIn thought leadership, seasonal campaigns. Lorena updates the current coffee details (via WhatsApp message or the app) and the engine handles all content generation and publishing. Claude writes the copy. DALL-E generates the images. No daily involvement from Lorena.
-
 **Sales Engine**
 Incoming leads from the quote form land here. Lorena builds a quote, converts it to an order, updates the status as production moves. The pipeline goes: Lead → Quoted → Confirmed → In Production → Shipped → Delivered. Customers get WhatsApp notifications at each stage.
 
@@ -92,14 +89,12 @@ Customers visit `/tracking/[orderCode]` and see their order status in real time.
 **In 90 days:**
 - Platform live and fully operational
 - Landing page generating quote requests
-- Marketing engine posting autonomously — 3x/week IG/FB, 2x/month LinkedIn
 - First 10 orders delivered
 - First returning customer
 
 **In 12 months:**
 - 50+ corporate clients in CRM
 - Consistent monthly revenue from recurring orders (same companies, different seasons)
-- Marketing engine running without intervention
 - Lorena's time 100% on coffee selection, production, and executive sales
 - At least one referral program generating new leads passively
 
@@ -131,7 +126,6 @@ Customers visit `/tracking/[orderCode]` and see their order status in real time.
 | Platform plan | `docs/strategy/platform-plan.md` |
 | Landing page copy | `docs/sales/landing-page-copy.md` |
 | Sales pitch templates | `docs/sales/pitch-corporativo.md` |
-| Content engine | `content-engine/` |
 | GitHub | https://github.com/tuyoisaza/CBC |
 | Railway project | ID: 3f019384-571b-4603-a0ab-2a8169c712dc |
 | Public site | https://www.coffeebunncafe.com |

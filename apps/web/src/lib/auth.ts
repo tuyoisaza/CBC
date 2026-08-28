@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import { compare } from 'bcryptjs'
+import { db } from '@/lib/db'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
 
@@ -13,6 +14,39 @@ const ALLOWED_EMAILS = (
   .split(',')
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean)
+
+/**
+ * Upserts the authenticated user into `User` and resolves their role.
+ * New users default to the "admin" role if it exists.
+ * Returns { userId, roleName }.
+ */
+async function syncUser(input: { email: string; name?: string | null; image?: string | null }) {
+  try {
+    const role = await db.role.findUnique({ where: { name: 'admin' } })
+
+    const user = await db.user.upsert({
+      where: { email: input.email.toLowerCase() },
+      update: {
+        name: input.name ?? undefined,
+        image: input.image ?? undefined,
+        roleId: role?.id ?? undefined,
+      },
+      create: {
+        email: input.email.toLowerCase(),
+        name: input.name,
+        image: input.image,
+        roleId: role?.id ?? undefined,
+      },
+      include: { role: true },
+    })
+
+    return { userId: user.id, roleName: user.role?.name?.toLowerCase() ?? null }
+  } catch {
+    // Sign-in must never break when the DB is unavailable (cold start /
+    // migration pending) — fall back to a safe default role.
+    return { userId: null, roleName: 'admin' }
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
@@ -71,14 +105,23 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, user, account }) {
-      if (user)    token.role = 'admin'
+      if (user?.email) {
+        const { userId, roleName } = await syncUser({
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        })
+        token.dbUserId = userId
+        token.role = roleName ?? token.role
+      }
       if (account) token.provider = account.provider
       return token
     },
 
     async session({ session, token }) {
-      session.user.role     = token.role     as string
-      session.user.provider = token.provider as string
+      session.user.id       = (token.dbUserId as string) ?? undefined
+      session.user.role     = (token.role as string) ?? 'admin'
+      session.user.provider = (token.provider as string) ?? undefined
       return session
     },
   },
