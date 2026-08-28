@@ -27,33 +27,39 @@ Depends on: None
   - Files: CHANGELOG.md
   - Acceptance: File exists with proper PHDK changelog format
   - Blocked by: none
-- [ ] Remove residual marketing code from /health endpoint
+- [x] Remove residual marketing code from /health endpoint
   - ID: phdk-005
   - Files: apps/web/src/app/health/route.ts
   - Acceptance: No 'engine' or 'linkedin' entries in ENV_GROUPS
   - Blocked by: none
-- [ ] Update /api/health to PHDK format
+  - Verified: ENV_GROUPS has no engine/linkedin entries
+- [x] Update /api/health to PHDK format
   - ID: phdk-006
   - Files: apps/web/src/app/api/health/route.ts
   - Acceptance: Returns {status, service, version, environment}
   - Blocked by: none
-- [ ] Add version display to app shell
+  - Verified: returns status/service/version/environment
+- [x] Add version display to app shell
   - ID: phdk-007
-  - Files: apps/web/src/app/layout.tsx
+  - Files: apps/web/src/app/layout.tsx, apps/web/src/components/public/VersionBadge.tsx
   - Acceptance: Version badge visible near logo
   - Blocked by: none
-- [ ] Add version display to login page
+  - Verified: VersionBadge renders NEXT_PUBLIC_APP_VERSION (with copy-debug on click)
+- [x] Add version display to login page
   - ID: phdk-008
   - Files: apps/web/src/app/login/page.tsx
   - Acceptance: Version shown in footer area
   - Blocked by: none
-- [ ] Add version display to admin panel
+  - Verified: login footer shows NEXT_PUBLIC_APP_VERSION
+- [x] Add version display to admin panel
   - ID: phdk-009
-  - Files: apps/web/src/app/admin/(protected)/layout.tsx
+  - Files: apps/web/src/app/admin/(protected)/layout.tsx, apps/web/src/components/admin/AdminNav.tsx
   - Acceptance: Version shown in admin shell
   - Blocked by: none
-- [ ] Clean up .env.example
+  - Verified: AdminNav shows version next to logo (with copy/download)
+- [x] Clean up .env.example
   - ID: phdk-010
   - Files: .env.example
   - Acceptance: No sk_live_/pk_live_ prefixes
   - Blocked by: none
+  - Verified: placeholders use bare var names, no live/test key prefixes
