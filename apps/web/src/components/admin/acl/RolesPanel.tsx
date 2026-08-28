@@ -14,6 +14,7 @@ const ALL_PERMISSIONS = [
   { key: 'roles:read', label: 'Roles (leer)' },
   { key: 'roles:write', label: 'Roles (escribir)' },
   { key: 'audit:read', label: 'Auditoría (leer)' },
+  { key: 'ai:read', label: 'Asistente IA' },
   { key: 'settings:read', label: 'Config (leer)' },
   { key: 'settings:write', label: 'Config (escribir)' },
   { key: 'debug:read', label: 'Debug' },

@@ -9,7 +9,7 @@ import {
   LayoutDashboard, ShoppingBag,
   MessageCircle, Settings, LogOut, Sun, Moon, Coffee, Package,
   Beaker, Puzzle, MapPin, Percent, Clipboard, Bug, Activity,
-  Users, Shield, ScrollText
+  Users, Shield, ScrollText, Sparkles
 } from 'lucide-react'
 import { getDebugDump, downloadDebugDump } from '@/lib/debug-capture'
 
@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { href: '/admin/users',     label: 'Usuarios',    icon: Users },
   { href: '/admin/roles',     label: 'Roles',       icon: Shield },
   { href: '/admin/audit',     label: 'Auditoría',   icon: ScrollText },
+  { href: '/admin/ai',        label: 'IA',           icon: Sparkles },
   { href: '/admin/debug',     label: 'Debug',       icon: Bug },
   { href: '/admin/system',    label: 'Sistema',     icon: Activity },
   { href: '/admin/settings',  label: 'Config',      icon: Settings },

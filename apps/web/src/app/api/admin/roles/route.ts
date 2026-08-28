@@ -21,6 +21,7 @@ export const ALL_PERMISSIONS = [
   'roles:read',
   'roles:write',
   'audit:read',
+  'ai:read',
   'settings:read',
   'settings:write',
   'debug:read',
