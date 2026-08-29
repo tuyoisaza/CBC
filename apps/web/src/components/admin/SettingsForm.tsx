@@ -19,6 +19,7 @@ export function SettingsForm({
   logoAlignment: initialLogoAlignment,
   logoLink: initialLogoLink,
   singlePurchaseMarkup: initialMarkup,
+  wholesaleMarkup: initialWholesaleMarkup,
 }: {
   apiKeys: ApiKeySetting[]
   apiKeyValues: Record<string, string>
@@ -27,6 +28,7 @@ export function SettingsForm({
   logoAlignment: string
   logoLink: string
   singlePurchaseMarkup: string
+  wholesaleMarkup: string
 }) {
   const [values, setValues]           = useState(apiKeyValues)
   const [revealed, setRevealed]       = useState<Record<string, boolean>>({})
@@ -40,6 +42,8 @@ export function SettingsForm({
   const [savingLogoConfig, setSavingLogoConfig] = useState<string | null>(null)
   const [markup, setMarkup] = useState(initialMarkup)
   const [savingMarkup, setSavingMarkup] = useState(false)
+  const [wholesaleMarkup, setWholesaleMarkup] = useState(initialWholesaleMarkup)
+  const [savingWholesaleMarkup, setSavingWholesaleMarkup] = useState(false)
   const router = useRouter()
 
   function mask(value: string) {
@@ -88,6 +92,20 @@ export function SettingsForm({
       router.refresh()
     } finally {
       setSavingMarkup(false)
+    }
+  }
+
+  async function saveWholesaleMarkup() {
+    setSavingWholesaleMarkup(true)
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'wholesale_markup_pct', value: wholesaleMarkup }),
+      })
+      router.refresh()
+    } finally {
+      setSavingWholesaleMarkup(false)
     }
   }
 
@@ -245,6 +263,40 @@ export function SettingsForm({
               className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               {savingMarkup ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Wholesale Markup */}
+      <section className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="border-b border-border bg-muted/30 px-5 py-3">
+          <h2 className="text-sm font-semibold text-foreground">Pedido personalizado (mayoreo)</h2>
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Porcentaje de aumento sobre el precio base para pedidos de mayoreo (10+ unidades) en el cotizador.
+            Déjalo en 0% para vender al costo base + IVA; súbelo si quieres margen también en mayoreo.
+            Normalmente debe ser menor que el margen de compra individual.
+          </p>
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <label className="block text-xs text-muted-foreground mb-1">Margen %</label>
+              <input
+                type="number"
+                value={wholesaleMarkup}
+                onChange={(e) => setWholesaleMarkup(e.target.value)}
+                min={0}
+                max={500}
+                className="input-field w-32 text-sm"
+              />
+            </div>
+            <button
+              onClick={saveWholesaleMarkup}
+              disabled={savingWholesaleMarkup}
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              {savingWholesaleMarkup ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
         </div>

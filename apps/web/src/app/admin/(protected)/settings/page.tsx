@@ -12,7 +12,7 @@ const API_KEY_SETTINGS = [
   { key: 'whatsapp_phone_number_id',   label: 'WhatsApp Phone Number ID',    hint: 'ID del número de WhatsApp',              prefix: '' },
 ]
 
-const SETTINGS_KEYS = ['site_logo_url', 'logo_size', 'logo_alignment', 'logo_link', 'single_purchase_markup']
+const SETTINGS_KEYS = ['site_logo_url', 'logo_size', 'logo_alignment', 'logo_link', 'single_purchase_markup', 'wholesale_markup_pct']
 
 async function getSettings() {
   const rows = await db.setting.findMany({
@@ -50,6 +50,7 @@ export default async function SettingsPage() {
         logoAlignment={settings['logo_alignment'] || 'left'}
         logoLink={settings['logo_link'] || ''}
         singlePurchaseMarkup={settings['single_purchase_markup'] || '20'}
+        wholesaleMarkup={settings['wholesale_markup_pct'] || '0'}
       />
     </div>
   )

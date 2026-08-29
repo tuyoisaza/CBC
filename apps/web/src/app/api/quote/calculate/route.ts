@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         db.extra.findMany({ where: { id: { in: parsed.extras.map(e => e.extraId) } } }),
         db.shippingZone.findUnique({ where: { id: parsed.shippingZoneId } }),
         db.volumeDiscount.findMany({ orderBy: { minQty: 'asc' } }),
-        db.setting.findMany({ where: { key: { in: ['RUSH_FEE_PCT', 'ADVANCE_PCT', 'IVA_PCT'] } } }),
+        db.setting.findMany({ where: { key: { in: ['RUSH_FEE_PCT', 'ADVANCE_PCT', 'IVA_PCT', 'wholesale_markup_pct'] } } }),
       ]),
     )
 
@@ -51,9 +51,14 @@ export async function POST(req: NextRequest) {
 
     const settingsMap = Object.fromEntries(settings.map(s => [s.key, s.value]))
 
+    // Wholesale markup applied on top of each method's base unit price — configurable
+    // in Admin → Settings, independent from the single-purchase retail markup.
+    const wholesaleMarkupPct = Number(settingsMap['wholesale_markup_pct'] ?? 0)
+    const wholesaleUnitPrice = (basePrice: number) => basePrice * (1 + wholesaleMarkupPct / 100)
+
     const methodMap = new Map(methods.map(m => [m.id, m]))
     const subtotal = parsed.items.reduce((sum, item) => {
-      return sum + methodMap.get(item.methodId)!.unitPrice * item.qty
+      return sum + wholesaleUnitPrice(methodMap.get(item.methodId)!.unitPrice) * item.qty
     }, 0)
 
     const totalUnits = parsed.items.reduce((sum, i) => sum + i.qty, 0)

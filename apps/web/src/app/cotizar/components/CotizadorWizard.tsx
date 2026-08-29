@@ -57,9 +57,16 @@ const calcPriceWithTax = (basePrice: number, markupPct: number) => {
   return Math.round(withMarkup * (1 + TAX_RATE) * 100) / 100
 }
 
-// Bulk/wholesale price shown with tax only (no retail markup) — for display purposes.
-// The actual subtotal/discount/shipping/rush math always runs on the raw wholesale
-// rate; this only affects what unit prices look like on screen.
+// Bulk/wholesale display price: base + configurable wholesale markup + tax.
+// Mirrors exactly what /api/quote/calculate computes server-side, so the unit
+// price shown here always matches the real subtotal math (just for display —
+// items[].unitPrice in state always stays the raw base rate).
+const wholesalePrice = (basePrice: number, wholesaleMarkupPct: number, ivaPct: number) => {
+  const withMarkup = basePrice * (1 + wholesaleMarkupPct / 100)
+  return Math.round(withMarkup * (1 + ivaPct / 100) * 100) / 100
+}
+
+// Extras carry no markup tier — tax only.
 const withTax = (rawPrice: number, ivaPct: number) => Math.round(rawPrice * (1 + ivaPct / 100) * 100) / 100
 
 const STEPS = [
@@ -73,6 +80,7 @@ const STEPS = [
 export function CotizadorWizard({ methods, extras, shippingZones, products, settings, preselectedProduct }: WizardProps) {
   const minQty = Number(settings.MIN_QTY_PER_METHOD ?? 10)
   const markupPct = Number(settings.SINGLE_PURCHASE_MARKUP_PCT ?? 20)
+  const wholesaleMarkupPct = Number(settings.WHOLESALE_MARKUP_PCT ?? 0)
   const ivaPct = Number(settings.IVA_PCT ?? 16)
 
   const [step, setStep] = useState(0)
@@ -291,7 +299,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                     <select value={item.methodId} onChange={(e) => updateItem(i, 'methodId', e.target.value)}
                       className="flex-1 bg-cbc-black border border-gray-700 rounded-md px-3 py-2 text-white text-sm focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none">
                       {methods.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name} — {fmt(withTax(m.unitPrice, ivaPct))} c/u (con IVA)</option>
+                        <option key={m.id} value={m.id}>{m.name} — {fmt(wholesalePrice(m.unitPrice, wholesaleMarkupPct, ivaPct))} c/u (con IVA)</option>
                       ))}
                     </select>
                     <div className="flex items-center gap-1">
@@ -305,7 +313,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                         <Plus className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-sm text-cbc-yellow w-24 text-right">{fmt(withTax(item.unitPrice, ivaPct) * item.qty)}</span>
+                    <span className="text-sm text-cbc-yellow w-24 text-right">{fmt(wholesalePrice(item.unitPrice, wholesaleMarkupPct, ivaPct) * item.qty)}</span>
                     <button type="button" onClick={() => removeItem(i)}
                       className="p-1.5 text-gray-500 hover:text-red-400 transition-colors">
                       <X className="h-4 w-4" />

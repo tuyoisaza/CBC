@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 
 export const SINGLE_PURCHASE_MARKUP_KEY = 'single_purchase_markup'
 export const DEFAULT_MARKUP_PCT = 20
+export const WHOLESALE_MARKUP_KEY = 'wholesale_markup_pct'
+export const DEFAULT_WHOLESALE_MARKUP_PCT = 0
 export const TAX_RATE = 0.16 // 16% IVA
 
 /**
@@ -11,6 +13,17 @@ export const TAX_RATE = 0.16 // 16% IVA
 export async function getSingleMarkupPct(): Promise<number> {
   const setting = await db.setting.findUnique({ where: { key: SINGLE_PURCHASE_MARKUP_KEY } })
   return parseFloat(setting?.value || String(DEFAULT_MARKUP_PCT))
+}
+
+/**
+ * Markup applied to bulk/wholesale orders (10+ units in the quotation wizard),
+ * per the `wholesale_markup_pct` setting. Defaults to 0 (at-cost + tax), which is
+ * intentionally lower than the single-purchase markup — buying in volume should
+ * cost less per unit than buying a single retail box.
+ */
+export async function getWholesaleMarkupPct(): Promise<number> {
+  const setting = await db.setting.findUnique({ where: { key: WHOLESALE_MARKUP_KEY } })
+  return parseFloat(setting?.value || String(DEFAULT_WHOLESALE_MARKUP_PCT))
 }
 
 export function markedUpPrice(basePrice: number, markupPct: number): number {
