@@ -167,7 +167,7 @@ async function main() {
       name: 'Box Moka',
       subtitle: 'Mini moka italiana',
       description: 'Caja de regalo que incluye una mini moka italiana y 250g de cafe de especialidad mexicano seleccionado por Lorena Luna.',
-      price: 799,
+      price: 849,
       features: ['250g cafe de especialidad (micro-lote)', 'Mini moka italiana', 'Tarjeta de curacion con historia y guia de preparacion', 'Branding de tu empresa en la caja'],
       images: ['https://placehold.co/800x450/1e1e1e/cbc9a0?text=Box+Moka'],
       videos: [],
