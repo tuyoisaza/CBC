@@ -5,28 +5,11 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 import { createLogger } from '@/lib/logger'
 import { recordAudit } from '@/lib/audit'
+import { ALL_PERMISSIONS } from '@/lib/permissions'
 
 const log = createLogger('admin/roles')
 
 export const dynamic = 'force-dynamic'
-
-export const ALL_PERMISSIONS = [
-  'dashboard:read',
-  'sales:read',
-  'sales:write',
-  'service:read',
-  'service:write',
-  'users:read',
-  'users:write',
-  'roles:read',
-  'roles:write',
-  'audit:read',
-  'ai:read',
-  'settings:read',
-  'settings:write',
-  'debug:read',
-  'system:read',
-] as const
 
 const createSchema = z.object({
   name: z.string().min(1),
