@@ -5,12 +5,35 @@ import { Preference } from 'mercadopago'
 import { mercadopagoClient } from '@/lib/mercadopago'
 import { getSingleMarkupPct, priceWithTax, priceBeforeTax, taxAmount } from '@/lib/pricing'
 
+// Loose international phone check: strip everything but digits, require 10–15.
+const whatsappSchema = z.string().transform((v) => v.replace(/[^\d]/g, '')).pipe(
+  z.string().min(10, 'Número de WhatsApp inválido').max(15, 'Número de WhatsApp inválido'),
+)
+
 const bodySchema = z.object({
   slug: z.string(),
-  name: z.string().min(1),
-  email: z.string().optional(),
-  whatsapp: z.string().min(1),
+  name: z.string().trim().min(1, 'El nombre es requerido'),
+  email: z.string().trim().email('Correo electrónico inválido').optional().or(z.literal('')),
+  whatsapp: whatsappSchema,
 })
+
+// Mercado Pago's SDK doesn't always throw plain Error instances — extract a
+// readable message from whatever shape shows up (Error, {message}, {cause}, etc.)
+// so the UI never has to fall back to a generic "Error desconocido".
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (err && typeof err === 'object') {
+    const anyErr = err as Record<string, unknown>
+    if (typeof anyErr.message === 'string') return anyErr.message
+    if (anyErr.cause) return errorMessage(anyErr.cause)
+    try {
+      return JSON.stringify(err)
+    } catch {
+      return String(err)
+    }
+  }
+  return String(err)
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -98,16 +121,18 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: preference.init_point })
   } catch (err) {
-    console.error('[single-checkout] error', err)
+    // Log the raw, unprocessed error so Railway logs show whatever shape it
+    // actually came in (Mercado Pago's SDK doesn't always throw plain Errors).
+    console.error('[single-checkout] error', JSON.stringify(err, Object.getOwnPropertyNames(err instanceof Object ? err : {})), err)
 
     if (err instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos de compra inválidos. Revisa el formulario.', code: 'VALIDATION_ERROR', details: err.flatten().fieldErrors },
+        { error: err.issues[0]?.message || 'Datos de compra inválidos. Revisa el formulario.', code: 'VALIDATION_ERROR', details: err.flatten().fieldErrors },
         { status: 400 },
       )
     }
 
-    const message = err instanceof Error ? err.message : 'Error desconocido al procesar el pago'
+    const message = errorMessage(err)
     return NextResponse.json(
       { error: `No se pudo iniciar el pago: ${message}`, code: 'CHECKOUT_ERROR' },
       { status: 500 },

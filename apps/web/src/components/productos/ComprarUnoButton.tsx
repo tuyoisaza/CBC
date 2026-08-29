@@ -2,6 +2,14 @@
 
 import { useState } from 'react'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const isValidEmail = (v: string) => EMAIL_RE.test(v.trim())
+// Accepts an optional leading + plus 10–15 digits (spaces/dashes/parens stripped).
+const isValidWhatsapp = (v: string) => {
+  const digits = v.replace(/[^\d]/g, '')
+  return digits.length >= 10 && digits.length <= 15
+}
+
 export function ComprarUnoButton({ slug, markedUpPrice }: { slug: string; markedUpPrice: number }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -10,9 +18,12 @@ export function ComprarUnoButton({ slug, markedUpPrice }: { slug: string; marked
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const emailOk = email.trim() === '' || isValidEmail(email)
+  const canSubmit = !!name.trim() && isValidWhatsapp(whatsapp) && emailOk
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name || !whatsapp) return
+    if (!canSubmit) return
     setLoading(true)
     setError('')
     try {
@@ -56,18 +67,28 @@ export function ComprarUnoButton({ slug, markedUpPrice }: { slug: string; marked
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">WhatsApp *</label>
-                <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} required className="input-field w-full" placeholder="+52 55 1234 5678" />
+                <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} required
+                  className={`input-field w-full ${whatsapp.trim() && !isValidWhatsapp(whatsapp) ? 'border-red-500' : ''}`}
+                  placeholder="+52 55 1234 5678" />
+                {whatsapp.trim() && !isValidWhatsapp(whatsapp) && (
+                  <p className="mt-1 text-xs text-red-400">Ingresa un número válido (10 a 15 dígitos), ej. +52 555 123 4567</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input-field w-full" placeholder="correo@ejemplo.com" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  className={`input-field w-full ${!emailOk ? 'border-red-500' : ''}`}
+                  placeholder="correo@ejemplo.com" />
+                {!emailOk && (
+                  <p className="mt-1 text-xs text-red-400">Ingresa un correo válido, ej. nombre@dominio.com</p>
+                )}
               </div>
               {error && <p className="text-sm text-red-400">{error}</p>}
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setOpen(false)} className="flex-1 rounded-lg border border-gray-600 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 transition-colors">
                   Cancelar
                 </button>
-                <button type="submit" disabled={loading} className="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-all">
+                <button type="submit" disabled={loading || !canSubmit} className="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-all">
                   {loading ? 'Redirigiendo...' : `Pagar $${markedUpPrice.toLocaleString('es-MX')}`}
                 </button>
               </div>
