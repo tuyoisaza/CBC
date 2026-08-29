@@ -49,6 +49,13 @@ interface QuoteExtra {
 
 const fmt = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
+const TAX_RATE = 0.16 // 16% IVA
+
+const calcPriceWithTax = (basePrice: number, markupPct: number) => {
+  const withMarkup = Math.round(basePrice * (1 + markupPct / 100) * 100) / 100
+  return Math.round(withMarkup * (1 + TAX_RATE) * 100) / 100
+}
+
 const STEPS = [
   { id: 0, label: 'Productos', icon: Package },
   { id: 1, label: 'Extras', icon: Sparkles },
@@ -59,6 +66,7 @@ const STEPS = [
 
 export function CotizadorWizard({ methods, extras, shippingZones, products, settings, preselectedProduct }: WizardProps) {
   const minQty = Number(settings.MIN_QTY_PER_METHOD ?? 10)
+  const markupPct = Number(settings.SINGLE_PURCHASE_MARKUP_PCT ?? 20)
 
   const [step, setStep] = useState(0)
   const [items, setItems] = useState<QuoteItem[]>(() => {
@@ -67,7 +75,8 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
       if (prod && prod.methodId) {
         const method = methods.find((m) => m.id === prod.methodId)
         if (method) {
-          return [{ methodId: method.id, methodName: method.name, qty: minQty, unitPrice: method.unitPrice, lineTotal: method.unitPrice * minQty }]
+          const priceWithTax = calcPriceWithTax(prod.price, markupPct)
+          return [{ methodId: method.id, methodName: method.name, qty: minQty, unitPrice: priceWithTax, lineTotal: priceWithTax * minQty }]
         }
       }
     }

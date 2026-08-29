@@ -3,6 +3,7 @@ import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { CotizadorWizard } from './components/CotizadorWizard'
 import { t } from '@/lib/i18n'
+import { getSingleMarkupPct } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,17 +14,19 @@ export default async function CotizarPage({
 }: {
   searchParams: Promise<{ product?: string }>
 }) {
-  const [methods, extras, shippingZones, products, settings] = await withDbRetry(() =>
+  const [methods, extras, shippingZones, products, settings, markupPct] = await withDbRetry(() =>
     Promise.all([
       db.method.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
       db.extra.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
       db.shippingZone.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
       db.product.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
       db.setting.findMany({ where: { key: { in: PUBLIC_KEYS } } }),
+      getSingleMarkupPct(),
     ]),
   )
 
   const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]))
+  settingsMap.SINGLE_PURCHASE_MARKUP_PCT = String(markupPct)
 
   const params = await searchParams
   const tr = (path: string) => t('es', path)
