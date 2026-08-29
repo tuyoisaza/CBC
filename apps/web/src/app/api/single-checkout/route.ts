@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 import { Preference } from 'mercadopago'
 import { mercadopagoClient } from '@/lib/mercadopago'
-import { getSingleMarkupPct, markedUpPrice } from '@/lib/pricing'
+import { getSingleMarkupPct, priceWithTax, priceBeforeTax, taxAmount } from '@/lib/pricing'
 
 const bodySchema = z.object({
   slug: z.string(),
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
     const markupPct = await getSingleMarkupPct()
-    const finalPrice = markedUpPrice(product.price, markupPct)
+    const finalPrice = priceWithTax(product.price, markupPct)
 
     const count = await db.order.count()
     const orderCode = `CBC-${new Date().getFullYear()}-S-${String(count + 1).padStart(3, '0')}`
@@ -43,14 +43,16 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    const subtotal = priceBeforeTax(finalPrice)
+    const iva = taxAmount(finalPrice)
     const quote = await db.quote.create({
       data: {
         leadId: lead.id,
         customerId: customer.id,
-        items: [{ type: product.slug, qty: 1, unitPrice: finalPrice, subtotal: finalPrice }],
-        subtotal: finalPrice,
-        iva: Math.round(finalPrice * 0.16 * 100) / 100,
-        total: Math.round(finalPrice * 1.16 * 100) / 100,
+        items: [{ type: product.slug, qty: 1, unitPrice: finalPrice, subtotal }],
+        subtotal,
+        iva,
+        total: finalPrice,
         status: 'Pagado',
       },
     })

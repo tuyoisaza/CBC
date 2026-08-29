@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ProductGallery } from '@/components/productos/ProductGallery'
 import { ComprarUnoButton } from '@/components/productos/ComprarUnoButton'
-import { getSingleMarkupPct, markedUpPrice } from '@/lib/pricing'
+import { getSingleMarkupPct, priceWithTax } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +22,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   if (!product) notFound()
 
   const markupPct = await withDbRetry(() => getSingleMarkupPct())
-  const finalPrice = markedUpPrice(product.price, markupPct)
+  const finalPrice = priceWithTax(product.price, markupPct)
 
   const videos = (Array.isArray(product.videos) ? product.videos : []) as { url: string; title?: string }[]
 
