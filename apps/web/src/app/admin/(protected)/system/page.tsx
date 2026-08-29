@@ -1,6 +1,7 @@
-import { Activity, Clock, Cpu, HardDrive, CheckCircle2, XCircle } from 'lucide-react'
+import { Activity, Clock, Cpu, HardDrive, CheckCircle2, XCircle, Wallet } from 'lucide-react'
 
 export const metadata = { title: 'Sistema' }
+export const dynamic = 'force-dynamic'
 
 const CRITICAL_ENV_VARS = [
   'DATABASE_URL', 'NEXTAUTH_SECRET', 'NEXTAUTH_URL', 'ADMIN_EMAIL',
@@ -15,7 +16,32 @@ function getEnvStatus(key: string): { configured: boolean; value: string } {
   return { configured: true, value: `${val.slice(0, 4)}${'*'.repeat(Math.min(val.length - 4, 8))}` }
 }
 
-export default function SystemPage() {
+type MpAccount = { ok: true; nickname: string; email: string; siteId: string; testMode: boolean } | { ok: false; error: string } | null
+
+async function getMercadoPagoAccount(): Promise<MpAccount> {
+  const token = process.env.MERCADOPAGO_ACCESS_TOKEN
+  if (!token) return null
+  try {
+    const res = await fetch('https://api.mercadopago.com/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) return { ok: false, error: `Mercado Pago devolvió HTTP ${res.status}` }
+    const data = await res.json()
+    return {
+      ok: true,
+      nickname: data.nickname,
+      email: data.email,
+      siteId: data.site_id,
+      testMode: token.startsWith('TEST-'),
+    }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
+export default async function SystemPage() {
+  const mpAccount = await getMercadoPagoAccount()
   const uptime = process.uptime()
   const hours = Math.floor(uptime / 3600)
   const minutes = Math.floor((uptime % 3600) / 60)
@@ -91,6 +117,41 @@ export default function SystemPage() {
             )
           })}
         </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Wallet className="h-4 w-4 text-cbc-yellow" />
+          <h2 className="text-sm font-semibold text-foreground">Cuenta de Mercado Pago vinculada</h2>
+        </div>
+        {mpAccount === null && (
+          <p className="text-xs text-muted-foreground">MERCADOPAGO_ACCESS_TOKEN no está configurado.</p>
+        )}
+        {mpAccount && !mpAccount.ok && (
+          <p className="text-xs text-red-500">Error al consultar la cuenta: {mpAccount.error}</p>
+        )}
+        {mpAccount && mpAccount.ok && (
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <span className="text-muted-foreground">Nickname: </span>
+              <span className="text-foreground font-mono">{mpAccount.nickname}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Email: </span>
+              <span className="text-foreground font-mono">{mpAccount.email}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Sitio: </span>
+              <span className="text-foreground font-mono">{mpAccount.siteId}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Modo: </span>
+              <span className={`font-mono font-semibold ${mpAccount.testMode ? 'text-amber-500' : 'text-green-500'}`}>
+                {mpAccount.testMode ? 'PRUEBA (sandbox)' : 'PRODUCCIÓN'}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4">
