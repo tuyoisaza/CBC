@@ -1,44 +1,58 @@
 'use server'
 
 import { db } from '@/lib/db'
+import { z } from 'zod'
 
-interface Item {
-  methodId: string
-  methodName: string
-  qty: number
-  unitPrice: number
-  lineTotal: number
-}
+const itemSchema = z.object({
+  methodId: z.string().min(1),
+  methodName: z.string().min(1),
+  qty: z.number().int().positive(),
+  unitPrice: z.number().nonnegative(),
+  lineTotal: z.number().nonnegative(),
+})
 
-interface ExtraItem {
-  extraId: string
-  name: string
-  qty: number
-  unitPrice: number
-  lineTotal: number
-}
+const extraItemSchema = z.object({
+  extraId: z.string().min(1),
+  name: z.string().min(1),
+  qty: z.number().int().positive(),
+  unitPrice: z.number().nonnegative(),
+  lineTotal: z.number().nonnegative(),
+})
 
-export async function submitQuote(data: {
-  companyName: string
-  contactName: string
-  email: string
-  whatsapp: string
-  items: Item[]
-  extras: ExtraItem[]
-  shippingZoneId: string
-  deliveryDate?: string
-  rush: boolean
-  subtotal: number
-  discount: number
-  discountPct: number
-  extrasTotal: number
-  shippingFee: number
-  rushFee: number
-  iva: number
-  total: number
-  advancePct: number
-  advanceAmount: number
-}) {
+// Loose international phone check: strip everything but digits, require 10–15.
+const whatsappSchema = z.string().transform((v) => v.replace(/[^\d]/g, '')).pipe(
+  z.string().min(10, 'Número de WhatsApp inválido').max(15, 'Número de WhatsApp inválido'),
+)
+
+const submitQuoteSchema = z.object({
+  companyName: z.string().trim().min(1, 'La empresa es requerida'),
+  contactName: z.string().trim().min(1, 'El nombre es requerido'),
+  email: z.string().trim().email('Correo electrónico inválido'),
+  whatsapp: whatsappSchema,
+  items: z.array(itemSchema).min(1, 'Agrega al menos un producto'),
+  extras: z.array(extraItemSchema),
+  shippingZoneId: z.string().min(1),
+  deliveryDate: z.string().optional(),
+  rush: z.boolean(),
+  subtotal: z.number(),
+  discount: z.number(),
+  discountPct: z.number(),
+  extrasTotal: z.number(),
+  shippingFee: z.number(),
+  rushFee: z.number(),
+  iva: z.number(),
+  total: z.number(),
+  advancePct: z.number(),
+  advanceAmount: z.number(),
+})
+
+export async function submitQuote(input: z.infer<typeof submitQuoteSchema>) {
+  const parsed = submitQuoteSchema.safeParse(input)
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message || 'Datos de cotización inválidos')
+  }
+  const data = parsed.data
+
   const customer = await db.customer.upsert({
     where: { whatsapp: data.whatsapp },
     update: { companyName: data.companyName, contactName: data.contactName, email: data.email },

@@ -49,6 +49,14 @@ interface QuoteExtra {
 
 const fmt = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const isValidEmail = (v: string) => EMAIL_RE.test(v.trim())
+// Accepts an optional leading + plus 10–15 digits (spaces/dashes/parens stripped).
+const isValidWhatsapp = (v: string) => {
+  const digits = v.replace(/[^\d]/g, '')
+  return digits.length >= 10 && digits.length <= 15
+}
+
 const TAX_RATE = 0.16 // 16% IVA
 
 // Single-purchase retail price: base + markup + tax (matches homepage / product page)
@@ -177,7 +185,9 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
 
   const canContinue = (() => {
     if (step === 0) return items.length > 0 && items.every((i) => i.qty >= minQty)
-    if (step === 3) return companyName.trim() && contactName.trim() && email.trim() && whatsapp.trim()
+    if (step === 3) {
+      return !!(companyName.trim() && contactName.trim() && isValidEmail(email) && isValidWhatsapp(whatsapp))
+    }
     return true
   })()
 
@@ -474,12 +484,22 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                 <div>
                   <label className="block text-xs font-medium text-gray-400 mb-1">Email *</label>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                    className="w-full bg-cbc-black border border-gray-700 rounded-md px-3 py-2.5 text-white text-sm focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none" placeholder="correo@ejemplo.com" />
+                    className={`w-full bg-cbc-black border rounded-md px-3 py-2.5 text-white text-sm focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none ${
+                      email.trim() && !isValidEmail(email) ? 'border-red-500' : 'border-gray-700'
+                    }`} placeholder="correo@ejemplo.com" />
+                  {email.trim() && !isValidEmail(email) && (
+                    <p className="mt-1 text-xs text-red-400">Ingresa un correo válido, ej. nombre@dominio.com</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-400 mb-1">WhatsApp *</label>
                   <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required
-                    className="w-full bg-cbc-black border border-gray-700 rounded-md px-3 py-2.5 text-white text-sm focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none" placeholder="+52 555 123 4567" />
+                    className={`w-full bg-cbc-black border rounded-md px-3 py-2.5 text-white text-sm focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none ${
+                      whatsapp.trim() && !isValidWhatsapp(whatsapp) ? 'border-red-500' : 'border-gray-700'
+                    }`} placeholder="+52 555 123 4567" />
+                  {whatsapp.trim() && !isValidWhatsapp(whatsapp) && (
+                    <p className="mt-1 text-xs text-red-400">Ingresa un número válido (10 a 15 dígitos), ej. +52 555 123 4567</p>
+                  )}
                 </div>
               </div>
             </div>
