@@ -6,6 +6,7 @@ import {
   Package, FileText, Plus, ExternalLink
 } from 'lucide-react'
 import { LeadStatusSelect } from '@/components/admin/sales/LeadStatusSelect'
+import { LeadArchiveButton } from '@/components/admin/sales/LeadArchiveButton'
 
 export const metadata = { title: 'Lead' }
 
@@ -39,7 +40,14 @@ export default async function LeadDetailPage({
           <p className="text-sm text-muted-foreground">{customer.contactName}</p>
         </div>
         <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} />
+        <LeadArchiveButton leadId={lead.id} archived={lead.archivedAt !== null} />
       </div>
+
+      {lead.archivedAt && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-300">
+          Este lead está archivado y no aparece en el pipeline. Usa “Restaurar” para devolverlo.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: details */}

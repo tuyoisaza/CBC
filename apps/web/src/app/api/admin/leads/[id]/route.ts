@@ -5,8 +5,9 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 
 const patchSchema = z.object({
-  status: z.enum(['new', 'contacted', 'quoted', 'confirmed', 'lost']).optional(),
-  notes:  z.string().optional(),
+  status:   z.enum(['new', 'contacted', 'quoted', 'confirmed', 'lost']).optional(),
+  notes:    z.string().optional(),
+  archived: z.boolean().optional(),
 })
 
 export async function PATCH(
@@ -17,11 +18,14 @@ export async function PATCH(
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const data = patchSchema.parse(body)
+  const { archived, ...rest } = patchSchema.parse(body)
 
   const lead = await db.lead.update({
     where: { id: params.id },
-    data,
+    data: {
+      ...rest,
+      ...(archived !== undefined && { archivedAt: archived ? new Date() : null }),
+    },
   })
 
   return NextResponse.json(lead)

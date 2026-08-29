@@ -12,9 +12,10 @@ describe('env', () => {
   })
 
   it('NEXT_PUBLIC_APP_URL is defined when present', () => {
-    if (process.env.NEXT_PUBLIC_APP_URL) {
-      expect(typeof env.NEXT_PUBLIC_APP_URL).toBe('string')
-      expect(env.NEXT_PUBLIC_APP_URL.length).toBeGreaterThan(0)
+    const url = env.NEXT_PUBLIC_APP_URL
+    if (url) {
+      expect(typeof url).toBe('string')
+      expect(url.length).toBeGreaterThan(0)
     }
   })
 

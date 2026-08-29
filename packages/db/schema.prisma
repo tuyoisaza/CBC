@@ -49,8 +49,11 @@ model Lead {
   messages    Message[]
   notes       String?
   assignedTo  String?
+  archivedAt  DateTime? // set = hidden from pipeline, record kept
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([archivedAt])
 }
 
 // ─── Sales ────────────────────────────────────────────────────────────────────
