@@ -254,7 +254,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                       >
                         <h3 className="font-semibold text-cbc-cream">{prod.name}</h3>
                         {prod.subtitle && <p className="text-sm text-gray-400 mt-0.5">{prod.subtitle}</p>}
-                        <p className="text-sm text-cbc-yellow mt-2">{fmt(prod.price)} <span className="text-gray-500">/ caja</span></p>
+                        <p className="text-sm text-cbc-yellow mt-2">{fmt(calcPriceWithTax(prod.price, markupPct))} <span className="text-gray-500 text-xs">/ caja (con IVA)</span></p>
                       </button>
                     )
                   })}
