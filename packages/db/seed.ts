@@ -178,10 +178,14 @@ async function main() {
   ]
 
   for (const p of products) {
-    const existing = await prisma.product.findUnique({ where: { slug: p.slug } })
-    if (!existing) {
-      await prisma.product.create({ data: p as unknown as Prisma.ProductCreateInput })
-    }
+    // Only force-correct price/methodId on existing products — never overwrite
+    // images/description/features, since admins customize those via the panel
+    // and a full overwrite here would wipe out real uploaded content on every deploy.
+    await prisma.product.upsert({
+      where: { slug: p.slug },
+      update: { price: p.price, methodId: p.methodId },
+      create: p as unknown as Prisma.ProductCreateInput,
+    })
   }
 
   console.log('✓ Seed complete')

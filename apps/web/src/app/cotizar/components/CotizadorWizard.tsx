@@ -51,10 +51,16 @@ const fmt = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigi
 
 const TAX_RATE = 0.16 // 16% IVA
 
+// Single-purchase retail price: base + markup + tax (matches homepage / product page)
 const calcPriceWithTax = (basePrice: number, markupPct: number) => {
   const withMarkup = Math.round(basePrice * (1 + markupPct / 100) * 100) / 100
   return Math.round(withMarkup * (1 + TAX_RATE) * 100) / 100
 }
+
+// Bulk/wholesale price shown with tax only (no retail markup) — for display purposes.
+// The actual subtotal/discount/shipping/rush math always runs on the raw wholesale
+// rate; this only affects what unit prices look like on screen.
+const withTax = (rawPrice: number, ivaPct: number) => Math.round(rawPrice * (1 + ivaPct / 100) * 100) / 100
 
 const STEPS = [
   { id: 0, label: 'Productos', icon: Package },
@@ -67,16 +73,19 @@ const STEPS = [
 export function CotizadorWizard({ methods, extras, shippingZones, products, settings, preselectedProduct }: WizardProps) {
   const minQty = Number(settings.MIN_QTY_PER_METHOD ?? 10)
   const markupPct = Number(settings.SINGLE_PURCHASE_MARKUP_PCT ?? 20)
+  const ivaPct = Number(settings.IVA_PCT ?? 16)
 
   const [step, setStep] = useState(0)
+  // Item unitPrice/lineTotal are always the raw wholesale rate (method.unitPrice) —
+  // matching what /api/quote/calculate actually uses. Tax and retail markup are only
+  // applied at display time, never stored in state, so numbers never drift apart.
   const [items, setItems] = useState<QuoteItem[]>(() => {
     if (preselectedProduct) {
       const prod = products.find((p) => p.slug === preselectedProduct || p.id === preselectedProduct)
       if (prod && prod.methodId) {
         const method = methods.find((m) => m.id === prod.methodId)
         if (method) {
-          const priceWithTax = calcPriceWithTax(prod.price, markupPct)
-          return [{ methodId: method.id, methodName: method.name, qty: minQty, unitPrice: priceWithTax, lineTotal: priceWithTax * minQty }]
+          return [{ methodId: method.id, methodName: method.name, qty: minQty, unitPrice: method.unitPrice, lineTotal: method.unitPrice * minQty }]
         }
       }
     }
@@ -282,7 +291,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                     <select value={item.methodId} onChange={(e) => updateItem(i, 'methodId', e.target.value)}
                       className="flex-1 bg-cbc-black border border-gray-700 rounded-md px-3 py-2 text-white text-sm focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none">
                       {methods.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name} — {fmt(m.unitPrice)} c/u</option>
+                        <option key={m.id} value={m.id}>{m.name} — {fmt(withTax(m.unitPrice, ivaPct))} c/u (con IVA)</option>
                       ))}
                     </select>
                     <div className="flex items-center gap-1">
@@ -296,7 +305,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                         <Plus className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-sm text-cbc-yellow w-20 text-right">{fmt(item.unitPrice * item.qty)}</span>
+                    <span className="text-sm text-cbc-yellow w-24 text-right">{fmt(withTax(item.unitPrice, ivaPct) * item.qty)}</span>
                     <button type="button" onClick={() => removeItem(i)}
                       className="p-1.5 text-gray-500 hover:text-red-400 transition-colors">
                       <X className="h-4 w-4" />
@@ -329,7 +338,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                   </button>
                   <div className="flex-1">
                     <span className="text-sm font-medium text-cbc-cream">{extra.name}</span>
-                    <span className="text-xs text-gray-400 ml-2">+{fmt(extra.unitPrice)} c/u</span>
+                    <span className="text-xs text-gray-400 ml-2">+{fmt(withTax(extra.unitPrice, ivaPct))} c/u (con IVA)</span>
                   </div>
                   {isSelected && (
                     <div className="flex items-center gap-1">

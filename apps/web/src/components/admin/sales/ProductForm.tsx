@@ -45,6 +45,7 @@ export function ProductForm({ product }: ProductFormProps) {
   const [methods, setMethods] = useState<Method[]>([])
   const [saving, setSaving] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
+  const [markupPct, setMarkupPct] = useState(20)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -53,7 +54,16 @@ export function ProductForm({ product }: ProductFormProps) {
       .then((res) => res.json())
       .then((data) => setMethods(data))
       .catch(() => {})
+    fetch('/api/admin/settings?key=single_purchase_markup')
+      .then((res) => res.json())
+      .then((data) => { if (data?.value) setMarkupPct(parseFloat(data.value)) })
+      .catch(() => {})
   }, [])
+
+  // Final price the customer actually pays at checkout: base + markup + 16% IVA
+  const finalPriceWithTax = Math.round(
+    Math.round(price * (1 + markupPct / 100) * 100) / 100 * 1.16 * 100
+  ) / 100
   const [newVideoUrl, setNewVideoUrl] = useState('')
   const [newVideoTitle, setNewVideoTitle] = useState('')
   const [error, setError] = useState('')
@@ -239,9 +249,13 @@ export function ProductForm({ product }: ProductFormProps) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Precio ($ MXN)</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Precio base ($ MXN, sin IVA)</label>
             <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} required min={1}
               className="input-field" />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Precio final al cliente (con {markupPct}% markup + 16% IVA):{' '}
+              <span className="font-semibold text-foreground">${finalPriceWithTax.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Orden</label>

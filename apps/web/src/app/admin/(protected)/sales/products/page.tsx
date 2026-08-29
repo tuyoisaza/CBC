@@ -4,6 +4,7 @@ import { Plus, Pencil, EyeOff } from 'lucide-react'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { DeleteProductForm } from '@/components/admin/sales/DeleteProductForm'
+import { getSingleMarkupPct, priceWithTax } from '@/lib/pricing'
 
 export const metadata = { title: 'Productos — CBC Admin' }
 
@@ -23,7 +24,7 @@ async function deleteProduct(formData: FormData) {
 }
 
 export default async function ProductsPage() {
-  const products = await getProducts()
+  const [products, markupPct] = await Promise.all([getProducts(), getSingleMarkupPct()])
 
   return (
     <div className="space-y-6">
@@ -47,7 +48,8 @@ export default async function ProductsPage() {
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <th className="text-left px-5 py-3 font-semibold text-foreground">Producto</th>
-              <th className="text-left px-5 py-3 font-semibold text-foreground hidden sm:table-cell">Precio</th>
+              <th className="text-left px-5 py-3 font-semibold text-foreground hidden sm:table-cell">Precio base</th>
+              <th className="text-left px-5 py-3 font-semibold text-foreground hidden sm:table-cell">Precio final (con IVA)</th>
               <th className="text-left px-5 py-3 font-semibold text-foreground hidden md:table-cell">Slug</th>
               <th className="text-left px-5 py-3 font-semibold text-foreground hidden lg:table-cell">Características</th>
               <th className="text-right px-5 py-3 font-semibold text-foreground">Acciones</th>
@@ -83,6 +85,11 @@ export default async function ProductsPage() {
                 <td className="px-5 py-4 hidden sm:table-cell">
                   <span className="font-medium text-foreground">${product.price.toLocaleString('es-MX')}</span>
                 </td>
+                <td className="px-5 py-4 hidden sm:table-cell">
+                  <span className="font-medium text-primary">
+                    ${priceWithTax(product.price, markupPct).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </span>
+                </td>
                 <td className="px-5 py-4 hidden md:table-cell">
                   <code className="text-xs text-muted-foreground">{product.slug}</code>
                 </td>
@@ -113,7 +120,7 @@ export default async function ProductsPage() {
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-muted-foreground">
+                <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">
                   <p className="text-sm">No hay productos aún</p>
                   <Link href="/admin/sales/products/new" className="text-primary hover:underline text-sm mt-1 inline-block">
                     Crear primer producto
