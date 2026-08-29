@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { t } from '@/lib/i18n'
-import { getSingleMarkupPct, markedUpPrice } from '@/lib/pricing'
+import { getSingleMarkupPct, priceWithTax } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 
@@ -91,7 +91,7 @@ export default async function HomePage() {
                 {products.map((product) => {
                   const videos = (Array.isArray(product.videos) ? product.videos : []) as { url: string; title?: string }[]
                   const extraImages = product.images.slice(1, 4)
-                  const finalPrice = markedUpPrice(product.price, markupPct)
+                  const finalPrice = priceWithTax(product.price, markupPct)
                   return (
                   <div key={product.id} className="rounded-2xl border border-gray-800 bg-[#1e1e1e] overflow-hidden hover:border-cbc-yellow/30 transition-all group">
                     <Link href={`/productos/${product.slug}`}>
