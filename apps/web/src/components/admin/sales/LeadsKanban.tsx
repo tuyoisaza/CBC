@@ -92,14 +92,14 @@ export function LeadsKanban({
         </p>
       )}
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-3 pb-4">
         {stages.map(({ key, label, color }) => {
           const stageLeads = leads.filter((l) => l.status === key)
           const isTarget = dragOverStage === key
           return (
             <div
               key={key}
-              className="flex-shrink-0 w-72"
+              className="min-w-0"
               onDragOver={(e) => {
                 e.preventDefault()
                 e.dataTransfer.dropEffect = 'move'
