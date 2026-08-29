@@ -35,10 +35,33 @@ async function checkStripe(): Promise<CheckResult> {
   }
 }
 
-function checkMercadoPago(): CheckResult {
-  return process.env.MERCADOPAGO_ACCESS_TOKEN
-    ? { status: 'ok', latency_ms: 0, message: 'configured' }
-    : { status: 'not_configured', latency_ms: 0 }
+async function checkMercadoPago(): Promise<CheckResult & { account?: { id: number; nickname: string; email: string; siteId: string; testMode: boolean } }> {
+  if (!process.env.MERCADOPAGO_ACCESS_TOKEN) return { status: 'not_configured', latency_ms: 0 }
+  const t0 = Date.now()
+  try {
+    const res = await fetch('https://api.mercadopago.com/users/me', {
+      headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` },
+    })
+    if (!res.ok) {
+      return { status: 'error', latency_ms: Date.now() - t0, message: `MP API returned HTTP ${res.status}` }
+    }
+    const data = await res.json()
+    return {
+      status: 'ok',
+      latency_ms: Date.now() - t0,
+      message: 'configured',
+      account: {
+        id: data.id,
+        nickname: data.nickname,
+        email: data.email,
+        siteId: data.site_id,
+        // Test-mode access tokens start with TEST-, live ones with APP_USR-
+        testMode: process.env.MERCADOPAGO_ACCESS_TOKEN.startsWith('TEST-'),
+      },
+    }
+  } catch (e) {
+    return { status: 'error', latency_ms: Date.now() - t0, message: (e as Error).message }
+  }
 }
 
 function checkFacturapi(): CheckResult {
@@ -66,8 +89,7 @@ export async function GET() {
   }
 
   const startedAt = Date.now()
-  const [prisma, stripe] = await Promise.all([checkPrisma(), checkStripe()])
-  const mercadoPago = checkMercadoPago()
+  const [prisma, stripe, mercadoPago] = await Promise.all([checkPrisma(), checkStripe(), checkMercadoPago()])
   const facturapi = checkFacturapi()
   const r2 = checkR2()
   const email = checkEmail()
