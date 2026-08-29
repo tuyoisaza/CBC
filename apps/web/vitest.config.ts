@@ -7,11 +7,6 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
-  oxc: {
-    jsx: {
-      runtime: 'automatic',
-    },
-  },
   test: {
     environment: 'happy-dom',
     setupFiles: ['./src/test/setup.ts'],
