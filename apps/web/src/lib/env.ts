@@ -3,17 +3,17 @@ import { z } from 'zod'
 const envSchema = z.object({
   // ─── App ─────────────────────────────────────────────────────────────────
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  NEXT_PUBLIC_APP_URL: z.string().url(),
+  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_ADMIN_URL: z.string().url().optional(),
 
   // ─── Database ─────────────────────────────────────────────────────────────
-  DATABASE_URL: z.string().min(1),
+  DATABASE_URL: z.string().min(1).optional(),
 
   // ─── Auth ─────────────────────────────────────────────────────────────────
-  NEXTAUTH_SECRET: z.string().min(32),
-  NEXTAUTH_URL: z.string().url(),
-  ADMIN_EMAIL: z.string().email(),
-  ADMIN_PASSWORD_HASH: z.string().min(1),
+  NEXTAUTH_SECRET: z.string().min(32).optional(),
+  NEXTAUTH_URL: z.string().url().optional(),
+  ADMIN_EMAIL: z.string().email().optional(),
+  ADMIN_PASSWORD_HASH: z.string().min(1).optional(),
 
   // ─── Stripe ───────────────────────────────────────────────────────────────
   STRIPE_SECRET_KEY: z.string().startsWith('sk_').optional(),
