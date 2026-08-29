@@ -1,18 +1,15 @@
-import { execSync } from 'child_process'
+import { readFileSync } from 'fs'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
-// Auto-detect version from git tag so NEXT_PUBLIC_APP_VERSION stays in sync
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+// Auto-inject version from monorepo root package.json
 function getVersion() {
   try {
-    return execSync('git describe --tags --abbrev=0', { encoding: 'utf-8' }).trim()
+    const pkg = JSON.parse(readFileSync(resolve(__dirname, '../../package.json'), 'utf-8'))
+    return `v${pkg.version}`
   } catch {
-    // Railway does shallow clones without tags — use public GitHub API
-    try {
-      const tag = execSync(
-        'node --input-type=module -e "const r=await fetch(\'https://api.github.com/repos/tuyoisaza/CBC/tags?per_page=1\',{headers:{\'User-Agent\':\'CBC\'}});const d=await r.json();process.stdout.write(d[0]?.name||\'\')"',
-        { encoding: 'utf-8', timeout: 10000 },
-      ).trim()
-      if (tag) return tag
-    } catch {}
     return process.env.NEXT_PUBLIC_APP_VERSION || '?'
   }
 }
