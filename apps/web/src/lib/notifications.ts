@@ -35,6 +35,30 @@ export async function notifyNewContact(data: {
   )
 }
 
+export async function notifyServiceMessage(data: {
+  name: string
+  email?: string
+  phone?: string
+  message: string
+}) {
+  await sendAdminEmail(
+    `💬 Mensaje de servicio al cliente — ${data.name}`,
+    `
+    <div style="font-family: sans-serif; max-width: 520px; color: #262626;">
+      <h2 style="color: #f7b84e;">Nuevo mensaje del sitio</h2>
+      <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+        <tr><td style="padding:8px 0; color:#636363;">Nombre</td><td style="padding:8px 0;"><strong>${data.name}</strong></td></tr>
+        ${data.email ? `<tr><td style="padding:8px 0; color:#636363;">Email</td><td style="padding:8px 0;"><strong>${data.email}</strong></td></tr>` : ''}
+        ${data.phone ? `<tr><td style="padding:8px 0; color:#636363;">Teléfono</td><td style="padding:8px 0;"><strong>${data.phone}</strong></td></tr>` : ''}
+      </table>
+      <p style="margin-top:16px; color:#636363;">Mensaje:</p>
+      <p style="background:#f5f5f5; padding:12px; border-radius:6px;">${data.message}</p>
+      <p style="margin-top:24px;"><a href="${process.env.NEXT_PUBLIC_ADMIN_URL}/admin/service" style="background:#f7b84e; color:#262626; padding:10px 20px; border-radius:6px; text-decoration:none; font-weight:700;">Ver en el inbox</a></p>
+    </div>
+    `
+  )
+}
+
 export async function notifyNewQuote(data: {
   companyName: string
   contactName: string

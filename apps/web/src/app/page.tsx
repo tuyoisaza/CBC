@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
+import { CustomerServiceForm } from '@/components/public/CustomerServiceForm'
+import { CustomerServiceWidget } from '@/components/public/CustomerServiceWidget'
 import { t } from '@/lib/i18n'
 import { getSingleMarkupPct, priceWithTax } from '@/lib/pricing'
 
@@ -203,9 +205,28 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        <section id="servicio" className="py-24 bg-cbc-black border-t border-gray-900">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10">
+              <p className="mb-3 text-sm font-semibold tracking-widest uppercase text-cbc-yellow">
+                ¿Necesitas ayuda?
+              </p>
+              <h2 className="text-4xl font-bold text-cbc-cream">Servicio al cliente</h2>
+              <p className="mt-4 text-lg text-gray-400">
+                Dudas sobre un pedido, branding o facturación. Escríbenos y Lorena te
+                responde el mismo día por WhatsApp o correo.
+              </p>
+            </div>
+            <div className="bg-[#1a1a1a] rounded-xl p-8 border border-gray-800 shadow-xl">
+              <CustomerServiceForm />
+            </div>
+          </div>
+        </section>
       </main>
 
       <PublicFooter lang="es" />
+      <CustomerServiceWidget />
     </>
   )
 }
