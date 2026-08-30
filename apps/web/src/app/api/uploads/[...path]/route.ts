@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 import fs from 'fs'
-
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), '.uploads')
+import { UPLOAD_DIR } from '@/lib/uploads'
 
 export async function GET(
   _req: NextRequest,

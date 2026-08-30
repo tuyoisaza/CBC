@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 import fs from 'fs/promises'
 import { uploadBuffer } from '@/lib/r2'
+import { UPLOAD_DIR } from '@/lib/uploads'
 import { createLogger } from '@/lib/logger'
 const log = createLogger('api/upload')
 
 const ALLOWED_TYPES = ['image/png', 'image/svg+xml', 'image/jpeg', 'image/jpg']
 const MAX_SIZE = 5 * 1024 * 1024
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), '.uploads')
 
 // R2 gives durable, absolute URLs that survive container restarts and render
 // in emails. Local disk is a dev-only fallback — on most PaaS containers
@@ -49,9 +49,12 @@ export async function POST(req: NextRequest) {
     await fs.mkdir(dir, { recursive: true })
     await fs.writeFile(path.join(dir, safeName), buffer)
     const publicUrl = `/api/uploads/${folder}/${safeName}`
-    log.warn(
-      { path: '/api/upload', method: 'POST', folder, filename: safeName, store: 'local', dir: UPLOAD_DIR },
-      'Saved to local disk — set CLOUDFLARE_R2_* + NEXT_PUBLIC_R2_PUBLIC_URL for durable storage',
+    const durable = UPLOAD_DIR.startsWith('/data') || Boolean(process.env.UPLOAD_DIR)
+    log.info(
+      { path: '/api/upload', method: 'POST', folder, filename: safeName, store: 'disk', dir: UPLOAD_DIR, durable },
+      durable
+        ? 'File saved to disk'
+        : 'File saved to ephemeral disk — mount a volume (UPLOAD_DIR / /data) or set CLOUDFLARE_R2_* for durable storage',
     )
     return NextResponse.json({ uploadUrl: publicUrl, publicUrl })
   } catch (err) {
