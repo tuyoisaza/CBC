@@ -1,25 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import path from 'path'
 import fs from 'fs/promises'
-import { uploadBuffer } from '@/lib/r2'
-import { UPLOAD_DIR } from '@/lib/uploads'
+import path from 'path'
+import { UPLOAD_DIR, uploadPath, uploadUrl } from '@/lib/uploads'
 import { createLogger } from '@/lib/logger'
 const log = createLogger('api/upload')
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 const ALLOWED_TYPES = ['image/png', 'image/svg+xml', 'image/jpeg', 'image/jpg']
 const MAX_SIZE = 5 * 1024 * 1024
-
-// R2 gives durable, absolute URLs that survive container restarts and render
-// in emails. Local disk is a dev-only fallback — on most PaaS containers
-// (Railway included) it is wiped on every redeploy/restart, so uploads there
-// "disappear" after a save.
-const R2_READY = Boolean(
-  process.env.CLOUDFLARE_R2_ACCOUNT_ID &&
-  process.env.CLOUDFLARE_R2_ACCESS_KEY &&
-  process.env.CLOUDFLARE_R2_SECRET_KEY &&
-  process.env.CLOUDFLARE_R2_BUCKET &&
-  process.env.NEXT_PUBLIC_R2_PUBLIC_URL,
-)
 
 export async function POST(req: NextRequest) {
   const url      = new URL(req.url)
@@ -39,27 +29,20 @@ export async function POST(req: NextRequest) {
 
     const safeName = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`
 
-    if (R2_READY) {
-      const publicUrl = await uploadBuffer(`uploads/${folder}/${safeName}`, buffer, type)
-      log.info({ path: '/api/upload', method: 'POST', folder, filename: safeName, store: 'r2' }, 'File uploaded to R2')
-      return NextResponse.json({ uploadUrl: publicUrl, publicUrl })
-    }
-
-    const dir = path.join(UPLOAD_DIR, folder)
+    // Single storage location — the persistent volume at /data/uploads.
+    const dir = uploadPath(folder)
     await fs.mkdir(dir, { recursive: true })
     await fs.writeFile(path.join(dir, safeName), buffer)
-    const publicUrl = `/api/uploads/${folder}/${safeName}`
-    const durable = UPLOAD_DIR.startsWith('/data') || Boolean(process.env.UPLOAD_DIR)
+
+    const publicUrl = uploadUrl(folder, safeName)
     log.info(
-      { path: '/api/upload', method: 'POST', folder, filename: safeName, store: 'disk', dir: UPLOAD_DIR, durable },
-      durable
-        ? 'File saved to disk'
-        : 'File saved to ephemeral disk — mount a volume (UPLOAD_DIR / /data) or set CLOUDFLARE_R2_* for durable storage',
+      { path: '/api/upload', method: 'POST', folder, filename: safeName, dir: UPLOAD_DIR },
+      'File saved',
     )
     return NextResponse.json({ uploadUrl: publicUrl, publicUrl })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    log.error({ path: '/api/upload', method: 'POST', error: msg }, 'Upload failed')
+    log.error({ path: '/api/upload', method: 'POST', error: msg, dir: UPLOAD_DIR }, 'Upload failed')
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
