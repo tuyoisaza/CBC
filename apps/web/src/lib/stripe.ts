@@ -1,9 +1,47 @@
 import Stripe from 'stripe'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Fall back to a placeholder so importing this module never throws when the key
+// is unset — callers that actually hit the API get a catchable 401 instead of a
+// module-load crash that would 500 unrelated routes (e.g. the Mercado Pago path
+// in /api/single-checkout).
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_missing_stripe_secret_key', {
   apiVersion: '2024-06-20',
   typescript: true,
 })
+
+export const isStripeConfigured = () => !!process.env.STRIPE_SECRET_KEY
+
+/**
+ * Stripe Checkout Session for a single storefront purchase (tax-inclusive,
+ * one line item, hosted redirect). Dynamic payment methods are left on — no
+ * `payment_method_types` — so card/OXXO/wallets are controlled from the
+ * Stripe Dashboard.
+ */
+export async function createSingleCheckoutSession(opts: {
+  amount: number // MXN, final tax-inclusive price
+  productName: string
+  slug: string
+  customerEmail?: string | null
+  metadata: Record<string, string>
+}) {
+  return stripe.checkout.sessions.create({
+    mode: 'payment',
+    line_items: [
+      {
+        price_data: {
+          currency: 'mxn',
+          unit_amount: Math.round(opts.amount * 100),
+          product_data: { name: opts.productName },
+        },
+        quantity: 1,
+      },
+    ],
+    customer_email: opts.customerEmail || undefined,
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${opts.slug}?compra=exito`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${opts.slug}?compra=cancelado`,
+    metadata: opts.metadata,
+  })
+}
 
 export async function createPaymentLink(opts: {
   amount: number        // in MXN cents

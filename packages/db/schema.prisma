@@ -127,6 +127,7 @@ model Payment {
   stripeCustomerId String?
   paymentLinkId    String?
   paymentLinkUrl   String?
+  provider         String    @default("mercadopago") // mercadopago | stripe
   amount           Float
   currency         String    @default("MXN")
   method           String    @default("card") // card | oxxo | spei | manual

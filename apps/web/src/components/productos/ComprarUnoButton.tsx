@@ -2,6 +2,13 @@
 
 import { useState } from 'react'
 
+type Provider = 'stripe' | 'mercadopago'
+
+const PROVIDER_LABEL: Record<Provider, string> = {
+  stripe: 'Tarjeta (Visa, Mastercard, Amex)',
+  mercadopago: 'Mercado Pago · OXXO · meses sin intereses',
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const isValidEmail = (v: string) => EMAIL_RE.test(v.trim())
 // Accepts an optional leading + plus 10–15 digits (spaces/dashes/parens stripped).
@@ -10,11 +17,21 @@ const isValidWhatsapp = (v: string) => {
   return digits.length >= 10 && digits.length <= 15
 }
 
-export function ComprarUnoButton({ slug, markedUpPrice }: { slug: string; markedUpPrice: number }) {
+export function ComprarUnoButton({
+  slug,
+  markedUpPrice,
+  providers = ['mercadopago'],
+}: {
+  slug: string
+  markedUpPrice: number
+  providers?: Provider[]
+}) {
+  const options = providers.length ? providers : (['mercadopago'] as Provider[])
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [provider, setProvider] = useState<Provider>(options[0])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -30,9 +47,17 @@ export function ComprarUnoButton({ slug, markedUpPrice }: { slug: string; marked
       const res = await fetch('/api/single-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, name, email, whatsapp }),
+        body: JSON.stringify({ slug, name, email, whatsapp, provider }),
       })
-      const body = await res.json()
+      const raw = await res.text()
+      let body: any = null
+      try {
+        body = raw ? JSON.parse(raw) : null
+      } catch {
+        // Non-JSON response (Cloudflare/Next error page) — surface status, don't
+        // choke on "Unexpected token '<'".
+        throw new Error(`El servidor respondió ${res.status}. Intenta de nuevo en un momento.`)
+      }
       if (!res.ok) {
         const detail = body?.code ? ` (${body.code})` : ''
         throw new Error(`${body?.error || 'Error al procesar'}${detail}`)
@@ -83,6 +108,35 @@ export function ComprarUnoButton({ slug, markedUpPrice }: { slug: string; marked
                   <p className="mt-1 text-xs text-red-400">Ingresa un correo válido, ej. nombre@dominio.com</p>
                 )}
               </div>
+
+              {options.length > 1 && (
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Método de pago</label>
+                  <div className="space-y-2">
+                    {options.map((p) => (
+                      <label
+                        key={p}
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                          provider === p
+                            ? 'border-green-500 bg-green-500/10 text-white'
+                            : 'border-gray-600 text-gray-300 hover:bg-gray-800'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="provider"
+                          value={p}
+                          checked={provider === p}
+                          onChange={() => setProvider(p)}
+                          className="h-4 w-4"
+                        />
+                        {PROVIDER_LABEL[p]}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {error && <p className="text-sm text-red-400">{error}</p>}
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setOpen(false)} className="flex-1 rounded-lg border border-gray-600 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 transition-colors">

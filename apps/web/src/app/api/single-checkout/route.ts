@@ -4,6 +4,8 @@ import { getOrCreateCustomer } from '@/lib/db-helpers'
 import { z } from 'zod'
 import { Preference } from 'mercadopago'
 import { mercadopagoClient } from '@/lib/mercadopago'
+import { createSingleCheckoutSession, isStripeConfigured } from '@/lib/stripe'
+import { getPaymentConfig, type PaymentProvider } from '@/lib/payment-config'
 import { getSingleMarkupPct, priceWithTax, priceBeforeTax, taxAmount } from '@/lib/pricing'
 
 // Loose international phone check: strip everything but digits, require 10–15.
@@ -16,6 +18,7 @@ const bodySchema = z.object({
   name: z.string().trim().min(1, 'El nombre es requerido'),
   email: z.string().trim().email('Correo electrónico inválido').optional().or(z.literal('')),
   whatsapp: whatsappSchema,
+  provider: z.enum(['stripe', 'mercadopago']).optional(),
 })
 
 // Mercado Pago's SDK doesn't always throw plain Error instances — extract a
@@ -40,6 +43,7 @@ function errorMessage(err: unknown): string {
 // it broke instead of just "checkout error".
 type Step =
   | 'parse-body'
+  | 'resolve-provider'
   | 'load-product'
   | 'price'
   | 'create-customer'
@@ -47,17 +51,45 @@ type Step =
   | 'create-quote'
   | 'create-order'
   | 'mp-create-preference'
+  | 'stripe-create-session'
   | 'record-payment'
 
 export async function POST(req: NextRequest) {
   let step: Step = 'parse-body'
   let slug: string | null = null
-  const provider = 'mercadopago'
+  let provider: PaymentProvider = 'mercadopago'
   const referer = req.headers.get('referer') || null
 
   try {
     const body = bodySchema.parse(await req.json())
     slug = body.slug
+
+    step = 'resolve-provider'
+    const config = await getPaymentConfig()
+    const enabled = config.singleProviders
+    provider = body.provider ?? enabled[0] ?? 'mercadopago'
+    if (!enabled.includes(provider)) {
+      return NextResponse.json(
+        {
+          error: `El método de pago "${provider}" no está habilitado.`,
+          code: 'PROVIDER_DISABLED',
+          step,
+          provider,
+        },
+        { status: 400 },
+      )
+    }
+    if (provider === 'stripe' && !isStripeConfigured()) {
+      return NextResponse.json(
+        {
+          error: 'Stripe no está configurado en el servidor.',
+          code: 'PROVIDER_NOT_CONFIGURED',
+          step,
+          provider,
+        },
+        { status: 503 },
+      )
+    }
 
     step = 'load-product'
     const product = await db.product.findUnique({ where: { slug: body.slug } })
@@ -120,39 +152,66 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    step = 'mp-create-preference'
-    const preference = await new Preference(mercadopagoClient).create({
-      body: {
-        items: [{
-          id: product.slug,
-          title: `1 × ${product.name}`,
-          quantity: 1,
-          unit_price: finalPrice,
-        }],
-        back_urls: {
-          success: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${body.slug}?compra=exito`,
-          failure: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${body.slug}?compra=fallo`,
-          pending: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${body.slug}?compra=pendiente`,
+    // ── Provider branch ────────────────────────────────────────────────────
+    let checkoutUrl: string
+    let externalId: string
+
+    if (provider === 'stripe') {
+      step = 'stripe-create-session'
+      const stripeSession = await createSingleCheckoutSession({
+        amount: finalPrice,
+        productName: `1 × ${product.name}`,
+        slug: body.slug,
+        customerEmail: body.email || null,
+        metadata: {
+          orderId: order.id,
+          orderCode,
+          type: 'full',
+          customerId: customer.id,
         },
-        auto_return: 'approved',
-        notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mercadopago`,
-        external_reference: order.id,
-      },
-    })
+      })
+      if (!stripeSession.url) throw new Error('Stripe no devolvió una URL de checkout')
+      checkoutUrl = stripeSession.url
+      externalId = stripeSession.id
+    } else {
+      step = 'mp-create-preference'
+      const preference = await new Preference(mercadopagoClient).create({
+        body: {
+          items: [{
+            id: product.slug,
+            title: `1 × ${product.name}`,
+            quantity: 1,
+            unit_price: finalPrice,
+          }],
+          back_urls: {
+            success: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${body.slug}?compra=exito`,
+            failure: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${body.slug}?compra=fallo`,
+            pending: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${body.slug}?compra=pendiente`,
+          },
+          auto_return: 'approved',
+          notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mercadopago`,
+          external_reference: order.id,
+        },
+      })
+      if (!preference.init_point) throw new Error('Mercado Pago no devolvió un enlace de pago')
+      checkoutUrl = preference.init_point
+      externalId = preference.id!
+    }
 
     step = 'record-payment'
     await db.payment.create({
       data: {
         orderId: order.id,
+        provider,
         amount: finalPrice,
         currency: 'MXN',
         type: 'full',
         status: 'pending',
-        stripePaymentId: preference.id,
+        stripePaymentId: externalId,
       },
     })
 
-    return NextResponse.json({ url: preference.init_point })
+    return NextResponse.json({ url: checkoutUrl, provider })
   } catch (err) {
     if (err instanceof z.ZodError) {
       console.warn('[single-checkout] validation failed', JSON.stringify({ step, slug, referer, issues: err.flatten().fieldErrors }))
@@ -196,6 +255,10 @@ export async function POST(req: NextRequest) {
       hint = /403|UNAUTHORIZED|policy/i.test(message)
         ? ' (Mercado Pago rechazó las credenciales — revisar MERCADOPAGO_ACCESS_TOKEN)'
         : ' (Mercado Pago no respondió — revisar estado del servicio)'
+    } else if (step === 'stripe-create-session') {
+      hint = /API key|401|authentication/i.test(message)
+        ? ' (Stripe rechazó la API key — revisar STRIPE_SECRET_KEY)'
+        : ' (Stripe no respondió — revisar estado del servicio)'
     }
 
     return NextResponse.json(
