@@ -51,7 +51,31 @@ export function EntityList({
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingKey, setUploadingKey] = useState<string | null>(null)
+  const [savedKey, setSavedKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Persist a single field of an existing row immediately (used to auto-save
+  // an image the moment it finishes uploading, without leaving edit mode or
+  // clobbering other in-progress edits on the row).
+  async function persistField(id: string, key: string, value: any) {
+    setError(null)
+    try {
+      const res = await fetch(`${apiPath}/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      })
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}))
+        throw new Error(b.error || `No se pudo guardar la imagen (HTTP ${res.status})`)
+      }
+      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, [key]: value } : it)))
+      setSavedKey(`${id}:${key}`)
+      setTimeout(() => setSavedKey((k) => (k === `${id}:${key}` ? null : k)), 2000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar la imagen')
+    }
+  }
 
   async function uploadImage(file: File): Promise<string> {
     const params = new URLSearchParams({ filename: file.name, type: file.type, folder: uploadFolder })
@@ -146,6 +170,7 @@ export function EntityList({
     if (field.type === 'image') {
       const url = values[field.key] as string | null | undefined
       const busy = uploadingKey === `${scope}:${field.key}`
+      const persists = scope !== 'new' // existing row → auto-save on change
       return (
         <div className="flex items-center gap-3">
           {url ? (
@@ -165,7 +190,9 @@ export function EntityList({
                 if (!file) return
                 setUploadingKey(`${scope}:${field.key}`)
                 try {
-                  onChange(field.key, await uploadImage(file))
+                  const uploaded = await uploadImage(file)
+                  onChange(field.key, uploaded)
+                  if (persists) await persistField(scope, field.key, uploaded)
                 } catch (err) {
                   setError(err instanceof Error ? err.message : 'Error al subir la imagen')
                 } finally {
@@ -178,11 +205,17 @@ export function EntityList({
           {url && (
             <button
               type="button"
-              onClick={() => onChange(field.key, null)}
+              onClick={async () => {
+                onChange(field.key, null)
+                if (persists) await persistField(scope, field.key, null)
+              }}
               className="text-muted-foreground hover:text-destructive transition-colors"
             >
               <X className="h-3.5 w-3.5" />
             </button>
+          )}
+          {savedKey === `${scope}:${field.key}` && (
+            <span className="text-xs text-green-600 dark:text-green-400">Guardada ✓</span>
           )}
         </div>
       )
@@ -294,9 +327,14 @@ export function EntityList({
                     {editingId === item.id ? (
                       renderInput(f, editValues, (k, v) => setEditValues({ ...editValues, [k]: v }), item.id)
                     ) : f.type === 'image' ? (
-                      item[f.key]
-                        ? <img src={item[f.key]} alt="" className="h-10 w-10 rounded-md object-cover border border-border" />
-                        : <span className="text-muted-foreground">—</span>
+                      // Always-on uploader: picking a file uploads + auto-saves
+                      // the row immediately, no need to enter edit mode.
+                      renderInput(
+                        f,
+                        { [f.key]: item[f.key] },
+                        (k, v) => setItems((prev) => prev.map((it) => (it.id === item.id ? { ...it, [k]: v } : it))),
+                        item.id,
+                      )
                     ) : (
                       <span className="text-foreground">
                         {f.type === 'boolean'
