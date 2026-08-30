@@ -6,6 +6,7 @@ import { ProductGallery } from '@/components/productos/ProductGallery'
 import { ComprarUnoButton } from '@/components/productos/ComprarUnoButton'
 import { getSingleMarkupPct, priceWithTax } from '@/lib/pricing'
 import { getPaymentConfig } from '@/lib/payment-config'
+import { getRetailShippingConfig } from '@/lib/shipping'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const markupPct = await withDbRetry(() => getSingleMarkupPct())
   const finalPrice = priceWithTax(product.price, markupPct)
   const { singleProviders } = await withDbRetry(() => getPaymentConfig())
+  const shippingCfg = await withDbRetry(() => getRetailShippingConfig())
 
   const videos = (Array.isArray(product.videos) ? product.videos : []) as { url: string; title?: string }[]
 
@@ -81,7 +83,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <ComprarUnoButton slug={product.slug} markedUpPrice={finalPrice} providers={singleProviders} />
+              <ComprarUnoButton slug={product.slug} markedUpPrice={finalPrice} providers={singleProviders} shipping={shippingCfg} />
               <Link
                 href={`/cotizar?product=${product.slug}`}
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all"

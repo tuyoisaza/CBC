@@ -12,32 +12,22 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_missing_st
 export const isStripeConfigured = () => !!process.env.STRIPE_SECRET_KEY
 
 /**
- * Stripe Checkout Session for a single storefront purchase (tax-inclusive,
- * one line item, hosted redirect). Dynamic payment methods are left on — no
+ * Stripe Checkout Session for a single storefront purchase (tax-inclusive
+ * line items, hosted redirect). Dynamic payment methods are left on — no
  * `payment_method_types` — so card/OXXO/wallets are controlled from the
  * Stripe Dashboard.
  */
 export async function createSingleCheckoutSession(opts: {
-  amount: number // MXN, final tax-inclusive price
-  productName: string
   slug: string
   customerEmail?: string | null
+  lineItems: Stripe.Checkout.SessionCreateParams.LineItem[]
   metadata: Record<string, string>
 }) {
   return stripe.checkout.sessions.create({
     mode: 'payment',
-    line_items: [
-      {
-        price_data: {
-          currency: 'mxn',
-          unit_amount: Math.round(opts.amount * 100),
-          product_data: { name: opts.productName },
-        },
-        quantity: 1,
-      },
-    ],
+    line_items: opts.lineItems,
     customer_email: opts.customerEmail || undefined,
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${opts.slug}?compra=exito`,
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${opts.slug}?compra=exito&order=${opts.metadata.orderCode ?? ''}`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/productos/${opts.slug}?compra=cancelado`,
     metadata: opts.metadata,
   })
