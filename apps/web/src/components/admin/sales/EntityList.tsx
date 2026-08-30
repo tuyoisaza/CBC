@@ -51,6 +51,7 @@ export function EntityList({
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingKey, setUploadingKey] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function uploadImage(file: File): Promise<string> {
     const params = new URLSearchParams({ filename: file.name, type: file.type, folder: uploadFolder })
@@ -88,18 +89,25 @@ export function EntityList({
 
   async function saveEdit(id: string) {
     setSaving(true)
+    setError(null)
     const body: Record<string, any> = {}
     for (const f of fields) {
       if (editValues[f.key] !== undefined) body[f.key] = editValues[f.key]
     }
     try {
-      await fetch(`${apiPath}/${id}`, {
+      const res = await fetch(`${apiPath}/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}))
+        throw new Error(b.error || `No se pudo guardar (HTTP ${res.status})`)
+      }
       setEditingId(null)
       load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar')
     } finally {
       setSaving(false)
     }
@@ -113,15 +121,22 @@ export function EntityList({
 
   async function createItem() {
     setSaving(true)
+    setError(null)
     try {
-      await fetch(apiPath, {
+      const res = await fetch(apiPath, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newValues),
       })
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}))
+        throw new Error(b.error || `No se pudo crear (HTTP ${res.status})`)
+      }
       setShowNew(false)
       setNewValues({})
       load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo crear')
     } finally {
       setSaving(false)
     }
@@ -151,8 +166,8 @@ export function EntityList({
                 setUploadingKey(`${scope}:${field.key}`)
                 try {
                   onChange(field.key, await uploadImage(file))
-                } catch {
-                  alert('Error al subir la imagen')
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'Error al subir la imagen')
                 } finally {
                   setUploadingKey(null)
                   e.target.value = ''
@@ -218,6 +233,13 @@ export function EntityList({
           {showNew ? 'Cancelar' : 'Nuevo'}
         </button>
       </div>
+
+      {error && (
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="shrink-0 hover:opacity-70"><X className="h-4 w-4" /></button>
+        </div>
+      )}
 
       {showNew && (
         <div className="rounded-xl border border-border bg-card p-5 space-y-4">
