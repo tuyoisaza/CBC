@@ -13,11 +13,12 @@ export default async function CotizarPageEn({
 }: {
   searchParams: Promise<{ product?: string }>
 }) {
-  const [methods, extras, shippingZones, products, settings] = await withDbRetry(() =>
+  const [methods, extras, shippingZones, volumeDiscounts, products, settings] = await withDbRetry(() =>
     Promise.all([
       db.method.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
       db.extra.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
       db.shippingZone.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
+      db.volumeDiscount.findMany({ orderBy: { minQty: 'asc' } }),
       db.product.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
       db.setting.findMany({ where: { key: { in: PUBLIC_KEYS } } }),
     ]),
@@ -46,6 +47,7 @@ export default async function CotizarPageEn({
           methods={JSON.parse(JSON.stringify(methods))}
           extras={JSON.parse(JSON.stringify(extras))}
           shippingZones={JSON.parse(JSON.stringify(shippingZones))}
+          volumeDiscounts={JSON.parse(JSON.stringify(volumeDiscounts))}
           products={JSON.parse(JSON.stringify(products))}
           settings={settingsMap}
           preselectedProduct={params.product}

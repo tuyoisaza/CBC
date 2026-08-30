@@ -13,6 +13,9 @@ interface Extra {
 interface ShippingZone {
   id: string; name: string; baseFee: number; feePerUnit: number
 }
+interface VolumeDiscount {
+  minQty: number; maxQty: number | null; discountPct: number
+}
 interface Product {
   id: string; slug: string; name: string; subtitle: string | null; price: number; images: string[]; methodId: string | null
 }
@@ -26,6 +29,7 @@ interface WizardProps {
   methods: Method[]
   extras: Extra[]
   shippingZones: ShippingZone[]
+  volumeDiscounts: VolumeDiscount[]
   products: Product[]
   settings: Record<string, string>
   preselectedProduct?: string
@@ -85,13 +89,27 @@ const STEPS = [
   { id: 4, label: 'Listo', icon: CheckCircle },
 ]
 
-export function CotizadorWizard({ methods, extras, shippingZones, products, settings, preselectedProduct }: WizardProps) {
+export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscounts, products, settings, preselectedProduct }: WizardProps) {
   const minQty = Number(settings.MIN_QTY_PER_METHOD ?? 10)
   const markupPct = Number(settings.SINGLE_PURCHASE_MARKUP_PCT ?? 20)
   const wholesaleMarkupPct = Number(settings.WHOLESALE_MARKUP_PCT ?? 0)
   const ivaPct = Number(settings.IVA_PCT ?? 16)
+  const tiers = [...volumeDiscounts].sort((a, b) => a.minQty - b.minQty)
 
   const [step, setStep] = useState(0)
+  const [lightbox, setLightbox] = useState<string | null>(null)
+
+  // Clickable thumbnail — opens the image full-size in an overlay.
+  const thumb = (src: string, cls: string) => (
+    <button
+      type="button"
+      onClick={() => setLightbox(src)}
+      className={`shrink-0 overflow-hidden rounded-md border border-gray-700 cursor-zoom-in transition-opacity hover:opacity-80 ${cls}`}
+      aria-label="Ver imagen más grande"
+    >
+      <img src={src} alt="" className="h-full w-full object-cover" />
+    </button>
+  )
   // Item unitPrice/lineTotal are always the raw wholesale rate (method.unitPrice) —
   // matching what /api/quote/calculate actually uses. Tax and retail markup are only
   // applied at display time, never stored in state, so numbers never drift apart.
@@ -120,6 +138,14 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [result, setResult] = useState<{ quoteId: string; quoteCode: string } | null>(null)
+
+  // Volume discount is keyed off the TOTAL units across every method in the
+  // order — same rule as /api/quote/calculate. Recomputed live as qty changes.
+  const totalUnits = items.reduce((s, i) => s + i.qty, 0)
+  const currentTier = tiers
+    .filter((d) => d.minQty <= totalUnits && (d.maxQty == null || d.maxQty >= totalUnits))
+    .at(-1) ?? null
+  const nextTier = tiers.find((d) => d.minQty > totalUnits) ?? null
 
   const calcPayload = useCallback(() => {
     return {
@@ -281,11 +307,14 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                       >
                         <h3 className="font-semibold text-cbc-cream">{prod.name}</h3>
                         {prod.subtitle && <p className="text-sm text-gray-400 mt-0.5">{prod.subtitle}</p>}
-                        <p className="text-sm text-cbc-yellow mt-2">{fmt(calcPriceWithTax(prod.price, markupPct))} <span className="text-gray-500 text-xs">/ caja (con IVA)</span></p>
+                        <p className="text-sm text-cbc-yellow mt-2">{fmt(calcPriceWithTax(prod.price, markupPct))} <span className="text-gray-500 text-xs">precio unitario (con IVA)</span></p>
                       </button>
                     )
                   })}
                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Precio de pieza única con IVA. Para pedidos de {minQty}+ cajas usa el pedido personalizado: precio de mayoreo y descuento por volumen.
+                </p>
               </div>
             )}
 
@@ -308,13 +337,11 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                   const itemMethod = methods.find((m) => m.id === item.methodId)
                   return (
                   <div key={i} className="flex items-center gap-3 rounded-xl border border-gray-700 bg-cbc-black p-3">
-                    {itemMethod?.imageUrl && (
-                      <img src={itemMethod.imageUrl} alt="" className="h-10 w-10 rounded-md object-cover border border-gray-700 shrink-0" />
-                    )}
+                    {itemMethod?.imageUrl && thumb(itemMethod.imageUrl, 'h-10 w-10')}
                     <select value={item.methodId} onChange={(e) => updateItem(i, 'methodId', e.target.value)}
                       className="flex-1 bg-cbc-black border border-gray-700 rounded-md px-3 py-2 text-white text-sm focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none">
                       {methods.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name} — {fmt(wholesalePrice(m.unitPrice, wholesaleMarkupPct, ivaPct))} c/u (con IVA)</option>
+                        <option key={m.id} value={m.id}>{m.name} — {fmt(wholesalePrice(m.unitPrice, wholesaleMarkupPct, ivaPct))} c/u mayoreo (con IVA)</option>
                       ))}
                     </select>
                     <div className="flex items-center gap-1">
@@ -339,6 +366,29 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
               </div>
 
               <p className="text-xs text-gray-500 mt-2">Mínimo {minQty} unidades por método.</p>
+
+              {items.length > 0 && tiers.length > 0 && (
+                <div className="mt-3 rounded-lg border border-gray-800 bg-cbc-black/60 p-3 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-gray-400">{totalUnits} {totalUnits === 1 ? 'unidad' : 'unidades'} en total</span>
+                    {currentTier ? (
+                      <span className="text-green-400 font-medium">✓ {currentTier.discountPct}% de descuento por volumen</span>
+                    ) : (
+                      <span className="text-gray-500">Sin descuento por volumen todavía</span>
+                    )}
+                  </div>
+                  {currentTier && (
+                    <p className="text-gray-500 mt-1">
+                      Aplica a pedidos de {currentTier.minQty}+ unidades{currentTier.maxQty ? ` (hasta ${currentTier.maxQty})` : ''}. Se resta del subtotal en el resumen.
+                    </p>
+                  )}
+                  {nextTier && (
+                    <p className="text-cbc-yellow/80 mt-1">
+                      Sube a {nextTier.minQty}+ unidades para {nextTier.discountPct}% de descuento.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -360,9 +410,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                     }`}>
                     {isSelected && <Check className="h-3 w-3 text-black" />}
                   </button>
-                  {extra.imageUrl && (
-                    <img src={extra.imageUrl} alt="" className="h-10 w-10 rounded-md object-cover border border-gray-700 shrink-0" />
-                  )}
+                  {extra.imageUrl && thumb(extra.imageUrl, 'h-10 w-10')}
                   <div className="flex-1">
                     <span className="text-sm font-medium text-cbc-cream">{extra.name}</span>
                     <span className="text-xs text-gray-400 ml-2">+{fmt(withTax(extra.unitPrice, ivaPct))} c/u (con IVA)</span>
@@ -443,7 +491,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                   return (
                     <div key={`m-${i}`} className="flex items-center gap-3">
                       {m?.imageUrl
-                        ? <img src={m.imageUrl} alt="" className="h-11 w-11 rounded-md object-cover border border-gray-700 shrink-0" />
+                        ? thumb(m.imageUrl, 'h-11 w-11')
                         : <div className="h-11 w-11 rounded-md border border-gray-800 bg-gray-900 shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-cbc-cream truncate">{item.methodName}</p>
@@ -459,7 +507,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                   return (
                     <div key={`e-${i}`} className="flex items-center gap-3">
                       {e?.imageUrl
-                        ? <img src={e.imageUrl} alt="" className="h-11 w-11 rounded-md object-cover border border-gray-700 shrink-0" />
+                        ? thumb(e.imageUrl, 'h-11 w-11')
                         : <div className="h-11 w-11 rounded-md border border-gray-800 bg-gray-900 shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-cbc-cream truncate">{ex.name}</p>
@@ -608,6 +656,25 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
               {submitting ? 'Enviando...' : 'Enviar cotización'}
             </button>
           )}
+        </div>
+      )}
+
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 cursor-zoom-out"
+          role="dialog"
+          aria-modal="true"
+        >
+          <img src={lightbox} alt="" className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-2xl" />
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+            aria-label="Cerrar"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
       )}
     </div>
