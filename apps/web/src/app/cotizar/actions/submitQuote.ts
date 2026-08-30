@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { sendQuoteToCustomer } from '@/lib/notifications'
 
 const itemSchema = z.object({
   methodId: z.string().min(1),
@@ -88,6 +89,48 @@ export async function submitQuote(input: z.infer<typeof submitQuoteSchema>) {
       status: 'Cotización creada',
     },
   })
+
+  // Customer quote email with method/extra images — non-blocking, never fails the quote.
+  try {
+    const [methodRows, extraRows] = await Promise.all([
+      db.method.findMany({ where: { id: { in: data.items.map((i) => i.methodId) } } }),
+      data.extras.length
+        ? db.extra.findMany({ where: { id: { in: data.extras.map((e) => e.extraId) } } })
+        : Promise.resolve([]),
+    ])
+    const mById = new Map(methodRows.map((m) => [m.id, m]))
+    const eById = new Map(extraRows.map((e) => [e.id, e]))
+    const lines = [
+      ...data.items.map((i) => {
+        const m = mById.get(i.methodId)
+        return { name: m?.name ?? i.methodName, description: m?.description ?? null, imageUrl: m?.imageUrl ?? null, qty: i.qty }
+      }),
+      ...data.extras.map((e) => {
+        const x = eById.get(e.extraId)
+        return { name: x?.name ?? e.name, description: x?.description ?? null, imageUrl: x?.imageUrl ?? null, qty: e.qty }
+      }),
+    ]
+    await sendQuoteToCustomer({
+      email: data.email,
+      contactName: data.contactName,
+      companyName: data.companyName,
+      quoteCode,
+      lines,
+      subtotal: data.subtotal,
+      discount: data.discount,
+      discountPct: data.discountPct,
+      extrasTotal: data.extrasTotal,
+      shippingFee: data.shippingFee,
+      rushFee: data.rushFee,
+      iva: data.iva,
+      total: data.total,
+      advancePct: data.advancePct,
+      advanceAmount: data.advanceAmount,
+      deliveryDate: data.deliveryDate ?? null,
+    })
+  } catch (err) {
+    console.error('[submitQuote] quote email failed', err)
+  }
 
   return { success: true, quoteId: quote.id, quoteCode }
 }

@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic'
 const schema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
+  imageUrl: z.string().nullable().optional(),
   unitPrice: z.number().positive(),
   active: z.boolean().optional(),
   sortOrder: z.number().int().optional(),

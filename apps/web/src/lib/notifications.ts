@@ -282,3 +282,102 @@ export async function sendCfdiToCustomer(opts: {
       `,
   })
 }
+
+// ─── Customer quote email ────────────────────────────────────────────────────
+// Sent right after the cotizador submits. Shows each method/extra with its
+// image so the client sees *what* they're getting, plus the authoritative
+// price breakdown. Method/extra images are stored as app-relative paths
+// (/api/uploads/...), so they're made absolute here for email clients.
+export async function sendQuoteToCustomer(opts: {
+  email: string
+  contactName: string
+  companyName: string
+  quoteCode: string
+  lines: Array<{ name: string; description?: string | null; imageUrl?: string | null; qty: number }>
+  subtotal: number
+  discount: number
+  discountPct: number
+  extrasTotal: number
+  shippingFee: number
+  rushFee: number
+  iva: number
+  total: number
+  advancePct: number
+  advanceAmount: number
+  deliveryDate?: string | null
+}) {
+  const base = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '')
+  const abs = (u?: string | null) =>
+    !u ? null : /^https?:\/\//.test(u) ? u : base ? `${base}${u.startsWith('/') ? '' : '/'}${u}` : null
+  const money = (n: number) =>
+    `$${n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const firstName = opts.contactName.split(' ')[0] || opts.contactName
+
+  const rows = opts.lines
+    .map((l) => {
+      const img = abs(l.imageUrl)
+      return `
+        <tr>
+          <td style="padding:10px 0; width:56px; vertical-align:top;">
+            ${
+              img
+                ? `<img src="${img}" width="48" height="48" alt="" style="width:48px; height:48px; border-radius:6px; object-fit:cover; border:1px solid #e5e5e5; display:block;" />`
+                : `<div style="width:48px; height:48px; border-radius:6px; background:#f0efe9; border:1px solid #e5e5e5;"></div>`
+            }
+          </td>
+          <td style="padding:10px 0 10px 12px; vertical-align:top;">
+            <div style="font-size:14px; color:#262626; font-weight:600;">${l.name}</div>
+            ${l.description ? `<div style="font-size:12px; color:#636363; margin-top:2px;">${l.description}</div>` : ''}
+          </td>
+          <td style="padding:10px 0; text-align:right; vertical-align:top; font-size:13px; color:#262626; white-space:nowrap;">
+            Cantidad: <strong>${l.qty}</strong>
+          </td>
+        </tr>`
+    })
+    .join('')
+
+  const brk = (label: string, value: string, color = '#636363') =>
+    `<tr><td style="padding:4px 0; color:${color}; font-size:13px;">${label}</td><td style="padding:4px 0; text-align:right; color:${color}; font-size:13px;">${value}</td></tr>`
+
+  await sendEmail({
+    to: opts.email,
+    subject: `Tu cotización ${opts.quoteCode} | Coffee Bunn Café`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto; color: #262626;">
+        <div style="background:#262626; padding:32px; text-align:center;">
+          <h1 style="color:#f7b84e; margin:0; font-size:24px;">Coffee Bunn Café</h1>
+        </div>
+        <div style="padding:32px;">
+          <p>Hola <strong>${firstName}</strong>,</p>
+          <p>Gracias por cotizar con nosotros${opts.companyName ? ` para <strong>${opts.companyName}</strong>` : ''}. Aquí está el detalle:</p>
+          <p style="font-size:13px; color:#636363; margin:0 0 8px;">Folio: <strong style="color:#262626;">${opts.quoteCode}</strong></p>
+
+          <table style="width:100%; border-collapse:collapse; border-top:1px solid #e5e5e5; margin-top:8px;">
+            ${rows}
+          </table>
+
+          <table style="width:100%; border-collapse:collapse; border-top:1px solid #e5e5e5; margin-top:16px;">
+            ${brk('Subtotal', money(opts.subtotal))}
+            ${opts.discountPct > 0 ? brk(`Descuento por volumen (${opts.discountPct}%)`, `-${money(opts.discount)}`, '#15803d') : ''}
+            ${opts.extrasTotal > 0 ? brk('Extras', money(opts.extrasTotal)) : ''}
+            ${brk('Envío', money(opts.shippingFee))}
+            ${opts.rushFee > 0 ? brk('Recargo urgente', money(opts.rushFee), '#b45309') : ''}
+            ${brk('IVA (16%)', money(opts.iva))}
+            <tr><td style="padding:8px 0 0; border-top:1px solid #262626; font-weight:700; font-size:15px;">Total MXN</td><td style="padding:8px 0 0; border-top:1px solid #262626; text-align:right; font-weight:700; font-size:15px;">${money(opts.total)}</td></tr>
+            <tr><td style="padding:4px 0; color:#b8860b; font-size:13px;">Anticipo (${opts.advancePct}%)</td><td style="padding:4px 0; text-align:right; color:#b8860b; font-size:13px;">${money(opts.advanceAmount)}</td></tr>
+          </table>
+
+          ${opts.deliveryDate ? `<p style="font-size:13px; color:#636363; margin-top:16px;">Fecha de entrega deseada: <strong style="color:#262626;">${opts.deliveryDate}</strong></p>` : ''}
+
+          <p style="color:#636363; font-size:14px; margin-top:24px;">
+            Esta cotización es válida por 15 días. Para confirmar tu pedido realiza el anticipo del ${opts.advancePct}% y envíanos tu logo en alta resolución.<br>
+            Cualquier duda, escríbenos al +52 55 72293512.
+          </p>
+        </div>
+        <div style="background:#fffaf3; padding:16px 32px; text-align:center; font-size:11px; color:#636363;">
+          Coffee Bunn Café · Av. José Martí 300, Escandón II, CDMX 11800
+        </div>
+      </div>
+    `,
+  })
+}

@@ -6,7 +6,7 @@ import { Plus, Pencil, X, Check, Trash2 } from 'lucide-react'
 export interface Field {
   key: string
   label: string
-  type: 'text' | 'number' | 'boolean'
+  type: 'text' | 'number' | 'boolean' | 'image'
   required?: boolean
   // Declarative (serializable) formatter — pages are Server Components, so
   // passing a function here would crash the server→client boundary.
@@ -33,12 +33,15 @@ export function EntityList({
   apiPath,
   fields,
   emptyMessage,
+  uploadFolder = 'general',
 }: {
   title: string
   description: string
   apiPath: string
   fields: Field[]
   emptyMessage: string
+  // Subfolder passed to /api/upload for any field of type 'image'.
+  uploadFolder?: string
 }) {
   const [items, setItems] = useState<any[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -47,6 +50,19 @@ export function EntityList({
   const [showNew, setShowNew] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null)
+
+  async function uploadImage(file: File): Promise<string> {
+    const params = new URLSearchParams({ filename: file.name, type: file.type, folder: uploadFolder })
+    const res = await fetch(`/api/upload?${params}`, {
+      method: 'POST',
+      body: file,
+      headers: { 'Content-Type': file.type },
+    })
+    const body = await res.json()
+    if (!res.ok || body.error) throw new Error(body.error || `HTTP ${res.status}`)
+    return body.publicUrl as string
+  }
 
   async function load() {
     setLoading(true)
@@ -111,7 +127,51 @@ export function EntityList({
     }
   }
 
-  function renderInput(field: Field, values: Record<string, any>, onChange: (key: string, val: any) => void) {
+  function renderInput(field: Field, values: Record<string, any>, onChange: (key: string, val: any) => void, scope = 'new') {
+    if (field.type === 'image') {
+      const url = values[field.key] as string | null | undefined
+      const busy = uploadingKey === `${scope}:${field.key}`
+      return (
+        <div className="flex items-center gap-3">
+          {url ? (
+            <img src={url} alt="" className="h-12 w-12 rounded-md object-cover border border-border" />
+          ) : (
+            <div className="h-12 w-12 rounded-md border border-dashed border-border" />
+          )}
+          <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
+            {busy ? 'Subiendo...' : (url ? 'Cambiar' : 'Subir')}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+              className="hidden"
+              disabled={busy}
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                setUploadingKey(`${scope}:${field.key}`)
+                try {
+                  onChange(field.key, await uploadImage(file))
+                } catch {
+                  alert('Error al subir la imagen')
+                } finally {
+                  setUploadingKey(null)
+                  e.target.value = ''
+                }
+              }}
+            />
+          </label>
+          {url && (
+            <button
+              type="button"
+              onClick={() => onChange(field.key, null)}
+              className="text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )
+    }
     if (field.type === 'boolean') {
       return (
         <input
@@ -210,7 +270,11 @@ export function EntityList({
                 {fields.map((f) => (
                   <td key={f.key} className="px-5 py-3">
                     {editingId === item.id ? (
-                      renderInput(f, editValues, (k, v) => setEditValues({ ...editValues, [k]: v }))
+                      renderInput(f, editValues, (k, v) => setEditValues({ ...editValues, [k]: v }), item.id)
+                    ) : f.type === 'image' ? (
+                      item[f.key]
+                        ? <img src={item[f.key]} alt="" className="h-10 w-10 rounded-md object-cover border border-border" />
+                        : <span className="text-muted-foreground">—</span>
                     ) : (
                       <span className="text-foreground">
                         {f.type === 'boolean'

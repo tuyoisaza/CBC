@@ -5,10 +5,10 @@ import { Check, ChevronLeft, ChevronRight, Plus, X, Package, Sparkles, Truck, Fi
 import { submitQuote } from '../actions/submitQuote'
 
 interface Method {
-  id: string; name: string; unitPrice: number
+  id: string; name: string; unitPrice: number; imageUrl?: string | null
 }
 interface Extra {
-  id: string; name: string; unitPrice: number
+  id: string; name: string; unitPrice: number; imageUrl?: string | null
 }
 interface ShippingZone {
   id: string; name: string; baseFee: number; feePerUnit: number
@@ -304,8 +304,13 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
               )}
 
               <div className="space-y-3">
-                {items.map((item, i) => (
+                {items.map((item, i) => {
+                  const itemMethod = methods.find((m) => m.id === item.methodId)
+                  return (
                   <div key={i} className="flex items-center gap-3 rounded-xl border border-gray-700 bg-cbc-black p-3">
+                    {itemMethod?.imageUrl && (
+                      <img src={itemMethod.imageUrl} alt="" className="h-10 w-10 rounded-md object-cover border border-gray-700 shrink-0" />
+                    )}
                     <select value={item.methodId} onChange={(e) => updateItem(i, 'methodId', e.target.value)}
                       className="flex-1 bg-cbc-black border border-gray-700 rounded-md px-3 py-2 text-white text-sm focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none">
                       {methods.map((m) => (
@@ -329,7 +334,8 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                       <X className="h-4 w-4" />
                     </button>
                   </div>
-                ))}
+                  )
+                })}
               </div>
 
               <p className="text-xs text-gray-500 mt-2">Mínimo {minQty} unidades por método.</p>
@@ -354,6 +360,9 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
                     }`}>
                     {isSelected && <Check className="h-3 w-3 text-black" />}
                   </button>
+                  {extra.imageUrl && (
+                    <img src={extra.imageUrl} alt="" className="h-10 w-10 rounded-md object-cover border border-gray-700 shrink-0" />
+                  )}
                   <div className="flex-1">
                     <span className="text-sm font-medium text-cbc-cream">{extra.name}</span>
                     <span className="text-xs text-gray-400 ml-2">+{fmt(withTax(extra.unitPrice, ivaPct))} c/u (con IVA)</span>
@@ -424,6 +433,45 @@ export function CotizadorWizard({ methods, extras, shippingZones, products, sett
         {/* Step 3: Summary + Contact */}
         {step === 3 && (
           <div className="space-y-8">
+            {/* Line-item detail */}
+            <div className="rounded-xl border border-gray-700 bg-cbc-black p-5">
+              <h3 className="text-sm font-semibold text-cbc-cream mb-3">Detalle de la cotización</h3>
+              <div className="space-y-3">
+                {items.map((item, i) => {
+                  const m = methods.find((mm) => mm.id === item.methodId)
+                  const unit = wholesalePrice(item.unitPrice, wholesaleMarkupPct, ivaPct)
+                  return (
+                    <div key={`m-${i}`} className="flex items-center gap-3">
+                      {m?.imageUrl
+                        ? <img src={m.imageUrl} alt="" className="h-11 w-11 rounded-md object-cover border border-gray-700 shrink-0" />
+                        : <div className="h-11 w-11 rounded-md border border-gray-800 bg-gray-900 shrink-0" />}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-cbc-cream truncate">{item.methodName}</p>
+                        <p className="text-xs text-gray-400">{item.qty} × {fmt(unit)} (con IVA)</p>
+                      </div>
+                      <span className="text-sm text-cbc-cream">{fmt(unit * item.qty)}</span>
+                    </div>
+                  )
+                })}
+                {selectedExtras.map((ex, i) => {
+                  const e = extras.find((ee) => ee.id === ex.extraId)
+                  const unit = withTax(ex.unitPrice, ivaPct)
+                  return (
+                    <div key={`e-${i}`} className="flex items-center gap-3">
+                      {e?.imageUrl
+                        ? <img src={e.imageUrl} alt="" className="h-11 w-11 rounded-md object-cover border border-gray-700 shrink-0" />
+                        : <div className="h-11 w-11 rounded-md border border-gray-800 bg-gray-900 shrink-0" />}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-cbc-cream truncate">{ex.name}</p>
+                        <p className="text-xs text-gray-400">{ex.qty} × {fmt(unit)} (con IVA)</p>
+                      </div>
+                      <span className="text-sm text-cbc-cream">{fmt(unit * ex.qty)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
             {/* Price breakdown */}
             <div className="rounded-xl border border-gray-700 bg-cbc-black p-5">
               <h3 className="text-sm font-semibold text-cbc-cream mb-3">Resumen de precios</h3>

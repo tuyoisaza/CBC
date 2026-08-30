@@ -262,6 +262,7 @@ model Method {
   id          String   @id @default(cuid())
   name        String
   description String?
+  imageUrl    String?  // representa el método en la cotización y el correo
   unitPrice   Float
   active      Boolean  @default(true)
   sortOrder   Int      @default(0)
@@ -274,6 +275,7 @@ model Extra {
   id          String   @id @default(cuid())
   name        String
   description String?
+  imageUrl    String?  // representa el extra en la cotización y el correo
   unitPrice   Float
   active      Boolean  @default(true)
   sortOrder   Int      @default(0)
