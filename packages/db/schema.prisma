@@ -101,6 +101,17 @@ model Order {
   customerId     String
   status         String    @default("confirmed")
   // confirmed | in_production | ready | shipped | delivered | cancelled
+  channel        String    @default("b2b") // b2b | retail
+  // Retail single-purchase checkout fields
+  shipping       Json?     // { name, phone, street, extNo, intNo, colonia, cp, city, state, country, references }
+  shippingCP     String?
+  shippingCity   String?
+  shippingCost   Float     @default(0)
+  shippingMethod String?   // flat | free | zone
+  isGift         Boolean   @default(false)
+  giftMessage    String?
+  recipientName  String?
+  needsCfdi      Boolean   @default(false)
   trackingNumber String?
   carrier        String?
   coffee         Coffee?   @relation(fields: [coffeeId], references: [id])

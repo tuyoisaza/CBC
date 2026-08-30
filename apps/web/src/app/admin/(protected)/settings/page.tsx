@@ -5,7 +5,11 @@ import { SettingsForm } from '@/components/admin/SettingsForm'
 
 export const metadata = { title: 'Configuración' }
 
-const SETTINGS_KEYS = ['site_logo_url', 'logo_size', 'logo_alignment', 'logo_link', 'single_purchase_markup', 'wholesale_markup_pct']
+const SETTINGS_KEYS = [
+  'site_logo_url', 'logo_size', 'logo_alignment', 'logo_link',
+  'single_purchase_markup', 'wholesale_markup_pct',
+  'retail_shipping_cost', 'retail_free_shipping_threshold',
+]
 
 async function getSettings() {
   const rows = await db.setting.findMany({
@@ -43,6 +47,8 @@ export default async function SettingsPage() {
         logoLink={settings['logo_link'] || ''}
         singlePurchaseMarkup={settings['single_purchase_markup'] || '20'}
         wholesaleMarkup={settings['wholesale_markup_pct'] || '0'}
+        retailShippingCost={settings['retail_shipping_cost'] || '150'}
+        retailFreeShippingThreshold={settings['retail_free_shipping_threshold'] || '800'}
       />
     </div>
   )

@@ -11,6 +11,8 @@ export function SettingsForm({
   logoLink: initialLogoLink,
   singlePurchaseMarkup: initialMarkup,
   wholesaleMarkup: initialWholesaleMarkup,
+  retailShippingCost: initialShippingCost,
+  retailFreeShippingThreshold: initialFreeThreshold,
 }: {
   logoUrl: string
   logoSize: string
@@ -18,6 +20,8 @@ export function SettingsForm({
   logoLink: string
   singlePurchaseMarkup: string
   wholesaleMarkup: string
+  retailShippingCost: string
+  retailFreeShippingThreshold: string
 }) {
   const [logoUrl, setLogoUrl]         = useState(initialLogoUrl)
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -29,6 +33,9 @@ export function SettingsForm({
   const [savingMarkup, setSavingMarkup] = useState(false)
   const [wholesaleMarkup, setWholesaleMarkup] = useState(initialWholesaleMarkup)
   const [savingWholesaleMarkup, setSavingWholesaleMarkup] = useState(false)
+  const [shippingCost, setShippingCost] = useState(initialShippingCost)
+  const [freeThreshold, setFreeThreshold] = useState(initialFreeThreshold)
+  const [savingShipping, setSavingShipping] = useState(false)
   const router = useRouter()
 
   async function saveLogoConfig(key: string, value: string) {
@@ -70,6 +77,27 @@ export function SettingsForm({
       router.refresh()
     } finally {
       setSavingWholesaleMarkup(false)
+    }
+  }
+
+  async function saveShipping() {
+    setSavingShipping(true)
+    try {
+      await Promise.all([
+        fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'retail_shipping_cost', value: shippingCost }),
+        }),
+        fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'retail_free_shipping_threshold', value: freeThreshold }),
+        }),
+      ])
+      router.refresh()
+    } finally {
+      setSavingShipping(false)
     }
   }
 
@@ -219,6 +247,50 @@ export function SettingsForm({
               className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               {savingMarkup ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Retail shipping */}
+      <section className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="border-b border-border bg-muted/30 px-5 py-3">
+          <h2 className="text-sm font-semibold text-foreground">Envío — compra individual</h2>
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Tarifa plana nacional para la compra de 1 unidad. El envío es gratis cuando el
+            total de producto llega al umbral. Deja el umbral en 0 para cobrar envío siempre.
+          </p>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <label className="block text-xs text-muted-foreground mb-1">Costo de envío (MXN)</label>
+              <input
+                type="number"
+                value={shippingCost}
+                onChange={(e) => setShippingCost(e.target.value)}
+                min={0}
+                step={10}
+                className="input-field w-32 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-muted-foreground mb-1">Envío gratis desde (MXN)</label>
+              <input
+                type="number"
+                value={freeThreshold}
+                onChange={(e) => setFreeThreshold(e.target.value)}
+                min={0}
+                step={50}
+                className="input-field w-32 text-sm"
+              />
+            </div>
+            <button
+              onClick={saveShipping}
+              disabled={savingShipping}
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              {savingShipping ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
         </div>
