@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, withDbRetry } from '@/lib/db'
 import { getOrCreateCustomer } from '@/lib/db-helpers'
 import { z } from 'zod'
 import { Prisma } from '@cbc/db'
@@ -97,7 +97,9 @@ export async function POST(req: NextRequest) {
     slug = body.slug
 
     step = 'resolve-provider'
-    const config = await getPaymentConfig()
+    // Early reads use withDbRetry: on a cold container / Postgres restart the
+    // first query can race the connection ("database system is starting up").
+    const config = await withDbRetry(() => getPaymentConfig())
     const enabled = config.singleProviders
     provider = body.provider ?? enabled[0] ?? 'mercadopago'
     if (!enabled.includes(provider)) {
@@ -114,7 +116,7 @@ export async function POST(req: NextRequest) {
     }
 
     step = 'load-product'
-    const product = await db.product.findUnique({ where: { slug: body.slug } })
+    const product = await withDbRetry(() => db.product.findUnique({ where: { slug: body.slug } }))
     if (!product) {
       console.warn('[single-checkout] product not found', JSON.stringify({ slug: body.slug, referer }))
       return NextResponse.json(
@@ -124,12 +126,12 @@ export async function POST(req: NextRequest) {
     }
 
     step = 'price'
-    const markupPct = await getSingleMarkupPct()
+    const markupPct = await withDbRetry(() => getSingleMarkupPct())
     const goodsTotal = priceWithTax(product.price, markupPct)
-    const ship = await getRetailShippingQuote(goodsTotal)
+    const ship = await withDbRetry(() => getRetailShippingQuote(goodsTotal))
     const orderTotal = Math.round((goodsTotal + ship.cost) * 100) / 100
 
-    const count = await db.order.count()
+    const count = await withDbRetry(() => db.order.count())
     const orderCode = `CBC-${new Date().getFullYear()}-S-${String(count + 1).padStart(3, '0')}`
 
     step = 'create-customer'
@@ -330,7 +332,9 @@ export async function POST(req: NextRequest) {
     )
 
     let hint = ''
-    if (step === 'create-customer' && /Unique constraint/i.test(message)) {
+    if (/database system is starting up|PrismaClientInitializationError|Can't reach database server/i.test(message)) {
+      hint = ' (la base de datos estaba reiniciando — reintenta en unos segundos)'
+    } else if (step === 'create-customer' && /Unique constraint/i.test(message)) {
       hint = ' (cliente duplicado — revisar getOrCreateCustomer)'
     } else if (step === 'mp-create-preference') {
       hint = /403|UNAUTHORIZED|policy/i.test(message)
