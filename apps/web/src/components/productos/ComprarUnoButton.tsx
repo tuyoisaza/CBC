@@ -9,12 +9,14 @@ const PROVIDER_LABEL: Record<Provider, string> = {
   mercadopago: 'Mercado Pago · OXXO · meses sin intereses',
 }
 
-// SAT — subconjunto común para personas físicas / empresas chicas.
+// SAT c_RegimenFiscal — subconjunto común para personas físicas / empresas chicas.
 const REGIMENES = [
-  ['605', 'Sueldos y salarios'],
+  ['626', 'Régimen Simplificado de Confianza (RESICO)'],
   ['612', 'Actividades empresariales y profesionales'],
-  ['626', 'RESICO'],
+  ['605', 'Sueldos y salarios'],
+  ['621', 'Incorporación Fiscal'],
   ['606', 'Arrendamiento'],
+  ['625', 'Actividades con plataformas tecnológicas'],
   ['616', 'Sin obligaciones fiscales'],
   ['601', 'General de Ley Personas Morales'],
   ['603', 'Personas Morales con Fines no Lucrativos'],
