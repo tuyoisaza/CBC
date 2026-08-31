@@ -381,3 +381,81 @@ export async function sendQuoteToCustomer(opts: {
     `,
   })
 }
+
+// ─── Retail single-purchase (storefront) ─────────────────────────────────────
+
+export async function notifyLorenaRetailOrder(opts: {
+  orderCode: string
+  customerName: string
+  amount: number
+  shippingCity: string
+  isGift: boolean
+  giftMessage?: string | null
+  recipientName?: string | null
+  needsCfdi: boolean
+}) {
+  const lines = [
+    `🛒 *Compra en tienda — ${opts.orderCode}*`,
+    `Cliente: ${opts.customerName}`,
+    `Monto: $${opts.amount.toLocaleString('es-MX')} MXN`,
+    `Envío a: ${opts.shippingCity}`,
+  ]
+  if (opts.isGift) {
+    lines.push(`🎁 Es un regalo${opts.recipientName ? ` — para ${opts.recipientName}` : ''}`)
+    if (opts.giftMessage) lines.push(`Mensaje: "${opts.giftMessage}"`)
+    lines.push(`(no incluir precio en el paquete)`)
+  }
+  if (opts.needsCfdi) lines.push(`🧾 Solicita factura`)
+  lines.push(``, `Ver pedido: ${process.env.NEXT_PUBLIC_ADMIN_URL}/admin/sales/orders`)
+
+  await sendWhatsApp(process.env.LORENA_PHONE!, lines.join('\n'))
+}
+
+export async function sendOrderConfirmationToCustomer(opts: {
+  whatsapp: string
+  email: string
+  name: string
+  orderCode: string
+  amount: number
+  isGift: boolean
+}) {
+  const trackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/tracking/${opts.orderCode}`
+
+  if (opts.whatsapp) {
+    await sendWhatsApp(
+      opts.whatsapp,
+      `¡Gracias por tu compra, ${opts.name}! ☕\n\n` +
+        `Pedido *${opts.orderCode}* confirmado por $${opts.amount.toLocaleString('es-MX')} MXN.\n` +
+        `Ya lo estamos preparando. Te avisamos cuando salga.\n\n` +
+        `Rastrear: ${trackUrl}`,
+    )
+  }
+
+  if (opts.email) {
+    await sendEmail({
+      to: opts.email,
+      subject: `Pedido ${opts.orderCode} confirmado | Coffee Bunn Café`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color: #262626;">
+          <div style="background: #262626; padding: 32px; text-align: center;">
+            <h1 style="color: #f7b84e; margin: 0; font-size: 24px;">Coffee Bunn Café</h1>
+          </div>
+          <div style="padding: 32px;">
+            <p>Hola <strong>${opts.name}</strong>,</p>
+            <p>Tu pedido <strong>${opts.orderCode}</strong> está confirmado.</p>
+            <p style="font-size: 22px; font-weight: bold; margin: 24px 0 8px;">$${opts.amount.toLocaleString('es-MX')} MXN</p>
+            <p>Lo estamos preparando. Te escribiremos por WhatsApp cuando salga a entrega.</p>
+            ${opts.isGift ? '<p style="color:#636363; font-size:14px;">Es un regalo: el paquete no incluye el precio.</p>' : ''}
+            <p style="margin-top: 24px;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/tracking/${opts.orderCode}"
+                 style="display: inline-block; background: #f7b84e; color: #262626; padding: 12px 28px; border-radius: 6px; font-weight: 700; text-decoration: none;">
+                Rastrear pedido
+              </a>
+            </p>
+            <p style="color: #636363; font-size: 13px; margin-top: 24px;">Cualquier duda, escríbenos al +52 55 72293512.</p>
+          </div>
+        </div>
+      `,
+    })
+  }
+}

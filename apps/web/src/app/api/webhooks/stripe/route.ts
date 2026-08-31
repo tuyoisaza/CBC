@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { db } from '@/lib/db'
-import { notifyLorenaPayment, sendPaymentLinkToCustomer } from '@/lib/notifications'
+import { notifyLorenaPayment } from '@/lib/notifications'
 import { createPaymentLink } from '@/lib/stripe'
+import { fulfillSinglePurchase, failSinglePurchase } from '@/lib/fulfillment'
 import Stripe from 'stripe'
+
+// A completed Checkout Session isn't necessarily paid: for delayed-notification
+// methods (OXXO, SPEI) `checkout.session.completed` fires while payment_status is
+// still 'unpaid', and the money is only confirmed later via
+// `checkout.session.async_payment_succeeded`. Fulfilling on 'completed' alone
+// would grant orders that never get paid and miss the ones that do.
+const SUCCESS_EVENTS = new Set<Stripe.Event['type']>([
+  'checkout.session.completed',
+  'checkout.session.async_payment_succeeded',
+])
+
+function isPaid(session: Stripe.Checkout.Session) {
+  return session.payment_status === 'paid' || session.payment_status === 'no_payment_required'
+}
 
 export async function POST(req: NextRequest) {
   const body      = await req.text()
@@ -11,70 +26,48 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(
-      body, signature, process.env.STRIPE_WEBHOOK_SECRET!
-    )
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  if (event.type === 'checkout.session.completed') {
+  if (SUCCESS_EVENTS.has(event.type)) {
     const session = event.data.object as Stripe.Checkout.Session
     const meta    = session.metadata ?? {}
 
+    if (!isPaid(session)) {
+      // OXXO/SPEI voucher issued — wait for async_payment_succeeded.
+      return NextResponse.json({ received: true, skipped: 'awaiting_payment' })
+    }
+
     if (meta.orderId && meta.type) {
-      const type = meta.type as 'deposit' | 'balance' | 'full'
-      if (type === 'full') {
-        await handleSinglePurchase({
-          orderId:   meta.orderId,
-          orderCode: meta.orderCode,
-          amount:    (session.amount_total ?? 0) / 100,
-          stripeId:  session.payment_intent as string,
-        })
-      } else {
+      const amount   = (session.amount_total ?? 0) / 100
+      const stripeId = (session.payment_intent as string) || session.id
+
+      if (meta.type === 'full') {
+        await fulfillSinglePurchase(meta.orderId, { externalId: stripeId, amount })
+      } else if (meta.type === 'deposit' || meta.type === 'balance') {
         await handlePaymentReceived({
           orderId:    meta.orderId,
           orderCode:  meta.orderCode,
           customerId: meta.customerId,
-          type:       type as 'deposit' | 'balance',
-          amount:     (session.amount_total ?? 0) / 100,
-          stripeId:   session.payment_intent as string,
+          type:       meta.type,
+          amount,
+          stripeId,
         })
       }
     }
   }
 
-  return NextResponse.json({ received: true })
-}
-
-async function handleSinglePurchase(opts: {
-  orderId:   string
-  orderCode: string
-  amount:    number
-  stripeId:  string
-}) {
-  await db.payment.updateMany({
-    where: { orderId: opts.orderId, type: 'full', status: 'pending' },
-    data:  { status: 'paid', paidAt: new Date(), stripePaymentId: opts.stripeId },
-  })
-
-  await db.order.update({
-    where: { id: opts.orderId },
-    data:  { status: 'in_production' },
-  })
-
-  const order = await db.order.findUnique({
-    where: { id: opts.orderId },
-    include: { customer: true },
-  })
-  if (order) {
-    await notifyLorenaPayment({
-      companyName: order.customer.companyName,
-      orderCode:   opts.orderCode,
-      amount:      opts.amount,
-      type:        'full',
-    })
+  if (event.type === 'checkout.session.async_payment_failed') {
+    const session = event.data.object as Stripe.Checkout.Session
+    const meta    = session.metadata ?? {}
+    if (meta.orderId && meta.type === 'full') {
+      await failSinglePurchase(meta.orderId)
+    }
   }
+
+  return NextResponse.json({ received: true })
 }
 
 async function handlePaymentReceived(opts: {
@@ -85,20 +78,19 @@ async function handlePaymentReceived(opts: {
   amount:     number
   stripeId:   string
 }) {
-  // Mark payment as paid
-  await db.payment.updateMany({
+  // Idempotency: only proceed if this payment was still pending.
+  const { count } = await db.payment.updateMany({
     where: { orderId: opts.orderId, type: opts.type, status: 'pending' },
     data:  { status: 'paid', paidAt: new Date(), stripePaymentId: opts.stripeId },
   })
+  if (count === 0) return
 
-  // Get order + customer
   const order = await db.order.findUnique({
     where:   { id: opts.orderId },
     include: { customer: true, quote: true },
   })
   if (!order) return
 
-  // Notify Lorena
   await notifyLorenaPayment({
     companyName: order.customer.companyName,
     orderCode:   opts.orderCode,
@@ -107,7 +99,6 @@ async function handlePaymentReceived(opts: {
   })
 
   if (opts.type === 'deposit') {
-    // Move order to in_production
     await db.order.update({
       where: { id: opts.orderId },
       data:  { status: 'in_production' },
@@ -139,20 +130,14 @@ async function handlePaymentReceived(opts: {
       },
     })
 
-    // Store balance link — will be sent when order is ready
     await db.order.update({
       where: { id: opts.orderId },
       data:  { notes: `Balance link: ${balanceLink.url}` },
     })
-
   } else if (opts.type === 'balance') {
-    // Full payment received — trigger CFDI generation
     await db.order.update({
       where: { id: opts.orderId },
       data:  { status: 'ready' },
     })
-
-    // CFDI generation is triggered from admin or automatically
-    // via /api/admin/cfdi when both payments are confirmed
   }
 }

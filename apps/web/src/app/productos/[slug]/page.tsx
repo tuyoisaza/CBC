@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ProductGallery } from '@/components/productos/ProductGallery'
 import { ComprarUnoButton } from '@/components/productos/ComprarUnoButton'
+import { CheckoutResultBanner, type CheckoutStatus } from '@/components/productos/CheckoutResultBanner'
 import { getSingleMarkupPct, priceWithTax } from '@/lib/pricing'
 import { getPaymentConfig } from '@/lib/payment-config'
 import { getRetailShippingConfig } from '@/lib/shipping'
@@ -15,7 +16,15 @@ function getYouTubeId(url: string): string | null {
   return match?.[1] || null
 }
 
-export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
+const CHECKOUT_STATUSES: CheckoutStatus[] = ['exito', 'pendiente', 'fallo', 'cancelado']
+
+export default async function ProductDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string }
+  searchParams: { compra?: string; order?: string }
+}) {
   const product = await withDbRetry(() =>
     db.product.findUnique({
       where: { slug: params.slug },
@@ -27,6 +36,19 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const finalPrice = priceWithTax(product.price, markupPct)
   const { singleProviders } = await withDbRetry(() => getPaymentConfig())
   const shippingCfg = await withDbRetry(() => getRetailShippingConfig())
+
+  const checkoutStatus = CHECKOUT_STATUSES.includes(searchParams.compra as CheckoutStatus)
+    ? (searchParams.compra as CheckoutStatus)
+    : null
+  const checkoutOrder =
+    checkoutStatus && searchParams.order
+      ? await withDbRetry(() =>
+          db.order.findUnique({
+            where: { orderCode: searchParams.order },
+            select: { orderCode: true, shippingCity: true, isGift: true, quote: { select: { total: true } } },
+          }),
+        )
+      : null
 
   const videos = (Array.isArray(product.videos) ? product.videos : []) as { url: string; title?: string }[]
 
@@ -50,6 +72,22 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
         <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8">
           <ArrowLeft className="h-4 w-4" /> Volver
         </Link>
+
+        {checkoutStatus && (
+          <CheckoutResultBanner
+            status={checkoutStatus}
+            order={
+              checkoutOrder
+                ? {
+                    orderCode: checkoutOrder.orderCode,
+                    total: checkoutOrder.quote?.total ?? 0,
+                    shippingCity: checkoutOrder.shippingCity,
+                    isGift: checkoutOrder.isGift,
+                  }
+                : null
+            }
+          />
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div>
