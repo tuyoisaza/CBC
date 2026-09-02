@@ -1,6 +1,6 @@
 {
   "name": "cbc-monorepo",
-  "version": "1.6.36",
+  "version": "1.6.37",
   "private": true,
   "packageManager": "pnpm@11.0.9",
   "scripts": {
