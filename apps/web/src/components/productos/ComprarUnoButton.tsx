@@ -335,7 +335,7 @@ export function ComprarUnoButton({
                   disabled={loading || !canSubmit}
                   className="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-50"
                 >
-                  {loading ? 'Redirigiendo…' : `Pagar ${money(total)}`}
+                  {loading ? 'Procesando…' : `Pagar ${money(total)}`}
                 </button>
               </div>
             </form>

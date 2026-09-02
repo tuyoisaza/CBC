@@ -30,3 +30,33 @@ export async function withDbRetry<T>(
   }
   throw lastErr
 }
+
+/**
+ * Block until Postgres answers a trivial query, or give up after `maxWaitMs`.
+ *
+ * The DB runs in serverless mode: it stops after idle and cold-starts on the
+ * next connection, which can take 10–30 s (container schedule + WAL recovery).
+ * `withDbRetry`'s ~2 s budget isn't enough for that. Call this once at the top
+ * of a request that must not fail on a sleeping DB (checkout) — it pings every
+ * `intervalMs` until `SELECT 1` succeeds, then the rest of the handler runs
+ * against a warm connection.
+ */
+export async function ensureDbAwake(
+  opts: { maxWaitMs?: number; intervalMs?: number } = {},
+): Promise<{ waitedMs: number; wokeUp: boolean }> {
+  const maxWaitMs = opts.maxWaitMs ?? 35_000
+  const intervalMs = opts.intervalMs ?? 1_500
+  const start = Date.now()
+  let attempt = 0
+
+  for (;;) {
+    try {
+      await prisma.$queryRaw`SELECT 1`
+      return { waitedMs: Date.now() - start, wokeUp: attempt > 0 }
+    } catch (err) {
+      attempt++
+      if (Date.now() - start + intervalMs >= maxWaitMs) throw err
+      await new Promise((r) => setTimeout(r, intervalMs))
+    }
+  }
+}

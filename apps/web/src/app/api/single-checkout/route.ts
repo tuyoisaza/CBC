@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db, withDbRetry } from '@/lib/db'
+import { db, withDbRetry, ensureDbAwake } from '@/lib/db'
 import { getOrCreateCustomer } from '@/lib/db-helpers'
 import { z } from 'zod'
 import { Prisma } from '@cbc/db'
@@ -75,6 +75,7 @@ function errorMessage(err: unknown): string {
 
 type Step =
   | 'parse-body'
+  | 'wake-db'
   | 'resolve-provider'
   | 'load-product'
   | 'price'
@@ -96,9 +97,13 @@ export async function POST(req: NextRequest) {
     const body = bodySchema.parse(await req.json())
     slug = body.slug
 
+    step = 'wake-db'
+    // The DB is serverless and may be asleep. Block here until it answers
+    // (cold start can take 10–30 s) so the rest of the checkout runs warm.
+    const woke = await ensureDbAwake()
+    if (woke.wokeUp) console.info('[single-checkout] db woke after', woke.waitedMs, 'ms')
+
     step = 'resolve-provider'
-    // Early reads use withDbRetry: on a cold container / Postgres restart the
-    // first query can race the connection ("database system is starting up").
     const config = await withDbRetry(() => getPaymentConfig())
     const enabled = config.singleProviders
     provider = body.provider ?? enabled[0] ?? 'mercadopago'
@@ -332,8 +337,8 @@ export async function POST(req: NextRequest) {
     )
 
     let hint = ''
-    if (/database system is starting up|PrismaClientInitializationError|Can't reach database server/i.test(message)) {
-      hint = ' (la base de datos estaba reiniciando — reintenta en unos segundos)'
+    if (step === 'wake-db' || /database system is starting up|PrismaClientInitializationError|Can't reach database server/i.test(message)) {
+      hint = ' (la base de datos está despertando — vuelve a intentar en un minuto)'
     } else if (step === 'create-customer' && /Unique constraint/i.test(message)) {
       hint = ' (cliente duplicado — revisar getOrCreateCustomer)'
     } else if (step === 'mp-create-preference') {
