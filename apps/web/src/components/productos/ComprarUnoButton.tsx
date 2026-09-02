@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { AddressAutocomplete } from './AddressAutocomplete'
 
 type Provider = 'stripe' | 'mercadopago'
 
@@ -191,6 +192,9 @@ export function ComprarUnoButton({
               {/* Dirección */}
               <div className="space-y-3 border-t border-gray-700 pt-4">
                 <p className="text-sm font-semibold text-white">Dirección de envío</p>
+                <AddressAutocomplete
+                  onFill={(p) => setAddr((s) => ({ ...s, ...p }))}
+                />
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={lbl}>Código postal *</label>
