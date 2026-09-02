@@ -4,9 +4,13 @@ import { useState } from 'react'
 
 type Provider = 'stripe' | 'mercadopago'
 
-const PROVIDER_LABEL: Record<Provider, string> = {
-  stripe: 'Tarjeta (Visa, Mastercard, Amex)',
-  mercadopago: 'Mercado Pago · OXXO · meses sin intereses',
+const PROVIDER_TITLE: Record<Provider, string> = {
+  stripe: 'Tarjeta',
+  mercadopago: 'Mercado Pago',
+}
+const PROVIDER_DESC: Record<Provider, string> = {
+  stripe: 'Visa, Mastercard, American Express',
+  mercadopago: 'Tarjetas, OXXO y meses sin intereses',
 }
 
 // SAT c_RegimenFiscal — subconjunto común para personas físicas / empresas chicas.
@@ -111,9 +115,13 @@ export function ComprarUnoButton({
       } catch {
         throw new Error(`El servidor respondió ${res.status}. Intenta de nuevo en un momento.`)
       }
-      if (!res.ok) {
-        const detail = body?.code ? ` (${body.code})` : ''
-        throw new Error(`${body?.error || 'Error al procesar'}${detail}`)
+      // The API always answers 200 with { ok }. Anything else is infra.
+      if (!res.ok || !body) {
+        throw new Error(`El servidor respondió ${res.status}. Intenta de nuevo en un momento.`)
+      }
+      if (body.ok === false || !body.url) {
+        const detail = body.code ? ` (${body.code})` : ''
+        throw new Error(`${body.error || 'No se pudo procesar el pago'}${detail}`)
       }
       window.location.href = body.url
     } catch (err: any) {
@@ -301,24 +309,43 @@ export function ComprarUnoButton({
               </div>
 
               {/* Método de pago */}
-              {options.length > 1 && (
-                <div className="border-t border-gray-700 pt-4">
-                  <label className={lbl}>Método de pago</label>
-                  <div className="space-y-2">
+              <div className="border-t border-gray-700 pt-4">
+                <p className="mb-2 text-sm font-semibold text-white">¿Cómo quieres pagar?</p>
+                {options.length === 1 ? (
+                  <div className="rounded-lg border border-green-500 bg-green-500/10 px-3 py-3 text-sm text-white">
+                    <span className="font-semibold">{PROVIDER_TITLE[options[0]]}</span>
+                    <span className="block text-xs text-gray-300">{PROVIDER_DESC[options[0]]}</span>
+                  </div>
+                ) : (
+                  <div className="grid gap-2">
                     {options.map((p) => (
-                      <label
+                      <button
+                        type="button"
                         key={p}
-                        className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
-                          provider === p ? 'border-green-500 bg-green-500/10 text-white' : 'border-gray-600 text-gray-300 hover:bg-gray-800'
+                        onClick={() => setProvider(p)}
+                        aria-pressed={provider === p}
+                        className={`flex items-start gap-3 rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
+                          provider === p
+                            ? 'border-green-500 bg-green-500/10 text-white'
+                            : 'border-gray-600 text-gray-300 hover:bg-gray-800'
                         }`}
                       >
-                        <input type="radio" name="provider" value={p} checked={provider === p} onChange={() => setProvider(p)} className="h-4 w-4" />
-                        {PROVIDER_LABEL[p]}
-                      </label>
+                        <span
+                          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                            provider === p ? 'border-green-500 bg-green-500' : 'border-gray-500'
+                          }`}
+                        >
+                          {provider === p && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                        </span>
+                        <span>
+                          <span className="font-semibold">{PROVIDER_TITLE[p]}</span>
+                          <span className="block text-xs text-gray-400">{PROVIDER_DESC[p]}</span>
+                        </span>
+                      </button>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {error && <p className="text-sm text-red-400">{error}</p>}
 

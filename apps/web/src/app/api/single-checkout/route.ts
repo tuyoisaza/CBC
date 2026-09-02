@@ -87,6 +87,18 @@ type Step =
   | 'stripe-create-session'
   | 'record-payment'
 
+// Always answer 200 with an `ok` flag. A non-2xx from here gets swallowed by
+// Cloudflare (it replaces origin 5xx bodies with its own HTML page), so the
+// browser would never see this JSON and the UI would show a generic error.
+function checkoutError(
+  error: string,
+  code: string,
+  step: Step,
+  extra: Record<string, unknown> = {},
+) {
+  return NextResponse.json({ ok: false, error, code, step, ...extra }, { status: 200 })
+}
+
 export async function POST(req: NextRequest) {
   let step: Step = 'parse-body'
   let slug: string | null = null
@@ -108,26 +120,17 @@ export async function POST(req: NextRequest) {
     const enabled = config.singleProviders
     provider = body.provider ?? enabled[0] ?? 'mercadopago'
     if (!enabled.includes(provider)) {
-      return NextResponse.json(
-        { error: `El método de pago "${provider}" no está habilitado.`, code: 'PROVIDER_DISABLED', step, provider },
-        { status: 400 },
-      )
+      return checkoutError('El método de pago no está disponible.', 'PROVIDER_DISABLED', step, { provider })
     }
     if (provider === 'stripe' && !isStripeConfigured()) {
-      return NextResponse.json(
-        { error: 'Stripe no está configurado en el servidor.', code: 'PROVIDER_NOT_CONFIGURED', step, provider },
-        { status: 503 },
-      )
+      return checkoutError('Stripe no está configurado en el servidor.', 'PROVIDER_NOT_CONFIGURED', step, { provider })
     }
 
     step = 'load-product'
     const product = await withDbRetry(() => db.product.findUnique({ where: { slug: body.slug } }))
     if (!product) {
       console.warn('[single-checkout] product not found', JSON.stringify({ slug: body.slug, referer }))
-      return NextResponse.json(
-        { error: 'Producto no encontrado.', code: 'PRODUCT_NOT_FOUND', step, slug: body.slug },
-        { status: 404 },
-      )
+      return checkoutError('Producto no encontrado.', 'PRODUCT_NOT_FOUND', step, { slug: body.slug })
     }
 
     step = 'price'
@@ -303,18 +306,15 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return NextResponse.json({ url: checkoutUrl, provider, orderCode })
+    return NextResponse.json({ ok: true, url: checkoutUrl, provider, orderCode }, { status: 200 })
   } catch (err) {
     if (err instanceof z.ZodError) {
       console.warn('[single-checkout] validation failed', JSON.stringify({ step, slug, referer, issues: err.flatten().fieldErrors }))
-      return NextResponse.json(
-        {
-          error: err.issues[0]?.message || 'Datos de compra inválidos. Revisa el formulario.',
-          code: 'VALIDATION_ERROR',
-          step,
-          details: err.flatten().fieldErrors,
-        },
-        { status: 400 },
+      return checkoutError(
+        err.issues[0]?.message || 'Datos de compra inválidos. Revisa el formulario.',
+        'VALIDATION_ERROR',
+        step,
+        { details: err.flatten().fieldErrors },
       )
     }
 
@@ -351,9 +351,11 @@ export async function POST(req: NextRequest) {
         : ' (Stripe no respondió — revisar estado del servicio)'
     }
 
-    return NextResponse.json(
-      { error: `No se pudo iniciar el pago [${step}]: ${message}${hint}`, code: 'CHECKOUT_ERROR', step, slug, provider },
-      { status: 502 },
+    return checkoutError(
+      `No se pudo iniciar el pago [${step}]: ${message}${hint}`,
+      'CHECKOUT_ERROR',
+      step,
+      { slug, provider },
     )
   }
 }
