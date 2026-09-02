@@ -31,23 +31,34 @@ export type PaymentConfig = {
   msiEnabled: boolean
 }
 
-// Defaults match today's hard-coded behaviour: single-checkout uses Mercado
-// Pago, OXXO is allowed on B2B payment links, MSI is off.
-const DEFAULTS: PaymentConfig = {
-  singleProviders: ['mercadopago'],
-  oxxoEnabled: true,
-  msiEnabled: false,
+const DEFAULT_OXXO = true
+const DEFAULT_MSI = false
+
+/**
+ * Providers to offer when the admin hasn't set an explicit list: every one
+ * whose credentials exist in the environment. So adding STRIPE_SECRET_KEY is
+ * enough for "Tarjeta" to show up as a choice — no admin toggle needed.
+ * Order here is the order the buyer sees them in.
+ */
+function configuredProviders(): PaymentProvider[] {
+  // Order = what the buyer sees, and options[0] is pre-selected. Card (Stripe)
+  // first; it matches the admin form's order and is the working path while the
+  // Mercado Pago account clears its policy review.
+  const list: PaymentProvider[] = []
+  if (process.env.STRIPE_SECRET_KEY) list.push('stripe')
+  if (process.env.MERCADOPAGO_ACCESS_TOKEN) list.push('mercadopago')
+  return list.length ? list : ['mercadopago']
 }
 
 function parseProviders(raw: string | undefined): PaymentProvider[] {
-  if (!raw) return DEFAULTS.singleProviders
+  if (!raw) return configuredProviders()
   try {
     const arr = JSON.parse(raw)
-    if (!Array.isArray(arr)) return DEFAULTS.singleProviders
+    if (!Array.isArray(arr)) return configuredProviders()
     const valid = arr.filter((p): p is PaymentProvider => p === 'stripe' || p === 'mercadopago')
-    return valid.length ? valid : DEFAULTS.singleProviders
+    return valid.length ? valid : configuredProviders()
   } catch {
-    return DEFAULTS.singleProviders
+    return configuredProviders()
   }
 }
 
@@ -58,8 +69,8 @@ export async function getPaymentConfig(): Promise<PaymentConfig> {
   const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
   return {
     singleProviders: parseProviders(map[PAYMENTS_SINGLE_PROVIDERS_KEY]),
-    oxxoEnabled: map[PAYMENTS_OXXO_KEY] ? map[PAYMENTS_OXXO_KEY] === 'true' : DEFAULTS.oxxoEnabled,
-    msiEnabled: map[PAYMENTS_MSI_KEY] ? map[PAYMENTS_MSI_KEY] === 'true' : DEFAULTS.msiEnabled,
+    oxxoEnabled: map[PAYMENTS_OXXO_KEY] ? map[PAYMENTS_OXXO_KEY] === 'true' : DEFAULT_OXXO,
+    msiEnabled: map[PAYMENTS_MSI_KEY] ? map[PAYMENTS_MSI_KEY] === 'true' : DEFAULT_MSI,
   }
 }
 
