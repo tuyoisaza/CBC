@@ -6,6 +6,21 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.40 — 2026-09-04
+
+### Added
+- Google Places address autocomplete in the retail checkout (`AddressAutocomplete`), activated via `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+
+### Verification
+- Version: v1.6.40
+- Deployed from Railway with the Google Maps key inlined in the client bundle
+- Health: `/health` returns PHDK-standard format
+
+### Known Issues
+- None
+
+---
+
 ## v1.5.x — 2026-08-26
 
 ### Changed

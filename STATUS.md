@@ -1,9 +1,10 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.0 (tag `v1.6.0` — see `git describe --tags --abbrev=0`)
+v1.6.40 (tag `v1.6.40` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
+- Google Places address autocomplete in the retail checkout (v1.6.39/1.6.40)
 - Marketing automation removal (all social posting, content engine, approval loop, marketing admin UI, Post model)
 - PHDK adoption: process standardization (ARCHITECTURE_DECISIONS.md, TASK.md, STATUS.md, CHANGELOG.md, health endpoints conforming to PHDK, version display, .env.example cleanup)
 - Admin platforms expansion (audit, roles, users, system, debug modules + ACL)
@@ -15,7 +16,7 @@ v1.6.0 (tag `v1.6.0` — see `git describe --tags --abbrev=0`)
 - All-in pricing (shared lib/pricing.ts + single-checkout final-price + descriptive errors)
 
 ## Current Slice
-None in flight — working tree clean, all recent work committed and pushed (v1.6.0).
+None in flight — working tree contains the v1.6.40 release bump, ready to push to main.
 
 ## Next Slices / Candidates
 - Feature structure reorganization (move to src/features/<name>/) — not started
