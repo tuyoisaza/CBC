@@ -59,15 +59,15 @@ export default async function PaymentsPage() {
     checkStripeStatus(),
     checkMercadoPagoStatus(),
   ])
-  const secrets = secretKeyChecklist()
+  const secrets = await secretKeyChecklist()
 
   return (
     <div className="space-y-8 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Pagos</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Estado de los proveedores y configuración del checkout. Las claves secretas se
-          administran en Railway → Variables, no aquí.
+          Estado de los proveedores y configuración del checkout. Los superadministradores
+          gestionan las credenciales en Configuración.
         </p>
       </div>
 
@@ -82,6 +82,7 @@ export default async function PaymentsPage() {
 
       {/* Editable storefront config */}
       <PaymentsSettingsForm
+        b2bProvider={config.b2bProvider}
         singleProviders={config.singleProviders}
         oxxoEnabled={config.oxxoEnabled}
         msiEnabled={config.msiEnabled}
@@ -90,7 +91,7 @@ export default async function PaymentsPage() {
       {/* Secret key checklist (read-only) */}
       <section className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="border-b border-border bg-muted/30 px-5 py-3">
-          <h2 className="text-sm font-semibold text-foreground">Claves (en Railway)</h2>
+          <h2 className="text-sm font-semibold text-foreground">Estado de las credenciales</h2>
         </div>
         <div className="divide-y divide-border">
           {secrets.map((s) => (
@@ -115,8 +116,8 @@ export default async function PaymentsPage() {
         </div>
         <div className="border-t border-border bg-muted/20 px-5 py-3">
           <p className="text-xs text-muted-foreground">
-            Para editarlas: Railway → servicio web → pestaña <strong>Variables</strong>. Un cambio
-            reinicia el servicio.
+            Un superadministrador puede actualizar las claves en <strong>Configuración</strong>.
+            Los cambios se aplican a las siguientes solicitudes, sin reiniciar el servicio.
           </p>
         </div>
       </section>

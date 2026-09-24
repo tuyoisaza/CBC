@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import axios from 'axios'
+import { getIntegrationValues } from '@/lib/integration-secrets'
 
 // Send outbound WhatsApp message
 const sendSchema = z.object({
@@ -20,21 +21,29 @@ export async function POST(req: NextRequest) {
   const data = sendSchema.parse(await req.json())
 
   // Send via WhatsApp Cloud API
+  const config = await getIntegrationValues(['WHATSAPP_PHONE_NUMBER_ID', 'WHATSAPP_TOKEN'])
+  if (!config.WHATSAPP_PHONE_NUMBER_ID || !config.WHATSAPP_TOKEN) {
+    return NextResponse.json({ error: 'WhatsApp is not configured' }, { status: 503 })
+  }
+  try {
   await axios.post(
-    `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+    `https://graph.facebook.com/v21.0/${config.WHATSAPP_PHONE_NUMBER_ID}/messages`,
     {
       messaging_product: 'whatsapp',
       to:   data.to.replace(/\D/g, ''),
       type: 'text',
       text: { body: data.body },
     },
-    { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` } }
+    { headers: { Authorization: `Bearer ${config.WHATSAPP_TOKEN}` } }
   )
+  } catch {
+    return NextResponse.json({ error: 'WhatsApp delivery failed' }, { status: 502 })
+  }
 
   // Save outbound message
   const message = await db.message.create({
     data: {
-      from:      `+${process.env.WHATSAPP_PHONE_NUMBER_ID}`,
+      from:      `+${config.WHATSAPP_PHONE_NUMBER_ID}`,
       to:        data.to,
       body:      data.body,
       direction: 'outbound',

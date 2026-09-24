@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AddressAutocomplete } from './AddressAutocomplete'
 
 type Provider = 'stripe' | 'mercadopago'
@@ -11,7 +11,7 @@ const PROVIDER_TITLE: Record<Provider, string> = {
 }
 const PROVIDER_DESC: Record<Provider, string> = {
   stripe: 'Visa, Mastercard, American Express',
-  mercadopago: 'Tarjetas, OXXO y meses sin intereses',
+  mercadopago: 'Paga con los métodos disponibles en Mercado Pago',
 }
 
 // SAT c_RegimenFiscal — subconjunto común para personas físicas / empresas chicas.
@@ -49,7 +49,7 @@ const EMPTY_CFDI = { rfc: '', razonSocial: '', regimenFiscal: '', usoCfdi: 'G03'
 export function ComprarUnoButton({
   slug,
   markedUpPrice,
-  providers = ['mercadopago'],
+  providers = [],
   shipping = { cost: 150, freeThreshold: 800 },
 }: {
   slug: string
@@ -57,7 +57,7 @@ export function ComprarUnoButton({
   providers?: Provider[]
   shipping?: { cost: number; freeThreshold: number }
 }) {
-  const options = providers.length ? providers : (['mercadopago'] as Provider[])
+  const options = providers
 
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -69,9 +69,11 @@ export function ComprarUnoButton({
   const [recipientName, setRecipientName] = useState('')
   const [needsCfdi, setNeedsCfdi] = useState(false)
   const [cfdi, setCfdi] = useState({ ...EMPTY_CFDI })
-  const [provider, setProvider] = useState<Provider>(options[0])
+  const [provider, setProvider] = useState<Provider | undefined>(options[0])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const checkoutAttempt = useRef<{ payload: string; key: string } | null>(null)
+  const submitting = useRef(false)
 
   const setA = (k: keyof typeof EMPTY_ADDR) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setAddr((s) => ({ ...s, [k]: e.target.value }))
@@ -88,26 +90,26 @@ export function ComprarUnoButton({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!canSubmit) return
+    if (!canSubmit || submitting.current) return
+    submitting.current = true
     setLoading(true)
     setError('')
     try {
+      const purchase = {
+        slug, name, email, whatsapp, provider, address: addr, isGift,
+        giftMessage: isGift ? giftMessage : '',
+        recipientName: isGift ? recipientName : '',
+        needsCfdi, cfdi: needsCfdi ? cfdi : undefined,
+      }
+      const payload = JSON.stringify(purchase)
+      // Keep the UUID after network/provider failures; edits start a new attempt.
+      if (checkoutAttempt.current?.payload !== payload) {
+        checkoutAttempt.current = { payload, key: crypto.randomUUID() }
+      }
       const res = await fetch('/api/single-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug,
-          name,
-          email,
-          whatsapp,
-          provider,
-          address: addr,
-          isGift,
-          giftMessage: isGift ? giftMessage : '',
-          recipientName: isGift ? recipientName : '',
-          needsCfdi,
-          cfdi: needsCfdi ? cfdi : undefined,
-        }),
+        body: JSON.stringify({ ...purchase, idempotencyKey: checkoutAttempt.current.key }),
       })
       const raw = await res.text()
       let body: any = null
@@ -128,11 +130,17 @@ export function ComprarUnoButton({
     } catch (err: any) {
       setError(err.message || 'Error al procesar')
       setLoading(false)
+    } finally {
+      submitting.current = false
     }
   }
 
   const field = 'input-field w-full'
   const lbl = 'block text-sm text-gray-400 mb-1'
+
+  if (options.length === 0) {
+    return <p className="text-sm text-gray-400">Los pagos en línea no están disponibles en este momento.</p>
+  }
 
   return (
     <>

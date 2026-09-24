@@ -29,10 +29,13 @@ const NAV_ITEMS = [
   { href: '/admin/debug',     label: 'Debug',       icon: Bug },
   { href: '/admin/system',    label: 'Sistema',     icon: Activity },
   { href: '/admin/payments',  label: 'Pagos',       icon: CreditCard },
-  { href: '/admin/settings',  label: 'Config',      icon: Settings },
+  { href: '/admin/settings',  label: 'Sitio y precios', icon: Settings },
 ]
 
-export function AdminNav() {
+export function AdminNav({ isSuperadmin = false }: { isSuperadmin?: boolean }) {
+  const navItems = isSuperadmin
+    ? [...NAV_ITEMS, { href: '/admin/configuration', label: 'Configuración', icon: Settings }]
+    : NAV_ITEMS
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -75,7 +78,7 @@ export function AdminNav() {
 
       {/* Nav items */}
       <nav className="flex-1 space-y-1 p-2 pt-4">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href)
           return (
             <Link

@@ -38,6 +38,7 @@ interface Order {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
+  pending_payment: { label: 'Pendiente de pago', color: 'bg-amber-500' },
   confirmed: { label: 'Confirmado', color: 'bg-blue-500' },
   in_production: { label: 'En Producción', color: 'bg-yellow-500' },
   ready: { label: 'Listo para Envío', color: 'bg-purple-500' },

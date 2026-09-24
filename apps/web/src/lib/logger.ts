@@ -10,6 +10,7 @@ function format(level: string, module: string, context: Record<string, unknown>,
 }
 
 function jsonReplacer(_key: string, value: unknown): unknown {
+  if (/authorization|cookie|password|secret|token|api[_-]?key|encryptedValue/i.test(_key)) return '[REDACTED]'
   if (value instanceof Error) {
     return { message: value.message, stack: value.stack?.split('\n').slice(0, 3).join('|') }
   }

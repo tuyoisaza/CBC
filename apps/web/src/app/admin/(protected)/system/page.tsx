@@ -1,3 +1,5 @@
+import { getIntegrationValues } from '@/lib/integration-secrets'
+import { INTEGRATION_KEYS } from '@/lib/integration-catalog'
 import { Activity, Clock, Cpu, HardDrive, CheckCircle2, XCircle, Wallet } from 'lucide-react'
 
 export const metadata = { title: 'Sistema' }
@@ -10,21 +12,20 @@ const CRITICAL_ENV_VARS = [
   'CLOUDFLARE_R2_ACCESS_KEY', 'SENTRY_DSN',
 ]
 
-function getEnvStatus(key: string): { configured: boolean; value: string } {
-  const val = process.env[key]
+function getEnvStatus(key: string, config: Record<string, string | undefined>): { configured: boolean; value: string } {
+  const val = INTEGRATION_KEYS.includes(key) ? config[key] : process.env[key]
   if (!val) return { configured: false, value: '—' }
-  return { configured: true, value: `${val.slice(0, 4)}${'*'.repeat(Math.min(val.length - 4, 8))}` }
+  return { configured: true, value: 'Configurado' }
 }
 
 type MpAccount = { ok: true; nickname: string; email: string; siteId: string; testMode: boolean } | { ok: false; error: string } | null
 
-async function getMercadoPagoAccount(): Promise<MpAccount> {
-  const token = process.env.MERCADOPAGO_ACCESS_TOKEN
+async function getMercadoPagoAccount(token: string | undefined, testMode: boolean): Promise<MpAccount> {
   if (!token) return null
   try {
     const res = await fetch('https://api.mercadopago.com/users/me', {
       headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
+      cache: 'no-store', signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) return { ok: false, error: `Mercado Pago devolvió HTTP ${res.status}` }
     const data = await res.json()
@@ -33,15 +34,16 @@ async function getMercadoPagoAccount(): Promise<MpAccount> {
       nickname: data.nickname,
       email: data.email,
       siteId: data.site_id,
-      testMode: token.startsWith('TEST-'),
+      testMode: testMode || token.startsWith('TEST-'),
     }
   } catch (e) {
-    return { ok: false, error: (e as Error).message }
+    return { ok: false, error: 'No se pudo consultar el servicio.' }
   }
 }
 
 export default async function SystemPage() {
-  const mpAccount = await getMercadoPagoAccount()
+  const config = await getIntegrationValues(INTEGRATION_KEYS)
+  const mpAccount = await getMercadoPagoAccount(config.MERCADOPAGO_ACCESS_TOKEN, config.MERCADOPAGO_TEST_MODE === 'true')
   const uptime = process.uptime()
   const hours = Math.floor(uptime / 3600)
   const minutes = Math.floor((uptime % 3600) / 60)
@@ -97,11 +99,11 @@ export default async function SystemPage() {
 
       <div className="rounded-xl border border-border bg-card">
         <div className="border-b border-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-foreground">Variables de entorno</h2>
+          <h2 className="text-sm font-semibold text-foreground">Estado de configuración</h2>
         </div>
         <div className="divide-y divide-border">
           {CRITICAL_ENV_VARS.map((key) => {
-            const { configured, value } = getEnvStatus(key)
+            const { configured, value } = getEnvStatus(key, config)
             return (
               <div key={key} className="flex items-center justify-between px-4 py-2.5">
                 <div className="flex items-center gap-2">

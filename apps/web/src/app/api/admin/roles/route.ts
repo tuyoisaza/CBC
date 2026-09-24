@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, superadminEmails } from '@/lib/auth'
+import { requireAdminAccess, isSuperadminSession } from '@/lib/superadmin'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { createLogger } from '@/lib/logger'
@@ -12,22 +13,18 @@ const log = createLogger('admin/roles')
 export const dynamic = 'force-dynamic'
 
 const createSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().trim().min(1).refine(name => name.toLowerCase() !== 'superadmin', 'Reserved role name'),
   description: z.string().optional(),
-  permissions: z.array(z.string()).default([]),
-})
+  permissions: z.array(z.enum(ALL_PERMISSIONS)).default([]),
+}).strict()
 
 const updateSchema = createSchema.partial()
 
-function requireAdmin(session: { user: { role?: string } } | null) {
-  if (!session) return { error: 'Unauthorized' as const, status: 401 as const }
-  if (session.user.role?.toLowerCase() !== 'admin') return { error: 'Forbidden' as const, status: 403 as const }
-  return null
-}
+
 
 export async function GET() {
   const session = await getServerSession(authOptions)
-  const guard = requireAdmin(session)
+  const guard = await requireAdminAccess(session)
   if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
 
   try {
@@ -44,7 +41,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  const guard = requireAdmin(session)
+  const guard = await requireAdminAccess(session)
   if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
 
   try {

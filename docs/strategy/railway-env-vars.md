@@ -1,21 +1,22 @@
 # Railway Environment Variables
+> Provider credentials can now be imported and managed in **Admin → Configuración** after the one-time [secure configuration setup](../deploy/integration-configuration.md). This legacy guide remains relevant for infrastructure/bootstrap variables and other services.
 > Set these in the Railway dashboard: railway.com → Project CBC → each service → Variables
 
 ---
 
 ## Service: cbc-platform
 
-### Already generated — paste these as-is
+### Example configuration — generate fresh secrets
 
 ```
 NODE_ENV=production
 NEXT_PUBLIC_APP_URL=https://coffeebunncafe.com
 NEXT_PUBLIC_ADMIN_URL=https://admin.coffeebunncafe.com
 NEXTAUTH_URL=https://admin.coffeebunncafe.com
-NEXTAUTH_SECRET=909ec9b685a3c1b736a1f910e31d6572e0afdf3dc258ab657af279b8e5e11f02
+NEXTAUTH_SECRET=<generate-a-new-secret>
 ADMIN_EMAIL=contact@coffeebunncafe.com
-ADMIN_PASSWORD_HASH=$2b$12$Dh.IE2M6CVKidn6rO5fSEOisLvrO0PwZ4xnGMYLrbt0LlFd6IunKy
-ENGINE_SECRET_TOKEN=c484664874dc67a76a4c1e568395453cd5674ee367324f2542316dc1823c4bca
+ADMIN_PASSWORD_HASH=<generate-a-new-secret>
+ENGINE_SECRET_TOKEN=<generate-a-new-secret>
 CBC_ENGINE_URL=https://cbc-engine.railway.internal
 RESEND_FROM_EMAIL=hola@coffeebunncafe.com
 LORENA_PHONE=5215572293512
@@ -29,8 +30,8 @@ NEXT_PUBLIC_R2_PUBLIC_URL=https://assets.coffeebunncafe.com
 
 **Admin login credentials:**
 - Email: `contact@coffeebunncafe.com`
-- Password: `CBC@Admin2025!`
-  *(Change this after first login via Settings)*
+- Password: obtain from your secret manager; rotate any previously documented password.
+  *(Configure the password hash through environment variables.)*
 
 ---
 
@@ -74,7 +75,7 @@ LINKEDIN_PERSON_URN=urn:li:person:...
 # WhatsApp (developers.facebook.com → WhatsApp → API Setup)
 WHATSAPP_TOKEN=
 WHATSAPP_PHONE_NUMBER_ID=
-WHATSAPP_VERIFY_TOKEN=c484664874dc67a76a4c1e568395453  # use first 32 chars of ENGINE_SECRET_TOKEN
+WHATSAPP_VERIFY_TOKEN=<generate-a-new-secret>
 
 # Email (resend.com → API Keys)
 RESEND_API_KEY=re_...
@@ -100,14 +101,14 @@ NEXT_PUBLIC_POSTHOG_KEY=
 
 ## Service: cbc-engine
 
-### Already generated — paste these as-is
+### Example configuration — generate fresh secrets
 
 ```
 NODE_ENV=production
-ENGINE_SECRET_TOKEN=c484664874dc67a76a4c1e568395453cd5674ee367324f2542316dc1823c4bca
+ENGINE_SECRET_TOKEN=<generate-a-new-secret>
 PLATFORM_URL=https://coffeebunncafe.com
 PORT=3001
-WHATSAPP_VERIFY_TOKEN=c484664874dc67a76a4c1e568395453
+WHATSAPP_VERIFY_TOKEN=<generate-a-new-secret>
 LORENA_PHONE=5215572293512
 ```
 
@@ -182,3 +183,9 @@ Just make sure DATABASE_URL is referenced in cbc-platform.
 - cbc-platform: https://railway.com/project/3f019384-571b-4603-a0ab-2a8169c712dc/service/6c73954d-dac9-4bc9-ba8d-040d59ec2de7
 - cbc-engine: https://railway.com/project/3f019384-571b-4603-a0ab-2a8169c712dc/service/8161499c-6703-49b0-bb0e-a4d8881c26ae
 - Railway project: https://railway.com/project/3f019384-571b-4603-a0ab-2a8169c712dc
+
+## Mercado Pago Checkout Pro
+
+Set MERCADOPAGO_ACCESS_TOKEN, MERCADOPAGO_WEBHOOK_SECRET and MERCADOPAGO_TEST_MODE (true or false). Never commit their values. See [Mercado Pago activation guide](../deploy/mercadopago.md). The public HTTPS origin is NEXT_PUBLIC_APP_URL.
+
+Previously documented credentials must be considered exposed if they were used. Rotate them in Railway and the relevant services; removing this text does not remove Git history.

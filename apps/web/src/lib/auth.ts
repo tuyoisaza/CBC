@@ -8,44 +8,45 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
 
 // The only Google accounts allowed into the admin. Overridable via
 // ADMIN_EMAILS (comma-separated) without a code change.
-const ALLOWED_EMAILS = (
-  process.env.ADMIN_EMAILS || 'thetboard@gmail.com,lorela2114@gmail.com'
-)
-  .split(',')
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean)
+export function superadminEmails() {
+  return (process.env.SUPERADMIN_EMAILS || '').split(',').map(email => email.trim().toLowerCase()).filter(Boolean)
+}
+
+function allowedEmails() {
+  return [...(process.env.ADMIN_EMAILS || 'thetboard@gmail.com,lorela2114@gmail.com').split(',').map(email => email.trim().toLowerCase()), ...superadminEmails()]
+}
 
 /**
  * Upserts the authenticated user into `User` and resolves their role.
  * New users default to the "admin" role if it exists.
  * Returns { userId, roleName }.
  */
-async function syncUser(input: { email: string; name?: string | null; image?: string | null }) {
-  try {
+export async function syncUser(input: { email: string; name?: string | null; image?: string | null }) {
+    const email = input.email.trim().toLowerCase()
+    const existing = await db.user.findUnique({ where: { email }, include: { role: true } })
+    if (existing && !existing.active) throw new Error('Account is inactive')
+    const bootstrapSuperadmin = superadminEmails().includes(email)
     const role = await db.role.findUnique({ where: { name: 'admin' } })
 
     const user = await db.user.upsert({
-      where: { email: input.email.toLowerCase() },
+      where: { email },
       update: {
         name: input.name ?? undefined,
         image: input.image ?? undefined,
-        roleId: role?.id ?? undefined,
+        ...(bootstrapSuperadmin ? { isSuperadmin: true } : {}),
       },
       create: {
-        email: input.email.toLowerCase(),
+        email,
         name: input.name,
         image: input.image,
         roleId: role?.id ?? undefined,
+        isSuperadmin: bootstrapSuperadmin,
       },
       include: { role: true },
     })
 
-    return { userId: user.id, roleName: user.role?.name?.toLowerCase() ?? null }
-  } catch {
-    // Sign-in must never break when the DB is unavailable (cold start /
-    // migration pending) — fall back to a safe default role.
-    return { userId: null, roleName: 'admin' }
-  }
+    if (!user.active) throw new Error('Account is inactive')
+    return { userId: user.id, roleName: user.role?.name?.toLowerCase() ?? '', isSuperadmin: user.isSuperadmin }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -93,10 +94,11 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     // ─── Block any Google account not on the allowlist ───────────
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
         const email = user.email?.toLowerCase()
-        if (!email || !ALLOWED_EMAILS.includes(email)) {
+        const googleProfile = profile as { email?: string; email_verified?: boolean } | undefined
+        if (!email || !allowedEmails().includes(email) || googleProfile?.email_verified !== true || googleProfile.email?.toLowerCase() !== email) {
           // Reject — redirect to login with error
           return `/login?error=AccessDenied`
         }
@@ -106,13 +108,22 @@ export const authOptions: NextAuthOptions = {
 
     async jwt({ token, user, account }) {
       if (user?.email) {
-        const { userId, roleName } = await syncUser({
+        const { userId, roleName, isSuperadmin } = await syncUser({
           email: user.email,
           name: user.name,
           image: user.image,
         })
         token.dbUserId = userId
-        token.role = roleName ?? token.role
+        token.role = roleName
+        token.isSuperadmin = isSuperadmin
+      } else {
+        // Re-read on every server session lookup: deactivation and role changes
+        // take effect without waiting for a long-lived JWT to expire.
+        if (!token.dbUserId) throw new Error('Account identity unavailable')
+        const current = await db.user.findUnique({ where: { id: token.dbUserId }, include: { role: true } })
+        if (!current?.active || current.email.toLowerCase() !== token.email?.toLowerCase()) throw new Error('Account access revoked')
+        token.role = current.role?.name.toLowerCase() ?? ''
+        token.isSuperadmin = current.isSuperadmin
       }
       if (account) token.provider = account.provider
       return token
@@ -120,7 +131,8 @@ export const authOptions: NextAuthOptions = {
 
     async session({ session, token }) {
       session.user.id       = (token.dbUserId as string) ?? undefined
-      session.user.role     = (token.role as string) ?? 'admin'
+      session.user.role     = (token.role as string) ?? ''
+      session.user.isSuperadmin = token.isSuperadmin === true
       session.user.provider = (token.provider as string) ?? undefined
       return session
     },

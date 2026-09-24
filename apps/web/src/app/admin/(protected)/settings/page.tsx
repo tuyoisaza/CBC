@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { CreditCard } from 'lucide-react'
 import { SettingsForm } from '@/components/admin/SettingsForm'
 
-export const metadata = { title: 'Configuración' }
+export const metadata = { title: 'Sitio y precios' }
 
 const SETTINGS_KEYS = [
   'site_logo_url', 'logo_size', 'logo_alignment', 'logo_link',
@@ -13,7 +13,7 @@ const SETTINGS_KEYS = [
 
 async function getSettings() {
   const rows = await db.setting.findMany({
-    where: { key: { in: SETTINGS_KEYS } },
+    where: { key: { in: SETTINGS_KEYS }, encrypted: false },
   })
   return Object.fromEntries(rows.map((r) => [r.key, r.value]))
 }
@@ -24,7 +24,7 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-8 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
+        <h1 className="text-2xl font-bold text-foreground">Sitio y precios</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Logo y márgenes del sitio.
         </p>
@@ -32,11 +32,11 @@ export default async function SettingsPage() {
 
       <div className="rounded-xl border border-border bg-muted/20 px-5 py-4">
         <p className="text-sm text-foreground">
-          Las claves de API y el estado de los proveedores de pago se administran en{' '}
+          El estado de los proveedores y los métodos de cobro se administran en{' '}
           <Link href="/admin/payments" className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
             <CreditCard className="h-3.5 w-3.5" /> Pagos
           </Link>
-          . Las claves secretas viven en Railway → Variables, no en la base de datos.
+          . Los superadministradores gestionan las credenciales en Configuración.
         </p>
       </div>
 

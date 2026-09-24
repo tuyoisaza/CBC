@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 const STATUSES = [
+  { value: 'pending_payment', label: 'Pendiente de pago' },
   { value: 'confirmed',     label: 'Confirmado' },
   { value: 'in_production', label: 'En producción' },
   { value: 'ready',         label: 'Listo' },

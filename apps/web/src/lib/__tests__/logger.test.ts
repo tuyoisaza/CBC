@@ -2,6 +2,16 @@ import { describe, it, expect, vi } from 'vitest'
 import { createLogger } from '../logger'
 
 describe('createLogger', () => {
+  it('redacts credential fields and nested authentication headers', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    createLogger('test').error({ apiKey: 'private-key', nested: { Authorization: 'Bearer private-token', encryptedValue: 'ciphertext', status: 401 } }, 'Provider failed')
+    const output = String(spy.mock.calls[0][0])
+    expect(output).not.toContain('private-key')
+    expect(output).not.toContain('private-token')
+    expect(output).not.toContain('ciphertext')
+    expect(output).toContain('401')
+    spy.mockRestore()
+  })
   it('returns an object with info, warn, error methods', () => {
     const logger = createLogger('test-module')
     expect(typeof logger.info).toBe('function')

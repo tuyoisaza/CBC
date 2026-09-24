@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { RefreshCw, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
 import {
   PAYMENTS_SINGLE_PROVIDERS_KEY,
+  PAYMENTS_B2B_PROVIDER_KEY,
   PAYMENTS_OXXO_KEY,
   PAYMENTS_MSI_KEY,
   PROVIDER_LABELS,
   type PaymentProvider,
-} from '@/lib/payment-config'
+} from '@/lib/payment-settings'
 
 type LiveStatus = {
   checkedAt: string
@@ -30,15 +31,18 @@ async function saveSetting(key: string, value: string) {
 
 export function PaymentsSettingsForm({
   singleProviders: initialProviders,
+  b2bProvider: initialB2b,
   oxxoEnabled: initialOxxo,
   msiEnabled: initialMsi,
 }: {
   singleProviders: PaymentProvider[]
+  b2bProvider: PaymentProvider
   oxxoEnabled: boolean
   msiEnabled: boolean
 }) {
   const router = useRouter()
   const [providers, setProviders] = useState<PaymentProvider[]>(initialProviders)
+  const [b2bProvider, setB2bProvider] = useState(initialB2b)
   const [oxxo, setOxxo] = useState(initialOxxo)
   const [msi, setMsi] = useState(initialMsi)
   const [busy, setBusy] = useState<string | null>(null)
@@ -82,6 +86,22 @@ export function PaymentsSettingsForm({
       router.refresh()
     } catch (e) {
       setter(current)
+      setError((e as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function changeB2bProvider(next: PaymentProvider) {
+    const previous = b2bProvider
+    setError(null)
+    setBusy(PAYMENTS_B2B_PROVIDER_KEY)
+    setB2bProvider(next)
+    try {
+      await saveSetting(PAYMENTS_B2B_PROVIDER_KEY, next)
+      router.refresh()
+    } catch (e) {
+      setB2bProvider(previous)
       setError((e as Error).message)
     } finally {
       setBusy(null)
@@ -169,6 +189,19 @@ export function PaymentsSettingsForm({
           </div>
         </div>
 
+        <div className="space-y-2">
+          <label htmlFor="b2b-payment-provider" className="text-sm font-medium text-foreground">
+            Proveedor para anticipos y saldos de cotizaciones
+          </label>
+          <select id="b2b-payment-provider" value={b2bProvider}
+            disabled={busy === PAYMENTS_B2B_PROVIDER_KEY}
+            onChange={(event) => changeB2bProvider(event.target.value as PaymentProvider)}
+            className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+            {ALL_PROVIDERS.map((provider) => <option key={provider} value={provider}>{PROVIDER_LABELS[provider]}</option>)}
+          </select>
+          <p className="text-xs text-muted-foreground">Se aplica a pedidos nuevos. Los saldos conservan el proveedor de su anticipo.</p>
+        </div>
+
         {/* Payment method toggles */}
         <div className="space-y-2">
           <label className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm text-foreground">
@@ -193,8 +226,8 @@ export function PaymentsSettingsForm({
               className="h-4 w-4 rounded border-border"
             />
             <span>
-              Meses sin intereses{' '}
-              <span className="text-xs text-muted-foreground">— MSI en tarjetas participantes (Mercado Pago)</span>
+              Pagos a meses (hasta 12){' '}
+              <span className="text-xs text-muted-foreground">— cuotas e intereses sujetos a la cuenta y tarjeta en Mercado Pago; desactivado permite un solo pago</span>
             </span>
           </label>
         </div>

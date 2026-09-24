@@ -20,6 +20,11 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_').optional(),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith('pk_').optional(),
 
+  // Mercado Pago Checkout Pro. Explicit mode supports test-user APP_USR tokens.
+  MERCADOPAGO_ACCESS_TOKEN: z.string().min(1).optional(),
+  MERCADOPAGO_WEBHOOK_SECRET: z.string().min(1).optional(),
+  MERCADOPAGO_TEST_MODE: z.enum(['true', 'false']).default('false'),
+
   // ─── SAT / Facturapi ──────────────────────────────────────────────────────
   FACTURAPI_KEY: z.string().min(1).optional(),
   CBC_RFC: z.string().min(12).max(13).optional(),

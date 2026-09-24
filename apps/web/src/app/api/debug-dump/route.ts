@@ -25,6 +25,10 @@ export async function POST(req: NextRequest) {
   }
   try {
     const body = await req.json()
+    // Do not ingest client diagnostics from the credential editor.
+    if (typeof body.url === 'string' && new URL(body.url, req.url).pathname.startsWith('/admin/configuration')) {
+      return NextResponse.json({ error: 'Diagnostics disabled' }, { status: 403 })
+    }
     const raw = JSON.stringify(body)
     if (raw.length > MAX_PAYLOAD) {
       return NextResponse.json({ error: 'Payload too large' }, { status: 413 })

@@ -14,6 +14,22 @@ describe('debug-capture', () => {
     console.warn = origConsole.warn
     console.error = origConsole.error
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
+
+  it('does not capture, export or transmit configuration-page diagnostics', async () => {
+    vi.resetModules()
+    vi.stubGlobal('location', { pathname: '/admin/configuration', href: 'https://cbc.example/admin/configuration' })
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const capture = await import('../debug-capture')
+    capture.initDebugCapture()
+    console.error('pretend-sensitive-value')
+    expect(capture.getDebugDump()).not.toContain('pretend-sensitive-value')
+    expect(await capture.reportDebugDump()).toEqual({ ok: false })
+    expect(fetch).not.toHaveBeenCalled()
+    vi.stubGlobal('location', { pathname: '/admin/dashboard', href: 'https://cbc.example/admin/dashboard' })
+    expect(capture.getDebugDump()).not.toContain('pretend-sensitive-value')
   })
 
   it('console.log is a callable function', () => {

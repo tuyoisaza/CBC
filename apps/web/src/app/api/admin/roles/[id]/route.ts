@@ -1,35 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, superadminEmails } from '@/lib/auth'
+import { requireAdminAccess, isSuperadminSession } from '@/lib/superadmin'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { createLogger } from '@/lib/logger'
 import { recordAudit } from '@/lib/audit'
+import { ALL_PERMISSIONS } from '@/lib/permissions'
 
 const log = createLogger('admin/roles')
 
 export const dynamic = 'force-dynamic'
 
 const updateSchema = z.object({
-  name: z.string().min(1).optional(),
+  name: z.string().trim().min(1).refine(name => name.toLowerCase() !== 'superadmin', 'Reserved role name').optional(),
   description: z.string().nullable().optional(),
-  permissions: z.array(z.string()).optional(),
-})
+  permissions: z.array(z.enum(ALL_PERMISSIONS)).optional(),
+}).strict()
 
-function requireAdmin(session: { user: { role?: string } } | null) {
-  if (!session) return { error: 'Unauthorized' as const, status: 401 as const }
-  if (session.user.role?.toLowerCase() !== 'admin') return { error: 'Forbidden' as const, status: 403 as const }
-  return null
-}
+
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
-  const guard = requireAdmin(session)
+  const guard = await requireAdminAccess(session)
   if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
 
   try {
     const body = await req.json()
     const data = updateSchema.parse(body)
+    const target = await db.role.findUnique({ where: { id: params.id } })
+    if (!target) return NextResponse.json({ error: 'Not Found' }, { status: 404 })
+    if (target.name.trim().toLowerCase() === 'superadmin') return NextResponse.json({ error: 'Reserved role' }, { status: 403 })
+    const protectedUsers = await db.user.count({ where: { roleId: params.id, OR: [{ isSuperadmin: true }, { email: { in: superadminEmails() } }] } })
+    if (protectedUsers > 0 && !await isSuperadminSession(session)) return NextResponse.json({ error: 'Cannot modify a superadmin account role' }, { status: 403 })
     const role = await db.role.update({
       where: { id: params.id },
       data: { name: data.name, description: data.description, permissions: data.permissions },
@@ -52,12 +55,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
-  const guard = requireAdmin(session)
+  const guard = await requireAdminAccess(session)
   if (guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
 
   try {
     const target = await db.role.findUnique({ where: { id: params.id } })
     if (!target) return NextResponse.json({ error: 'Not Found' }, { status: 404 })
+    if (target.name.trim().toLowerCase() === 'superadmin') return NextResponse.json({ error: 'Reserved role' }, { status: 403 })
 
     const users = await db.user.count({ where: { roleId: params.id } })
     if (users > 0) {

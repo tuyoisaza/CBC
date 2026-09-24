@@ -1,3 +1,4 @@
+import { getIntegrationValue, getIntegrationValues } from './integration-secrets'
 import axios from 'axios'
 import { sendEmail } from '@/lib/email'
 
@@ -90,21 +91,23 @@ export async function notifyNewQuote(data: {
 
 // ─── WhatsApp ────────────────────────────────────────────────────────────────
 
-async function sendWhatsApp(to: string, message: string): Promise<boolean> {
+async function sendWhatsApp(to: string | undefined, message: string): Promise<boolean> {
   try {
+    const config = await getIntegrationValues(['WHATSAPP_PHONE_NUMBER_ID', 'WHATSAPP_TOKEN'])
+    if (!to || !config.WHATSAPP_PHONE_NUMBER_ID || !config.WHATSAPP_TOKEN) return false
     await axios.post(
-      `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+      `https://graph.facebook.com/v21.0/${config.WHATSAPP_PHONE_NUMBER_ID}/messages`,
       {
         messaging_product: 'whatsapp',
         to: to.replace(/\D/g, ''), // strip non-digits
         type: 'text',
         text: { body: message },
       },
-      { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` } }
+      { headers: { Authorization: `Bearer ${config.WHATSAPP_TOKEN}` } }
     )
     return true
-  } catch (err) {
-    console.error('WhatsApp send error:', err)
+  } catch {
+    console.error('WhatsApp delivery failed')
     return false
   }
 }
@@ -149,7 +152,7 @@ export async function notifyLorenaNewLead(lead: {
     `Caja: ${lead.boxType} × ${lead.quantity}\n\n` +
     `Ver en admin: ${process.env.NEXT_PUBLIC_ADMIN_URL}/admin/sales`
 
-  await sendWhatsApp(process.env.LORENA_PHONE!, msg)
+  await sendWhatsApp(await getIntegrationValue('LORENA_PHONE'), msg)
 }
 
 export async function notifyLorenaPayment(opts: {
@@ -166,7 +169,7 @@ export async function notifyLorenaPayment(opts: {
     `Monto: $${opts.amount.toLocaleString('es-MX')} MXN\n\n` +
     `Ver pedido: ${process.env.NEXT_PUBLIC_ADMIN_URL}/admin/sales/orders`
 
-  await sendWhatsApp(process.env.LORENA_PHONE!, msg)
+  await sendWhatsApp(await getIntegrationValue('LORENA_PHONE'), msg)
 }
 
 // ─── Customer notifications ───────────────────────────────────────────────────
@@ -208,13 +211,13 @@ export async function sendPaymentLinkToCustomer(opts: {
   type: 'deposit' | 'balance'
   paymentUrl: string
 }) {
-  const typeLabel = opts.type === 'deposit' ? 'anticipo (50%)' : 'saldo final (50%)'
+  const typeLabel = opts.type === 'deposit' ? 'anticipo' : 'saldo final'
   const msg =
     `Hola ${opts.companyName} 👋\n\n` +
     `Aquí está el link de pago para el ${typeLabel} de tu pedido *${opts.orderCode}*:\n\n` +
     `💳 *$${opts.amount.toLocaleString('es-MX')} MXN*\n` +
     `${opts.paymentUrl}\n\n` +
-    `El link acepta tarjeta de crédito/débito y OXXO Pay.\n` +
+    `Consulta los métodos de pago disponibles al abrir el enlace.\n` +
     `Cualquier duda, estamos aquí. ☕`
 
   await sendWhatsApp(opts.whatsapp, msg)
@@ -242,7 +245,7 @@ export async function sendPaymentLinkToCustomer(opts: {
               </a>
             </div>
             <p style="color: #636363; font-size: 14px;">
-              El link acepta tarjeta de crédito/débito y OXXO Pay.<br>
+              Consulta los métodos de pago disponibles al abrir el enlace.<br>
               Cualquier duda, escríbenos al +52 55 72293512.
             </p>
           </div>
@@ -408,7 +411,7 @@ export async function notifyLorenaRetailOrder(opts: {
   if (opts.needsCfdi) lines.push(`🧾 Solicita factura`)
   lines.push(``, `Ver pedido: ${process.env.NEXT_PUBLIC_ADMIN_URL}/admin/sales/orders`)
 
-  await sendWhatsApp(process.env.LORENA_PHONE!, lines.join('\n'))
+  await sendWhatsApp(await getIntegrationValue('LORENA_PHONE'), lines.join('\n'))
 }
 
 export async function sendOrderConfirmationToCustomer(opts: {

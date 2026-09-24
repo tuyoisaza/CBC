@@ -30,7 +30,7 @@ export default async function ProductDetailPage({
       where: { slug: params.slug },
     }),
   )
-  if (!product) notFound()
+  if (!product || !product.active) notFound()
 
   const markupPct = await withDbRetry(() => getSingleMarkupPct())
   const finalPrice = priceWithTax(product.price, markupPct)
@@ -45,12 +45,17 @@ export default async function ProductDetailPage({
       ? await withDbRetry(() =>
           db.order.findUnique({
             where: { orderCode: searchParams.order },
-            select: { orderCode: true, shippingCity: true, isGift: true, quote: { select: { total: true } } },
+            select: { orderCode: true, shippingCity: true, isGift: true, quote: { select: { total: true } },
+              payments: { where: { type: 'full' }, select: { status: true } } },
           }),
         )
       : null
 
   const videos = (Array.isArray(product.videos) ? product.videos : []) as { url: string; title?: string }[]
+  // Redirect query parameters describe navigation, not proof of payment.
+  const verifiedStatus = checkoutOrder?.payments.some(p => p.status === 'paid') ? 'exito'
+    : checkoutOrder?.payments.some(p => ['failed', 'refunded', 'charged_back'].includes(p.status)) ? 'fallo'
+    : checkoutStatus === 'exito' ? 'pendiente' : checkoutStatus
 
   const allMedia = [
     ...product.images.map((url) => ({ type: 'image' as const, url, thumbnail: url, title: product.name })),
@@ -75,7 +80,7 @@ export default async function ProductDetailPage({
 
         {checkoutStatus && (
           <CheckoutResultBanner
-            status={checkoutStatus}
+            status={verifiedStatus!}
             order={
               checkoutOrder
                 ? {

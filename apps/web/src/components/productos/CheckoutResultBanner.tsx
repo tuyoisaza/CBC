@@ -23,7 +23,7 @@ export function CheckoutResultBanner({ status, order }: { status: CheckoutStatus
               {order.shippingCity ? ` · envío a ${order.shippingCity}` : ''}.
             </p>
             <p className="mt-1">
-              Te enviamos la confirmación por WhatsApp y correo. Ya lo estamos preparando.
+              Tu pago está acreditado. Ya estamos preparando tu pedido.
               {order.isGift ? ' El paquete no incluye el precio.' : ''}
             </p>
             <Link
@@ -34,7 +34,7 @@ export function CheckoutResultBanner({ status, order }: { status: CheckoutStatus
             </Link>
           </>
         ) : (
-          <p>Recibimos tu pago. Te enviamos la confirmación por WhatsApp y correo.</p>
+          <p>Tu pago está acreditado.</p>
         )}
       </Wrapper>
     )
@@ -45,8 +45,8 @@ export function CheckoutResultBanner({ status, order }: { status: CheckoutStatus
       <Wrapper tone="warn" Icon={Clock} title="Pago en proceso">
         <p>
           {order ? <>Pedido <strong>{order.orderCode}</strong>. </> : null}
-          Tu pago con OXXO o transferencia se está procesando. Te confirmamos por WhatsApp y correo
-          en cuanto se acredite (puede tardar unas horas).
+          Estamos esperando la confirmación del proveedor de pago. Actualiza esta página en unos minutos.
+          Los pagos en efectivo o por transferencia pueden tardar más en acreditarse.
         </p>
         {order && (
           <Link
@@ -63,7 +63,7 @@ export function CheckoutResultBanner({ status, order }: { status: CheckoutStatus
   if (status === 'fallo') {
     return (
       <Wrapper tone="error" Icon={XCircle} title="El pago no se completó">
-        <p>No se procesó el cobro. Puedes intentar de nuevo con el botón de compra.</p>
+        <p>Este pago no está acreditado. Revisa su estado en el proveedor antes de volver a comprar.</p>
       </Wrapper>
     )
   }

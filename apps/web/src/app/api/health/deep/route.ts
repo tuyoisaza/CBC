@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { getIntegrationValues } from '@/lib/integration-secrets'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,28 +20,29 @@ async function checkPrisma(timeoutMs = 3000): Promise<CheckResult> {
     ])
     return { status: 'ok', latency_ms: Date.now() - t0 }
   } catch (e) {
-    return { status: 'error', latency_ms: Date.now() - t0, message: (e as Error).message }
+    return { status: 'error', latency_ms: Date.now() - t0, message: 'Service check failed' }
   }
 }
 
-async function checkStripe(): Promise<CheckResult> {
-  if (!process.env.STRIPE_SECRET_KEY) return { status: 'not_configured', latency_ms: 0 }
+async function checkStripe(key: string | undefined): Promise<CheckResult> {
+  if (!key) return { status: 'not_configured', latency_ms: 0 }
   const t0 = Date.now()
   try {
-    const stripe = (await import('@/lib/stripe')).stripe
+    const stripe = await (await import('@/lib/stripe')).getStripe()
     await stripe.customers.list({ limit: 1 })
     return { status: 'ok', latency_ms: Date.now() - t0 }
   } catch (e) {
-    return { status: 'error', latency_ms: Date.now() - t0, message: (e as Error).message }
+    return { status: 'error', latency_ms: Date.now() - t0, message: 'Service check failed' }
   }
 }
 
-async function checkMercadoPago(): Promise<CheckResult & { account?: { id: number; nickname: string; email: string; siteId: string; testMode: boolean } }> {
-  if (!process.env.MERCADOPAGO_ACCESS_TOKEN) return { status: 'not_configured', latency_ms: 0 }
+async function checkMercadoPago(token: string | undefined, testMode: boolean): Promise<CheckResult & { account?: { id: number; nickname: string; email: string; siteId: string; testMode: boolean } }> {
+  if (!token) return { status: 'not_configured', latency_ms: 0 }
   const t0 = Date.now()
   try {
     const res = await fetch('https://api.mercadopago.com/users/me', {
-      headers: { Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}` },
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store', signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) {
       return { status: 'error', latency_ms: Date.now() - t0, message: `MP API returned HTTP ${res.status}` }
@@ -56,30 +58,12 @@ async function checkMercadoPago(): Promise<CheckResult & { account?: { id: numbe
         email: data.email,
         siteId: data.site_id,
         // Test-mode access tokens start with TEST-, live ones with APP_USR-
-        testMode: process.env.MERCADOPAGO_ACCESS_TOKEN.startsWith('TEST-'),
+        testMode: testMode || token.startsWith('TEST-'),
       },
     }
   } catch (e) {
-    return { status: 'error', latency_ms: Date.now() - t0, message: (e as Error).message }
+    return { status: 'error', latency_ms: Date.now() - t0, message: 'Service check failed' }
   }
-}
-
-function checkFacturapi(): CheckResult {
-  return process.env.FACTURAPI_KEY
-    ? { status: 'ok', latency_ms: 0, message: 'configured' }
-    : { status: 'not_configured', latency_ms: 0 }
-}
-
-function checkR2(): CheckResult {
-  return process.env.CLOUDFLARE_R2_ACCESS_KEY
-    ? { status: 'ok', latency_ms: 0, message: 'configured' }
-    : { status: 'not_configured', latency_ms: 0 }
-}
-
-function checkEmail(): CheckResult {
-  if (process.env.BREVO_API_KEY) return { status: 'ok', latency_ms: 0, message: 'brevo configured' }
-  if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.length > 5) return { status: 'ok', latency_ms: 0, message: 'resend configured' }
-  return { status: 'not_configured', latency_ms: 0 }
 }
 
 export async function GET() {
@@ -89,10 +73,21 @@ export async function GET() {
   }
 
   const startedAt = Date.now()
-  const [prisma, stripe, mercadoPago] = await Promise.all([checkPrisma(), checkStripe(), checkMercadoPago()])
-  const facturapi = checkFacturapi()
-  const r2 = checkR2()
-  const email = checkEmail()
+  let config: Record<string, string | undefined>
+  try {
+    config = await getIntegrationValues(['STRIPE_SECRET_KEY', 'MERCADOPAGO_ACCESS_TOKEN', 'MERCADOPAGO_TEST_MODE',
+      'FACTURAPI_KEY', 'CLOUDFLARE_R2_ACCOUNT_ID', 'CLOUDFLARE_R2_ACCESS_KEY', 'CLOUDFLARE_R2_SECRET_KEY',
+      'CLOUDFLARE_R2_BUCKET', 'BREVO_API_KEY', 'RESEND_API_KEY'])
+  } catch {
+    return NextResponse.json({ status: 'error', message: 'Integration configuration unavailable' }, { status: 503 })
+  }
+  const [prisma, stripe, mercadoPago] = await Promise.all([
+    checkPrisma(), checkStripe(config.STRIPE_SECRET_KEY), checkMercadoPago(config.MERCADOPAGO_ACCESS_TOKEN, config.MERCADOPAGO_TEST_MODE === 'true'),
+  ])
+  const configured = (present: unknown): CheckResult => ({ status: present ? 'ok' : 'not_configured', latency_ms: 0 })
+  const facturapi = configured(config.FACTURAPI_KEY)
+  const r2 = configured(config.CLOUDFLARE_R2_ACCOUNT_ID && config.CLOUDFLARE_R2_ACCESS_KEY && config.CLOUDFLARE_R2_SECRET_KEY && config.CLOUDFLARE_R2_BUCKET)
+  const email = configured(config.BREVO_API_KEY || (config.RESEND_API_KEY && config.RESEND_API_KEY.length > 5))
 
   const checks = { prisma, stripe, mercadopago: mercadoPago, facturapi, r2, email }
   const values = Object.values(checks)

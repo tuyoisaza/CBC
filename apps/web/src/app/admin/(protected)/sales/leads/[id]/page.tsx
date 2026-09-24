@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import { LeadStatusSelect } from '@/components/admin/sales/LeadStatusSelect'
 import { LeadArchiveButton } from '@/components/admin/sales/LeadArchiveButton'
+import { CreateOrderPaymentButton } from '@/components/admin/sales/CreateOrderPaymentButton'
+import { getPaymentConfig } from '@/lib/payment-config'
 
 export const metadata = { title: 'Lead' }
 
@@ -19,12 +21,13 @@ export default async function LeadDetailPage({
     where: { id: params.id },
     include: {
       customer: true,
-      quotes: { orderBy: { createdAt: 'desc' } },
+      quotes: { orderBy: { createdAt: 'desc' }, include: { order: { include: { payments: { where: { type: 'deposit' }, orderBy: { createdAt: 'asc' }, take: 1 } } } } },
       messages: { orderBy: { createdAt: 'desc' }, take: 10 },
     },
   })
 
   if (!lead) notFound()
+  const paymentConfig = await getPaymentConfig()
 
   const { customer } = lead
 
@@ -141,10 +144,10 @@ export default async function LeadDetailPage({
             </h2>
             <div className="space-y-2">
               <Link
-                href={`/admin/sales/quotes/new?leadId=${lead.id}`}
+                href="/cotizar"
                 className="flex items-center gap-2 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                <Plus className="h-4 w-4" /> Nueva cotización
+                <Plus className="h-4 w-4" /> Abrir cotizador
               </Link>
               {customer.whatsapp && (
                 <a
@@ -169,10 +172,9 @@ export default async function LeadDetailPage({
             ) : (
               <div className="space-y-2">
                 {lead.quotes.map((q) => (
-                  <Link
+                  <div
                     key={q.id}
-                    href={`/admin/sales/quotes/${q.id}`}
-                    className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted transition-colors"
+                    className="rounded-lg border border-border p-3"
                   >
                     <div>
                       <p className="text-xs font-medium text-foreground">{q.quoteCode}</p>
@@ -191,7 +193,15 @@ export default async function LeadDetailPage({
                        q.status === 'accepted' ? 'Aceptada' :
                        q.status === 'rejected' ? 'Rechazada' : q.status}
                     </span>
-                  </Link>
+                    {q.order && <Link href={`/admin/sales/orders/${q.order.id}`} className="mt-2 block text-xs text-primary hover:underline">Ver pedido</Link>}
+                    {(!q.order || q.order.channel === 'b2b') && !['Cancelada', 'rejected', 'cancelled'].includes(q.status) && (!q.order || q.order.status === 'pending_payment' || q.order.payments.length === 0 || q.order.payments[0]?.status === 'pending') && q.order?.status !== 'cancelled' && (
+                      <CreateOrderPaymentButton
+                        quoteId={q.id}
+                        defaultProvider={paymentConfig.b2bProvider}
+                        existingProvider={q.order?.payments[0]?.provider === 'stripe' || q.order?.payments[0]?.provider === 'mercadopago' ? q.order.payments[0].provider : undefined}
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
             )}

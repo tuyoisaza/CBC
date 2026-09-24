@@ -1,13 +1,18 @@
 import axios from 'axios'
+import { getIntegrationValue } from './integration-secrets'
 
 const BASE_URL = 'https://www.facturapi.io/v2'
 
-function client() {
-  return axios.create({
+async function client() {
+  const apiKey = await getIntegrationValue('FACTURAPI_KEY')
+  if (!apiKey) throw new Error('Facturapi is not configured')
+  const instance = axios.create({
     baseURL: BASE_URL,
-    auth: { username: process.env.FACTURAPI_KEY!, password: '' },
+    auth: { username: apiKey, password: '' },
     headers: { 'Content-Type': 'application/json' },
   })
+  instance.interceptors.response.use(response => response, () => Promise.reject(new Error('Facturapi request failed')))
+  return instance
 }
 
 export interface CfdiData {
@@ -37,7 +42,7 @@ export interface CfdiData {
 }
 
 export async function createCfdi(data: CfdiData) {
-  const res = await client().post('/invoices', data)
+  const res = await (await client()).post('/invoices', data)
   return res.data as {
     id: string
     uuid: string
@@ -49,7 +54,7 @@ export async function createCfdi(data: CfdiData) {
 }
 
 export async function getCfdiPdfUrl(invoiceId: string): Promise<string> {
-  const res = await client().get(`/invoices/${invoiceId}/pdf`, {
+  const res = await (await client()).get(`/invoices/${invoiceId}/pdf`, {
     responseType: 'arraybuffer',
   })
   // Return as base64 — caller saves to R2
@@ -57,7 +62,7 @@ export async function getCfdiPdfUrl(invoiceId: string): Promise<string> {
 }
 
 export async function getCfdiXmlUrl(invoiceId: string): Promise<string> {
-  const res = await client().get(`/invoices/${invoiceId}/xml`, {
+  const res = await (await client()).get(`/invoices/${invoiceId}/xml`, {
     responseType: 'arraybuffer',
   })
   return Buffer.from(res.data).toString('base64')
@@ -66,7 +71,7 @@ export async function getCfdiXmlUrl(invoiceId: string): Promise<string> {
 export async function cancelCfdi(invoiceId: string, motive: string) {
   // Motives: "01"=error without replacement, "02"=error with replacement,
   //          "03"=not carried out, "04"=normative operation
-  const res = await client().delete(`/invoices/${invoiceId}`, {
+  const res = await (await client()).delete(`/invoices/${invoiceId}`, {
     data: { motive },
   })
   return res.data

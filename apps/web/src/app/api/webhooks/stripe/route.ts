@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
+import { getIntegrationValue } from '@/lib/integration-secrets'
 import { db } from '@/lib/db'
-import { notifyLorenaPayment } from '@/lib/notifications'
-import { createPaymentLink } from '@/lib/stripe'
-import { fulfillSinglePurchase, failSinglePurchase } from '@/lib/fulfillment'
+import { failSinglePurchase } from '@/lib/fulfillment'
+import { settlePayment } from '@/lib/payment-settlement'
 import Stripe from 'stripe'
 
 // A completed Checkout Session isn't necessarily paid: for delayed-notification
@@ -24,9 +24,16 @@ export async function POST(req: NextRequest) {
   const body      = await req.text()
   const signature = req.headers.get('stripe-signature')!
 
+  let secret: string | undefined
+  let stripe: Stripe
+  try {
+    secret = await getIntegrationValue('STRIPE_WEBHOOK_SECRET')
+    if (!secret) return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 })
+    stripe = await getStripe()
+  } catch { return NextResponse.json({ error: 'Webhook unavailable' }, { status: 503 }) }
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = stripe.webhooks.constructEvent(body, signature, secret)
   } catch {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
@@ -44,18 +51,23 @@ export async function POST(req: NextRequest) {
       const amount   = (session.amount_total ?? 0) / 100
       const stripeId = (session.payment_intent as string) || session.id
 
-      if (meta.type === 'full') {
-        await fulfillSinglePurchase(meta.orderId, { externalId: stripeId, amount })
-      } else if (meta.type === 'deposit' || meta.type === 'balance') {
-        await handlePaymentReceived({
-          orderId:    meta.orderId,
-          orderCode:  meta.orderCode,
-          customerId: meta.customerId,
-          type:       meta.type,
-          amount,
-          stripeId,
-        })
+      const payment = meta.paymentId
+        ? await db.payment.findUnique({ where: { id: meta.paymentId } })
+        : await db.payment.findFirst({ where: {
+            orderId: meta.orderId, type: meta.type,
+            OR: [{ provider: 'stripe' }, ...(typeof session.payment_link === 'string'
+              ? [{ paymentLinkId: session.payment_link }] : [])],
+          } })
+      if (!payment) return NextResponse.json({ error: 'Payment not found' }, { status: 503 })
+      // Older B2B Stripe links were stored with the schema's MP default. Only
+      // repair when the signed Stripe event identifies that exact stored link.
+      if (payment.provider !== 'stripe' && typeof session.payment_link === 'string' &&
+          payment.paymentLinkId === session.payment_link) {
+        await db.payment.update({ where: { id: payment.id }, data: { provider: 'stripe' } })
       }
+      await settlePayment(payment.id, {
+        provider: 'stripe', externalId: stripeId, amount, currency: session.currency || '',
+      })
     }
   }
 
@@ -63,81 +75,9 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session
     const meta    = session.metadata ?? {}
     if (meta.orderId && meta.type === 'full') {
-      await failSinglePurchase(meta.orderId)
+      await failSinglePurchase(meta.orderId, meta.paymentId)
     }
   }
 
   return NextResponse.json({ received: true })
-}
-
-async function handlePaymentReceived(opts: {
-  orderId:    string
-  orderCode:  string
-  customerId: string
-  type:       'deposit' | 'balance'
-  amount:     number
-  stripeId:   string
-}) {
-  // Idempotency: only proceed if this payment was still pending.
-  const { count } = await db.payment.updateMany({
-    where: { orderId: opts.orderId, type: opts.type, status: 'pending' },
-    data:  { status: 'paid', paidAt: new Date(), stripePaymentId: opts.stripeId },
-  })
-  if (count === 0) return
-
-  const order = await db.order.findUnique({
-    where:   { id: opts.orderId },
-    include: { customer: true, quote: true },
-  })
-  if (!order) return
-
-  await notifyLorenaPayment({
-    companyName: order.customer.companyName,
-    orderCode:   opts.orderCode,
-    amount:      opts.amount,
-    type:        opts.type,
-  })
-
-  if (opts.type === 'deposit') {
-    await db.order.update({
-      where: { id: opts.orderId },
-      data:  { status: 'in_production' },
-    })
-
-    // Generate balance payment link (remaining 50%)
-    const balanceAmount = Math.round(order.quote.total * 0.5 * 100) / 100
-    const balanceLink   = await createPaymentLink({
-      amount:      balanceAmount,
-      description: `CBC ${opts.orderCode} — Saldo final 50%`,
-      metadata: {
-        orderId:    opts.orderId,
-        orderCode:  opts.orderCode,
-        type:       'balance',
-        customerId: opts.customerId,
-      },
-      allowOxxo: true,
-    })
-
-    await db.payment.create({
-      data: {
-        orderId:        opts.orderId,
-        amount:         balanceAmount,
-        currency:       'MXN',
-        type:           'balance',
-        status:         'pending',
-        paymentLinkId:  balanceLink.id,
-        paymentLinkUrl: balanceLink.url,
-      },
-    })
-
-    await db.order.update({
-      where: { id: opts.orderId },
-      data:  { notes: `Balance link: ${balanceLink.url}` },
-    })
-  } else if (opts.type === 'balance') {
-    await db.order.update({
-      where: { id: opts.orderId },
-      data:  { status: 'ready' },
-    })
-  }
 }

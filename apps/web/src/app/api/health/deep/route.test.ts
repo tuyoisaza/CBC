@@ -1,0 +1,55 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+const mocks = vi.hoisted(() => ({ session: vi.fn(), config: vi.fn(), stripe: vi.fn(), list: vi.fn(), fetch: vi.fn(), ping: vi.fn() }))
+vi.mock('next-auth', () => ({ getServerSession: mocks.session }))
+vi.mock('@/lib/auth', () => ({ authOptions: {} }))
+vi.mock('@/lib/db', () => ({ db: { $queryRaw: mocks.ping } }))
+vi.mock('@/lib/integration-secrets', () => ({ getIntegrationValues: mocks.config }))
+vi.mock('@/lib/stripe', () => ({ getStripe: mocks.stripe }))
+import { GET } from './route'
+
+beforeEach(() => {
+  vi.resetAllMocks()
+  mocks.session.mockResolvedValue({ user: { id: 'admin' } })
+  mocks.config.mockResolvedValue({ MERCADOPAGO_ACCESS_TOKEN: 'database-secret', MERCADOPAGO_TEST_MODE: 'true', STRIPE_SECRET_KEY: 'db-stripe', FACTURAPI_KEY: 'db-facturapi' })
+  mocks.stripe.mockResolvedValue({ customers: { list: mocks.list } })
+  mocks.list.mockResolvedValue({ data: [] })
+  mocks.ping.mockResolvedValue([])
+  mocks.fetch.mockResolvedValue({ ok: true, json: async () => ({ id: 1, nickname: 'CBC', email: 'cbc@example.com', site_id: 'MLM' }) })
+  vi.stubGlobal('fetch', mocks.fetch)
+})
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+describe('deep health configured integrations', () => {
+  it('uses live database credentials and explicit test mode without exposing them', async () => {
+    vi.stubEnv('MERCADOPAGO_ACCESS_TOKEN', 'old-env-secret')
+    const body = await (await GET()).json()
+    expect(mocks.fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer database-secret')
+    expect(body.checks.mercadopago.account.testMode).toBe(true)
+    expect(body.checks.facturapi.status).toBe('ok')
+    expect(mocks.stripe).toHaveBeenCalledOnce()
+    expect(JSON.stringify(body)).not.toMatch(/database-secret|old-env-secret|db-stripe/)
+  })
+  it('honors disabled database keys even if environment credentials exist', async () => {
+    vi.stubEnv('MERCADOPAGO_ACCESS_TOKEN', 'old-env-secret')
+    mocks.config.mockResolvedValue({})
+    const body = await (await GET()).json()
+    expect(body.checks.mercadopago.status).toBe('not_configured')
+    expect(mocks.fetch).not.toHaveBeenCalled()
+    expect(mocks.stripe).not.toHaveBeenCalled()
+  })
+  it('returns safe errors for SDK and storage failures', async () => {
+    mocks.list.mockRejectedValue(new Error('secret API key: db-stripe'))
+    const body = await (await GET()).json()
+    expect(body.checks.stripe.status).toBe('error')
+    expect(JSON.stringify(body)).not.toContain('db-stripe')
+    mocks.config.mockRejectedValue(new Error('encrypted-secret-value'))
+    const result = await GET()
+    expect(result.status).toBe(503)
+    expect(await result.text()).not.toContain('encrypted-secret-value')
+  })
+  it('does not read configuration for unauthenticated requests', async () => {
+    mocks.session.mockResolvedValue(null)
+    expect((await GET()).status).toBe(401)
+    expect(mocks.config).not.toHaveBeenCalled()
+  })
+})

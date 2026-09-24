@@ -7,7 +7,7 @@ const authMiddleware = withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => token?.role === 'admin',
+      authorized: ({ token }) => !!token?.dbUserId && (token.role === 'admin' || token.isSuperadmin === true),
     },
     pages: {
       signIn: '/login',
@@ -33,6 +33,8 @@ export default function middleware(req: NextRequest): NextResponse {
     '/login',
     '/en',
     '/cotizar',
+    '/productos',
+    '/contacto',
     '/tracking',
     '/api',
   ]

@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
  * - GET routes expect 200.
  * - The Stripe webhook expects 400 on an unsigned POST — that proves it's
  *   deployed AND actively validating signatures.
- * - The Mercado Pago webhook expects 200 (it acks non-payment events).
+ * - The Mercado Pago webhook expects 401 on an unsigned POST.
  */
 
 type Probe = {
@@ -35,7 +35,7 @@ const PROBES: Probe[] = [
   { name: 'api: volume-discounts', method: 'GET',  path: '/api/volume-discounts',     expect: [200] },
   { name: 'api: public settings',  method: 'GET',  path: '/api/settings/public',      expect: [200] },
   { name: 'webhook: stripe',       method: 'POST', path: '/api/webhooks/stripe',      expect: [400], body: '{}' },
-  { name: 'webhook: mercadopago',  method: 'POST', path: '/api/webhooks/mercadopago', expect: [200], body: '{}' },
+  { name: 'webhook: mercadopago',  method: 'POST', path: '/api/webhooks/mercadopago', expect: [401], body: '{}' },
 ]
 
 function baseUrl(): string {
@@ -76,7 +76,7 @@ export async function GET() {
           status: null,
           ok: false,
           latency_ms: Date.now() - t0,
-          error: (e as Error).message,
+          error: 'Endpoint check failed',
         }
       }
     }),

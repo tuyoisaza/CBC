@@ -4,6 +4,7 @@ import Link from 'next/link'
 export const metadata = { title: 'Pedidos' }
 
 const STATUS_LABEL: Record<string, string> = {
+  pending_payment: 'Pendiente de pago',
   confirmed: 'Confirmado', in_production: 'En producción',
   ready: 'Listo', shipped: 'En camino', delivered: 'Entregado', cancelled: 'Cancelado',
 }

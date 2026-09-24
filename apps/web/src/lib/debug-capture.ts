@@ -11,8 +11,13 @@ let origWarn: (...args: unknown[]) => void
 let origError: (...args: unknown[]) => void
 
 function capture(type: string, args: unknown[]) {
+  if (sensitivePage()) { entries.length = 0; return }
   entries.push({ type, args: args.map(a => a instanceof Error ? a.stack || a.message : a), timestamp: new Date().toISOString() })
   if (entries.length > MAX) entries.shift()
+}
+
+function sensitivePage() {
+  return typeof location !== 'undefined' && location.pathname.startsWith('/admin/configuration')
 }
 
 function getDumpPayload() {
@@ -27,6 +32,7 @@ function getDumpPayload() {
 }
 
 export async function reportDebugDump(): Promise<{ ok: boolean; timestamp?: string; requestId?: string }> {
+  if (sensitivePage()) { entries.length = 0; return { ok: false } }
   try {
     const res = await fetch('/api/debug-dump', {
       method: 'POST',
@@ -77,6 +83,7 @@ export function initDebugCapture() {
 }
 
 export function getDebugDump(): string {
+  if (sensitivePage()) { entries.length = 0; return 'Los diagnósticos están desactivados en Configuración.' }
   const version = document.querySelector<HTMLMetaElement>('meta[name="app-version"]')?.content || '?'
 
   const lines: string[] = [

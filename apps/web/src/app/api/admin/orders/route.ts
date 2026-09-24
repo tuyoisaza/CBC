@@ -3,104 +3,63 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
-import { createPaymentLink, getOrCreateStripeCustomer } from '@/lib/stripe'
-import { notifyCustomerOrderStatus, sendPaymentLinkToCustomer, notifyLorenaPayment } from '@/lib/notifications'
+import { notifyCustomerOrderStatus, sendPaymentLinkToCustomer } from '@/lib/notifications'
+import { getPaymentConfig } from '@/lib/payment-config'
+import { depositAmount, ensureOrderPayment } from '@/lib/order-payments'
 
-// Convert accepted quote → order
 const createOrderSchema = z.object({
-  quoteId: z.string(),
+  quoteId: z.string().min(1),
+  provider: z.enum(['stripe', 'mercadopago']).optional(),
 })
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { quoteId } = createOrderSchema.parse(await req.json())
-
-  const quote = await db.quote.findUnique({
-    where: { id: quoteId },
-    include: { customer: true, lead: true, order: true },
-  })
-  if (!quote) return NextResponse.json({ error: 'Quote not found' }, { status: 404 })
-  if (quote.order) return NextResponse.json({ error: 'Order already exists' }, { status: 409 })
-
-  // Order code
-  const count = await db.order.count()
-  const orderCode = `CBC-${new Date().getFullYear()}-${String(count + 1).padStart(3, '0')}`
-
-  // Create Stripe customer
-  const stripeCustomer = await getOrCreateStripeCustomer({
-    email:            quote.customer.email || '',
-    name:             quote.customer.companyName,
-    whatsapp:         quote.customer.whatsapp || undefined,
-    stripeCustomerId: quote.customer.stripeCustomerId || undefined,
-  })
-
-  // Update customer with Stripe ID
-  if (!quote.customer.stripeCustomerId) {
-    await db.customer.update({
-      where: { id: quote.customerId },
-      data:  { stripeCustomerId: (stripeCustomer as any).id },
+  try {
+    const { quoteId, provider: requestedProvider } = createOrderSchema.parse(await req.json())
+    const quote = await db.quote.findUnique({ where: { id: quoteId }, include: { customer: true } })
+    if (!quote) return NextResponse.json({ error: 'Quote not found' }, { status: 404 })
+    let amount: number
+    try {
+      amount = depositAmount(quote.total, quote.advancePct)
+    } catch (error) {
+      return NextResponse.json({ error: (error as Error).message }, { status: 422 })
+    }
+    const config = await getPaymentConfig()
+    const provider = requestedProvider ?? config.b2bProvider
+    // quoteId is unique, so concurrent requests reuse the same order.
+    const order = await db.order.upsert({
+      where: { quoteId }, update: {},
+      create: {
+        quoteId, customerId: quote.customerId, status: 'pending_payment', channel: 'b2b',
+        orderCode: `CBC-${new Date().getFullYear()}-${quote.id.toUpperCase()}`,
+      },
     })
+    if (order.channel !== 'b2b') return NextResponse.json({ error: 'Los pedidos de compra individual no admiten anticipos B2B.' }, { status: 409 })
+    if (order.status === 'cancelled') return NextResponse.json({ error: 'El pedido está cancelado.' }, { status: 409 })
+    // An existing pending payment retains its original provider and amount.
+    const payment = await ensureOrderPayment(order.id, provider, 'deposit', amount)
+    if (payment.status === 'pending') {
+      await db.quote.updateMany({ where: { id: quoteId, status: { in: ['Cotización creada', 'draft', 'sent', 'accepted', 'Pendiente de pago'] } }, data: { status: 'Pendiente de pago' } })
+    }
+    if (payment.status === 'pending' && payment.paymentLinkUrl) {
+      await sendPaymentLinkToCustomer({
+        whatsapp: quote.customer.whatsapp || '', email: quote.customer.email || '',
+        companyName: quote.customer.companyName, orderCode: order.orderCode,
+        amount: payment.amount, type: 'deposit', paymentUrl: payment.paymentLinkUrl,
+      }).catch(error => console.error('[orders] payment notification failed', order.id, error))
+    }
+    return NextResponse.json({ order, paymentLink: payment.paymentLinkUrl, provider: payment.provider, paymentStatus: payment.status })
+  } catch (error) {
+    if (error instanceof z.ZodError) return NextResponse.json({ error: 'Solicitud inválida', details: error.errors }, { status: 400 })
+    console.error('[orders] failed to prepare deposit', error)
+    return NextResponse.json({ error: 'No se pudo preparar el pago. Puedes reintentar sin crear otro pedido.' }, { status: 502 })
   }
-
-  // Create order
-  const order = await db.order.create({
-    data: {
-      orderCode,
-      quoteId,
-      customerId: quote.customerId,
-      status:     'confirmed',
-    },
-  })
-
-  // Generate deposit payment link (50%)
-  const depositAmount = Math.round(quote.total * 0.5 * 100) / 100
-  const depositLink = await createPaymentLink({
-    amount:      depositAmount,
-    description: `CBC ${orderCode} — Anticipo 50%`,
-    metadata: {
-      orderId:     order.id,
-      orderCode,
-      type:        'deposit',
-      customerId:  quote.customerId,
-    },
-    allowOxxo: true,
-  })
-
-  // Save payment record
-  await db.payment.create({
-    data: {
-      orderId:        order.id,
-      amount:         depositAmount,
-      currency:       'MXN',
-      type:           'deposit',
-      status:         'pending',
-      paymentLinkId:  depositLink.id,
-      paymentLinkUrl: depositLink.url,
-    },
-  })
-
-  // Send payment link to customer
-  await sendPaymentLinkToCustomer({
-    whatsapp:   quote.customer.whatsapp || '',
-    email:      quote.customer.email || '',
-    companyName: quote.customer.companyName,
-    orderCode,
-    amount:      depositAmount,
-    type:        'deposit',
-    paymentUrl:  depositLink.url,
-  })
-
-  // Update quote status
-  await db.quote.update({ where: { id: quoteId }, data: { status: 'accepted' } })
-
-  return NextResponse.json({ order, paymentLink: depositLink.url }, { status: 201 })
 }
-
 // Update order status
 const patchSchema = z.object({
-  status:        z.enum(['confirmed','in_production','ready','shipped','delivered','cancelled']).optional(),
+  status:        z.enum(['pending_payment','confirmed','in_production','ready','shipped','delivered','cancelled']).optional(),
   trackingNumber: z.string().optional(),
   carrier:        z.string().optional(),
   notes:          z.string().optional(),

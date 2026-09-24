@@ -4,6 +4,7 @@ import { generateText, stripJsonFences } from '@/lib/llm'
 import axios from 'axios'
 import crypto from 'crypto'
 import { createLogger } from '@/lib/logger'
+import { getIntegrationValue, getIntegrationValues } from '@/lib/integration-secrets'
 const log = createLogger('webhooks/whatsapp')
 
 // Verify webhook with Meta
@@ -13,7 +14,10 @@ export async function GET(req: NextRequest) {
   const token     = url.searchParams.get('hub.verify_token')
   const challenge = url.searchParams.get('hub.challenge')
 
-  if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+  let verifyToken: string | undefined
+  try { verifyToken = await getIntegrationValue('WHATSAPP_VERIFY_TOKEN') }
+  catch { return NextResponse.json({ error: 'Webhook unavailable' }, { status: 503 }) }
+  if (verifyToken && mode === 'subscribe' && token === verifyToken) {
     return new NextResponse(challenge, { status: 200 })
   }
   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -23,18 +27,22 @@ export async function POST(req: NextRequest) {
   // Verify Meta signature
   const rawBody  = await req.text()
   const signature = req.headers.get('x-hub-signature-256') || ''
+  let appSecret: string | undefined
+  try { appSecret = await getIntegrationValue('META_APP_SECRET') }
+  catch { return NextResponse.json({ error: 'Webhook unavailable' }, { status: 503 }) }
+  if (!appSecret) return NextResponse.json({ error: 'Webhook unavailable' }, { status: 503 })
   const expected  = 'sha256=' + crypto
-    .createHmac('sha256', process.env.META_APP_SECRET!)
+    .createHmac('sha256', appSecret)
     .update(rawBody)
     .digest('hex')
 
-  if (signature !== expected) {
+  if (!/^sha256=[a-f0-9]{64}$/.test(signature) || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
   // Always ack immediately (Meta requires < 20s response)
   const body = JSON.parse(rawBody)
-  handleMessage(body).catch(err => log.error({ error: err }, 'WhatsApp message handler failed'))
+  handleMessage(body).catch(() => log.error({}, 'WhatsApp message handler failed'))
   return NextResponse.json({ received: true })
 }
 
@@ -49,7 +57,7 @@ async function handleMessage(body: any) {
 
   // ─── Lorena's coffee update ───────────────────────────────────
   const isCoffeeUpdate = /café nuevo|cafe nuevo|nuevo café|nuevo cafe|new coffee/i.test(text)
-  const isLorena = from === process.env.LORENA_PHONE?.replace(/\D/g, '')
+  const isLorena = from === (await getIntegrationValue('LORENA_PHONE'))?.replace(/\D/g, '')
 
   if (isLorena && isCoffeeUpdate) {
     await handleCoffeeUpdate(text, from)
@@ -105,7 +113,7 @@ Si un campo no está, usa null. Devuelve solo el JSON, sin markdown.`,
       `Notas: ${coffee.tastingNotes.join(', ')}`
     )
   } catch (err) {
-    log.error({ error: err, from }, 'Coffee update failed')
+    log.error({}, 'Coffee update failed')
     await sendWhatsApp(from,
       '❌ No pude procesar el café. Intenta con más detalle: nombre, origen, variedad, proceso y notas de cata.'
     )
@@ -152,9 +160,13 @@ async function handleCustomerMessage(text: string, from: string) {
 }
 
 async function sendWhatsApp(to: string, message: string) {
+  const config = await getIntegrationValues(['WHATSAPP_PHONE_NUMBER_ID', 'WHATSAPP_TOKEN'])
+  if (!config.WHATSAPP_PHONE_NUMBER_ID || !config.WHATSAPP_TOKEN) throw new Error('WhatsApp is not configured')
+  try {
   await axios.post(
-    `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+    `https://graph.facebook.com/v21.0/${config.WHATSAPP_PHONE_NUMBER_ID}/messages`,
     { messaging_product: 'whatsapp', to, type: 'text', text: { body: message } },
-    { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` } }
+    { headers: { Authorization: `Bearer ${config.WHATSAPP_TOKEN}` } }
   )
+  } catch { throw new Error('WhatsApp delivery failed') }
 }

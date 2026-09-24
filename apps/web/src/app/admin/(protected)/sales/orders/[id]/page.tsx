@@ -8,6 +8,7 @@ import { GenerateCfdiButton } from '@/components/admin/sales/GenerateCfdiButton'
 export const metadata = { title: 'Pedido' }
 
 const STATUS_LABELS: Record<string, string> = {
+  pending_payment: 'Pendiente de pago',
   confirmed:     'Confirmado',
   in_production: 'En producción',
   ready:         'Listo',
@@ -70,9 +71,9 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                 <div key={p.id} className="flex items-center justify-between text-sm">
                   <div>
                     <p className="font-medium text-foreground capitalize">
-                      {p.type === 'deposit' ? 'Anticipo' : 'Saldo final'}
+                      {p.type === 'deposit' ? 'Anticipo' : p.type === 'full' ? 'Pago completo' : 'Saldo final'}
                     </p>
-                    <p className="text-xs text-muted-foreground">${p.amount.toLocaleString('es-MX')} MXN</p>
+                    <p className="text-xs text-muted-foreground">${p.amount.toLocaleString('es-MX')} MXN · {p.provider === 'mercadopago' ? 'Mercado Pago' : 'Stripe'}</p>
                   </div>
                   <div className="text-right">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -80,9 +81,9 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                       p.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
                       'bg-red-100 text-red-700'
                     }`}>
-                      {p.status === 'paid' ? 'Pagado' : p.status === 'pending' ? 'Pendiente' : 'Fallido'}
+                      {p.status === 'paid' ? 'Pagado' : p.status === 'pending' ? 'Pendiente' : p.status === 'refunded' ? 'Reembolsado' : p.status === 'charged_back' ? 'Contracargo' : 'Fallido'}
                     </span>
-                    {p.paymentLinkUrl && p.status === 'pending' && (
+                    {p.paymentLinkUrl && (p.status === 'pending' || p.status === 'failed') && (
                       <div>
                         <a href={p.paymentLinkUrl} target="_blank" rel="noopener noreferrer"
                           className="text-xs text-primary hover:underline">

@@ -10,6 +10,7 @@ declare module 'next-auth' {
       image?:    string | null
       role:      string
       provider:  string
+      isSuperadmin?: boolean
     }
   }
 }
@@ -19,5 +20,6 @@ declare module 'next-auth/jwt' {
     role?:        string
     provider?:    string
     dbUserId?:    string | null
+    isSuperadmin?: boolean
   }
 }

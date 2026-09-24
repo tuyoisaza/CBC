@@ -329,6 +329,7 @@ model Role {
 }
 
 model User {
+  isSuperadmin Boolean @default(false)
   id        String     @id @default(cuid())
   email     String     @unique
   name      String?
@@ -339,6 +340,16 @@ model User {
   auditLogs AuditLog[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+}
+
+// Ciphertext only. Disabled rows deliberately suppress legacy environment fallback.
+model IntegrationCredential {
+  key            String   @id
+  provider       String
+  encryptedValue String?  @db.Text
+  disabled       Boolean  @default(false)
+  updatedBy      String?
+  updatedAt      DateTime @updatedAt
 }
 
 model AuditLog {
