@@ -6,6 +6,11 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.42 — Configuration navigation
+
+- Keep Configuración near the top of a scrollable admin sidebar, with accessible labels on compact screens.
+- Add a superadmin credential-management link from Sistema and preserve admin destinations through Google sign-in.
+
 ## v1.6.41 — Secure provider configuration and Mercado Pago integration
 
 - Deployment startup preserves existing business settings and prices: no automatic reseeding or accepted data loss.

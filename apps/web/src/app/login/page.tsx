@@ -1,4 +1,5 @@
 'use client'
+import { getAdminCallbackPath } from '@/lib/auth-redirect'
 
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
@@ -110,7 +111,7 @@ function LoginForm() {
           )}
 
           <button
-            onClick={() => signIn('google', { callbackUrl: '/admin/dashboard' })}
+            onClick={() => signIn('google', { callbackUrl: getAdminCallbackPath(params.get('callbackUrl')) })}
             className="w-full flex items-center justify-center gap-3 rounded-xl py-3 px-4 font-semibold text-sm transition-all duration-200 hover:opacity-90 active:scale-95"
             style={{
               backgroundColor: '#f7b84e',

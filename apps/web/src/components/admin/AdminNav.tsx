@@ -34,7 +34,7 @@ const NAV_ITEMS = [
 
 export function AdminNav({ isSuperadmin = false }: { isSuperadmin?: boolean }) {
   const navItems = isSuperadmin
-    ? [...NAV_ITEMS, { href: '/admin/configuration', label: 'Configuración', icon: Settings }]
+    ? [NAV_ITEMS[0], { href: '/admin/configuration', label: 'Configuración', icon: Settings }, ...NAV_ITEMS.slice(1)]
     : NAV_ITEMS
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
@@ -46,9 +46,9 @@ export function AdminNav({ isSuperadmin = false }: { isSuperadmin?: boolean }) {
   }, [])
 
   return (
-    <aside className="flex w-16 lg:w-56 flex-col border-r border-border bg-card shrink-0">
+    <aside className="flex min-h-0 w-16 lg:w-56 flex-col border-r border-border bg-card shrink-0">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 px-4 border-b border-border">
+      <div className="flex h-16 shrink-0 items-center gap-3 px-4 border-b border-border">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
           <Coffee className="h-4 w-4 text-primary-foreground" />
         </div>
@@ -77,13 +77,15 @@ export function AdminNav({ isSuperadmin = false }: { isSuperadmin?: boolean }) {
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 space-y-1 p-2 pt-4">
+      <nav aria-label="Administración" className="min-h-0 flex-1 overflow-y-auto space-y-1 p-2 pt-4">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href)
           return (
             <Link
               key={href}
               href={href}
+              aria-label={label}
+              title={label}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
                   ? 'bg-primary/10 text-primary'
@@ -98,7 +100,7 @@ export function AdminNav({ isSuperadmin = false }: { isSuperadmin?: boolean }) {
       </nav>
 
       {/* Bottom actions */}
-      <div className="p-2 border-t border-border space-y-1">
+      <div className="shrink-0 p-2 border-t border-border space-y-1">
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"

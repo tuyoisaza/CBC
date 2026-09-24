@@ -1,7 +1,7 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.41 (tag `v1.6.41` — see `git describe --tags --abbrev=0`)
+v1.6.42 (tag `v1.6.42` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
 - Google Places address autocomplete in the retail checkout (v1.6.39/1.6.40)
@@ -20,7 +20,7 @@ Secure provider configuration: `/admin/configuration` for explicit superadmins, 
 
 Mercado Pago integration: retail checkout and B2B deposits/balances implemented locally, with signed Webhooks, payment verification, retry handling, and admin payment actions. See `docs/deploy/mercadopago.md`.
 
-- Automated tests: 170 passing across 25 files. TypeScript and production build pass locally.
+- Automated regression coverage includes secure provider storage, authorization, payment processing, and login destination preservation.
 - Railway seller token connectivity checked successfully (HTTP 200); webhook signing secret was absent during inspection.
 - Production preparation completed: additive schema applied and matched against Prisma, independent encryption key configured, both authorized owners granted superadmin, and 10 existing provider fields imported into encrypted storage.
 - Release v1.6.41 removes automatic reseeding and accepted data loss from startup. Existing prices, settings and roles are preserved on restart.

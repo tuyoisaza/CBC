@@ -1,6 +1,10 @@
 import { getIntegrationValues } from '@/lib/integration-secrets'
 import { INTEGRATION_KEYS } from '@/lib/integration-catalog'
 import { Activity, Clock, Cpu, HardDrive, CheckCircle2, XCircle, Wallet } from 'lucide-react'
+import Link from 'next/link'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { isSuperadminSession } from '@/lib/superadmin'
 
 export const metadata = { title: 'Sistema' }
 export const dynamic = 'force-dynamic'
@@ -42,6 +46,7 @@ async function getMercadoPagoAccount(token: string | undefined, testMode: boolea
 }
 
 export default async function SystemPage() {
+  const isSuperadmin = await isSuperadminSession(await getServerSession(authOptions))
   const config = await getIntegrationValues(INTEGRATION_KEYS)
   const mpAccount = await getMercadoPagoAccount(config.MERCADOPAGO_ACCESS_TOKEN, config.MERCADOPAGO_TEST_MODE === 'true')
   const uptime = process.uptime()
@@ -57,6 +62,14 @@ export default async function SystemPage() {
           Información del sistema y estado de servicios.
         </p>
       </div>
+
+      {isSuperadmin && <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+        <h2 className="font-semibold text-foreground">Claves API y secretos</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Selecciona un proveedor en Configuración para guardar o reemplazar sus credenciales.</p>
+        <Link href="/admin/configuration" className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+          Configurar claves y secretos
+        </Link>
+      </div>}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-xl border border-border bg-card p-4">
