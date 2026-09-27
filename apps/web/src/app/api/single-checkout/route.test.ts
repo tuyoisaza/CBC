@@ -4,10 +4,10 @@ import { NextRequest } from 'next/server'
 const mocks = vi.hoisted(() => ({
   findPayment: vi.fn(), updatePayment: vi.fn(), createPayment: vi.fn(), transaction: vi.fn(),
   product: vi.fn(), customer: vi.fn(), lead: vi.fn(), quote: vi.fn(), order: vi.fn(),
-  preference: vi.fn(), stripe: vi.fn(), config: vi.fn(), shipping: vi.fn(),
+  preference: vi.fn(), stripe: vi.fn(), config: vi.fn(), shipping: vi.fn(), updateCustomer: vi.fn(),
 }))
 vi.mock('@/lib/db', () => ({
-  db: { payment: { findUnique: mocks.findPayment, update: mocks.updatePayment }, product: { findUnique: mocks.product }, $transaction: mocks.transaction },
+  db: { payment: { findUnique: mocks.findPayment, update: mocks.updatePayment }, product: { findUnique: mocks.product }, customer: { update: mocks.updateCustomer }, $transaction: mocks.transaction },
   withDbRetry: (fn: () => unknown) => fn(), ensureDbAwake: async () => ({ wokeUp: false }),
 }))
 vi.mock('@/lib/db-helpers', () => ({ getOrCreateCustomer: mocks.customer }))
@@ -17,13 +17,14 @@ vi.mock('@/lib/payment-config', () => ({ getPaymentConfig: mocks.config }))
 vi.mock('@/lib/shipping', () => ({ getRetailShippingQuote: mocks.shipping }))
 vi.mock('@/lib/pricing', () => ({ getSingleMarkupPct: async () => 0, priceWithTax: (n: number) => n, priceBeforeTax: (n: number) => n / 1.16, taxAmount: (n: number) => n - n / 1.16 }))
 import { POST } from './route'
+import { CHECKOUT_RFC_ERROR } from '@/lib/checkout-validation'
 
 const purchase = {
   idempotencyKey: '94376d8e-5190-4b57-a34f-40f9c9c95258', slug: 'coffee', name: 'Ana', email: 'ana@example.com',
   whatsapp: '5512345678', provider: 'mercadopago',
   address: { street: 'Calle Uno', extNo: '1', colonia: 'Centro', cp: '06700', city: 'CDMX', state: 'CDMX' },
 }
-const submit = async (body = purchase) => (await POST(new NextRequest('https://cbc.example/api/single-checkout', {
+const submit = async (body: Record<string, unknown> = purchase) => (await POST(new NextRequest('https://cbc.example/api/single-checkout', {
   method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' },
 }))).json()
 let saved: Map<string, any>
@@ -50,6 +51,38 @@ beforeEach(() => {
   mocks.preference.mockResolvedValue({ id: 'mp1', url: 'https://mp.example/pay' })
   mocks.stripe.mockResolvedValue({ id: 'stripe1', url: 'https://stripe.example/pay' })
   vi.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+describe('retail checkout billing validation', () => {
+  const cfdi = { rfc: 'ABCD900101AB1', razonSocial: 'Cliente de prueba', regimenFiscal: '626', usoCfdi: 'G03', cpFiscal: '06700' }
+
+  it.each(['ABCD900101AB12', '1234567890123'])('rejects malformed RFC before creating a purchase: %s', rfc => {
+    return submit({ ...purchase, needsCfdi: true, cfdi: { ...cfdi, rfc } }).then(result => {
+      expect(result).toMatchObject({ ok: false, code: 'VALIDATION_ERROR', error: CHECKOUT_RFC_ERROR, step: 'parse-body' })
+      expect(mocks.customer).not.toHaveBeenCalled()
+      expect(mocks.transaction).not.toHaveBeenCalled()
+      expect(mocks.preference).not.toHaveBeenCalled()
+    })
+  })
+
+  it.each(['', undefined])('requires an email when requesting a CFDI: %s', async email => {
+    expect(await submit({ ...purchase, needsCfdi: true, email, cfdi })).toMatchObject({
+      ok: false, code: 'VALIDATION_ERROR', error: 'El correo electrónico es requerido para la factura',
+    })
+    expect(mocks.customer).not.toHaveBeenCalled()
+  })
+
+  it('stores a normalized RFC and reuses checkout for equivalent RFC input', async () => {
+    const first = await submit({ ...purchase, needsCfdi: true, cfdi: { ...cfdi, rfc: ' abcd900101ab1 ' } })
+    expect(first.ok).toBe(true)
+    expect(mocks.updateCustomer).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ rfc: cfdi.rfc }) }))
+    expect(await submit({ ...purchase, needsCfdi: true, cfdi })).toEqual(first)
+    expect(mocks.transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it('still allows checkout without an email when no CFDI is requested', async () => {
+    expect(await submit({ ...purchase, email: '' })).toMatchObject({ ok: true })
+  })
 })
 
 describe('retail checkout retries', () => {

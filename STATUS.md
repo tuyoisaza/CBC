@@ -1,7 +1,7 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.42 (tag `v1.6.42` — see `git describe --tags --abbrev=0`)
+v1.6.43 (tag `v1.6.43` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
 - Google Places address autocomplete in the retail checkout (v1.6.39/1.6.40)

@@ -1,12 +1,14 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AddressAutocomplete } from './AddressAutocomplete'
+import { readCheckoutDraft, saveCheckoutDraft, removeCheckoutDraft } from '@/lib/checkout-draft'
+import { isValidCheckoutRfc, normalizeCheckoutRfc, CHECKOUT_RFC_ERROR } from '@/lib/checkout-validation'
 
 type Provider = 'stripe' | 'mercadopago'
 
 const PROVIDER_TITLE: Record<Provider, string> = {
-  stripe: 'Tarjeta',
+  stripe: 'Tarjeta · Stripe',
   mercadopago: 'Mercado Pago',
 }
 const PROVIDER_DESC: Record<Provider, string> = {
@@ -72,8 +74,39 @@ export function ComprarUnoButton({
   const [provider, setProvider] = useState<Provider | undefined>(options[0])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [remember, setRemember] = useState(false)
+  const [hasSaved, setHasSaved] = useState(false)
+  const [savedNotice, setSavedNotice] = useState('')
   const checkoutAttempt = useRef<{ payload: string; key: string } | null>(null)
   const submitting = useRef(false)
+
+  useEffect(() => {
+    if (!remember) return
+    const saved = saveCheckoutDraft({ name, email, whatsapp, addr, needsCfdi, cfdi, isGift, recipientName, giftMessage })
+    setHasSaved(saved)
+    setSavedNotice(saved ? 'Datos guardados en este navegador durante 90 días.' : 'No se pudieron guardar los datos en este navegador. Puedes continuar con tu compra.')
+  }, [remember, name, email, whatsapp, addr, needsCfdi, cfdi, isGift, recipientName, giftMessage])
+
+  function restoreDraft() {
+    const saved = readCheckoutDraft()
+    if (!saved) {
+      setHasSaved(false)
+      setSavedNotice('No hay datos guardados disponibles.')
+      return
+    }
+    setName(saved.name); setEmail(saved.email); setWhatsapp(saved.whatsapp)
+    setAddr(saved.addr); setNeedsCfdi(saved.needsCfdi); setCfdi(saved.cfdi)
+    setIsGift(saved.isGift); setRecipientName(saved.recipientName); setGiftMessage(saved.giftMessage)
+    setRemember(true)
+    setError('')
+  }
+
+  function forgetDraft() {
+    setRemember(false)
+    const removed = removeCheckoutDraft()
+    if (removed) setHasSaved(false)
+    setSavedNotice(removed ? 'Datos guardados borrados.' : 'No se pudieron borrar los datos. Revisa el almacenamiento de tu navegador.')
+  }
 
   const setA = (k: keyof typeof EMPTY_ADDR) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setAddr((s) => ({ ...s, [k]: e.target.value }))
@@ -83,9 +116,9 @@ export function ComprarUnoButton({
   const shipCost = shipping.freeThreshold > 0 && markedUpPrice >= shipping.freeThreshold ? 0 : shipping.cost
   const total = markedUpPrice + shipCost
 
-  const emailOk = email.trim() === '' || isValidEmail(email)
+  const emailOk = (!needsCfdi && email.trim() === '') || isValidEmail(email)
   const addrOk = !!addr.street.trim() && !!addr.extNo.trim() && !!addr.colonia.trim() && isCP(addr.cp) && !!addr.city.trim() && !!addr.state.trim()
-  const cfdiOk = !needsCfdi || (cfdi.rfc.trim().length >= 12 && !!cfdi.razonSocial.trim() && !!cfdi.regimenFiscal && !!cfdi.usoCfdi && isCP(cfdi.cpFiscal))
+  const cfdiOk = !needsCfdi || (isValidCheckoutRfc(cfdi.rfc) && !!cfdi.razonSocial.trim() && !!cfdi.regimenFiscal && !!cfdi.usoCfdi && isCP(cfdi.cpFiscal))
   const canSubmit = !!name.trim() && isValidWhatsapp(whatsapp) && emailOk && addrOk && cfdiOk
 
   async function handleSubmit(e: React.FormEvent) {
@@ -99,7 +132,7 @@ export function ComprarUnoButton({
         slug, name, email, whatsapp, provider, address: addr, isGift,
         giftMessage: isGift ? giftMessage : '',
         recipientName: isGift ? recipientName : '',
-        needsCfdi, cfdi: needsCfdi ? cfdi : undefined,
+        needsCfdi, cfdi: needsCfdi ? { ...cfdi, rfc: normalizeCheckoutRfc(cfdi.rfc) } : undefined,
       }
       const payload = JSON.stringify(purchase)
       // Keep the UUID after network/provider failures; edits start a new attempt.
@@ -145,7 +178,7 @@ export function ComprarUnoButton({
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setHasSaved(!!readCheckoutDraft()); setOpen(true) }}
         className="inline-flex items-center justify-center gap-2 rounded-md bg-green-600 px-8 py-4 text-base font-semibold text-white hover:bg-green-700 transition-all"
       >
         Comprar 1 — {money(markedUpPrice)} MXN
@@ -168,6 +201,20 @@ export function ComprarUnoButton({
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2 rounded-lg border border-gray-700 p-3 text-sm text-gray-300">
+                {hasSaved && (
+                  <div className="flex flex-wrap gap-4">
+                    <button type="button" onClick={restoreDraft} className="text-green-400 underline">Rellenar con mis datos guardados</button>
+                    <button type="button" onClick={forgetDraft} className="underline">Borrar datos guardados</button>
+                  </div>
+                )}
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={remember} onChange={(e) => e.target.checked ? setRemember(true) : forgetDraft()} />
+                  Guardar mis datos en este navegador
+                </label>
+                <p className="text-xs text-gray-400">Incluye contacto, dirección, regalo y facturación. Úsalo en un dispositivo personal.</p>
+                {savedNotice && <p role="status" className="text-xs text-gray-400">{savedNotice}</p>}
+              </div>
               {/* Contacto */}
               <div className="space-y-3">
                 <div>
@@ -188,12 +235,14 @@ export function ComprarUnoButton({
                   <label className={lbl}>Email {needsCfdi ? '*' : ''}</label>
                   <input
                     type="email"
+                    required={needsCfdi}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={`${field} ${!emailOk ? 'border-red-500' : ''}`}
                     placeholder="correo@ejemplo.com"
                   />
                   <p className="mt-1 text-xs text-gray-500">Para el comprobante y avisos de entrega.</p>
+                  {!emailOk && <p className="mt-1 text-xs text-red-400">{needsCfdi && !email.trim() ? 'Ingresa tu email para recibir la factura.' : 'Revisa el formato de tu email.'}</p>}
                 </div>
               </div>
 
@@ -288,7 +337,10 @@ export function ComprarUnoButton({
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className={lbl}>RFC *</label>
-                        <input value={cfdi.rfc} onChange={setC('rfc')} className={`${field} uppercase`} placeholder="XAXX010101000" />
+                        <input value={cfdi.rfc} onChange={setC('rfc')} aria-invalid={!!cfdi.rfc && !isValidCheckoutRfc(cfdi.rfc)} aria-describedby="checkout-rfc-help" className={`${field} uppercase`} placeholder="XAXX010101000" />
+                        <p id="checkout-rfc-help" className={`mt-1 text-xs ${cfdi.rfc && !isValidCheckoutRfc(cfdi.rfc) ? 'text-red-400' : 'text-gray-500'}`}>
+                          {cfdi.rfc && !isValidCheckoutRfc(cfdi.rfc) ? CHECKOUT_RFC_ERROR : '12 o 13 caracteres, según tu constancia fiscal.'}
+                        </p>
                       </div>
                       <div>
                         <label className={lbl}>CP fiscal *</label>

@@ -6,6 +6,15 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.43 — Reusable checkout details and billing validation
+
+- Add optional browser-local checkout drafts with a 90-day expiry, restore button, and deletion control.
+- Validate RFC consistently before payment and on the server; require an email for invoice requests.
+- Label card payments as Stripe so buyers can identify the provider.
+- Mercado Pago activation still requires its configured webhook signing secret and provider acceptance testing.
+- Verification: 195 tests and TypeScript checks passed.
+- Record the standing release workflow: version, commit, tag, and push after each completed requested change.
+
 ## v1.6.42 — Configuration navigation
 
 - Keep Configuración near the top of a scrollable admin sidebar, with accessible labels on compact screens.

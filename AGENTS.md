@@ -2,12 +2,13 @@
 
 ## Version bump rule
 
-Every time you push to `main`, you MUST increment the version tag. Current pattern is `v1.3.x`.
+After completing every requested change, increment the patch version, commit with the new version number, tag the commit, and push to `main`. This is the user's standing authorization; do not leave completed changes uncommitted unless the user asks. Continue from the latest released tag (current series: `v1.6.x`).
 
-- If the commit is a new feature: `v1.3.x feat: ...`
-- If the commit is a bug fix: `v1.3.x fix: ...`
-- Tag is set via `git tag v1.3.x && git push origin main --tags`
-- The version on the website is auto-detected from the latest git tag at build time (see `next.config.mjs`), so tagging before push is sufficient — no manual env var updates needed.
+- If the commit is a new feature: `v1.6.x feat: ...`
+- If the commit is a bug fix: `v1.6.x fix: ...`
+- Update the root `package.json` version, `STATUS.md`, and `CHANGELOG.md` to match the release.
+- Tag before pushing with `git tag v1.6.x` and `git push origin main --tags`.
+- The website reads the root `package.json` version at build time (see `apps/web/next.config.mjs`); keep it synchronized with the release tag.
 
 ## General
 

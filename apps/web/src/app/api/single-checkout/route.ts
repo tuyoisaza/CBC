@@ -9,6 +9,7 @@ import { createSingleCheckoutSession, isStripeConfigured } from '@/lib/stripe'
 import { getPaymentConfig, type PaymentProvider } from '@/lib/payment-config'
 import { getRetailShippingQuote } from '@/lib/shipping'
 import { getSingleMarkupPct, priceWithTax, priceBeforeTax, taxAmount } from '@/lib/pricing'
+import { CHECKOUT_RFC_ERROR, isValidCheckoutRfc, normalizeCheckoutRfc } from '@/lib/checkout-validation'
 
 // Loose international phone check: strip everything but digits, require 10–15.
 const whatsappSchema = z.string().transform((v) => v.replace(/[^\d]/g, '')).pipe(
@@ -29,7 +30,7 @@ const addressSchema = z.object({
 })
 
 const cfdiSchema = z.object({
-  rfc: z.string().trim().min(12, 'RFC inválido').max(13, 'RFC inválido'),
+  rfc: z.string().transform(normalizeCheckoutRfc).refine(isValidCheckoutRfc, CHECKOUT_RFC_ERROR),
   razonSocial: z.string().trim().min(1, 'La razón social es requerida'),
   regimenFiscal: z.string().trim().min(3, 'Selecciona un régimen fiscal'),
   usoCfdi: z.string().trim().min(3, 'Selecciona un uso de CFDI'),
@@ -54,6 +55,10 @@ const bodySchema = z
   .refine((d) => !d.needsCfdi || !!d.cfdi, {
     message: 'Faltan los datos de facturación',
     path: ['cfdi'],
+  })
+  .refine((d) => !d.needsCfdi || !!d.email, {
+    message: 'El correo electrónico es requerido para la factura',
+    path: ['email'],
   })
 
 type Step =
