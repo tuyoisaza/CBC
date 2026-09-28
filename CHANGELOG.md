@@ -6,6 +6,13 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.52 — Saved quotation details in leads
+
+- Show the customer's saved quotation at the top of each lead: products, quantities, unit prices, extras, delivery information and full financial breakdown.
+- Preserve saved prices and support historical item formats without recalculating against the current catalog.
+- Separate Ver cotizaciones guardadas from Nueva cotización; keep payment and order actions beside the saved quotation.
+- Verification: production build and TypeScript checks passed; 226 full-suite tests plus the additional internal-upload-link regression passed.
+
 ## v1.6.51 — Real collected revenue and sale exclusions
 
 - Count paid MXN payment amounts instead of quoted totals, including partial deposits; use payment dates for monthly revenue and all records for historical totals.

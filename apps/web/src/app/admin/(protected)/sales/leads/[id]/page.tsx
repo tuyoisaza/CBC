@@ -3,13 +3,14 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Building2, User, Phone, Mail,
-  Package, FileText, Plus, ExternalLink
+  FileText, Plus, ExternalLink
 } from 'lucide-react'
 import { LeadStatusSelect } from '@/components/admin/sales/LeadStatusSelect'
 import { LeadArchiveButton } from '@/components/admin/sales/LeadArchiveButton'
 import { CreateOrderPaymentButton } from '@/components/admin/sales/CreateOrderPaymentButton'
 import { getPaymentConfig } from '@/lib/payment-config'
 import { OrderRevenueClassification } from '@/components/admin/sales/OrderRevenueClassification'
+import { QuoteDetails } from '@/components/admin/sales/QuoteDetails'
 
 export const metadata = { title: 'Lead' }
 
@@ -22,7 +23,7 @@ export default async function LeadDetailPage({
     where: { id: params.id },
     include: {
       customer: true,
-      quotes: { orderBy: { createdAt: 'desc' }, include: { order: { include: { payments: { where: { type: 'deposit' }, orderBy: { createdAt: 'asc' }, take: 1 } } } } },
+      quotes: { orderBy: { createdAt: 'desc' }, include: { shippingZone: true, order: { include: { payments: { where: { type: 'deposit' }, orderBy: { createdAt: 'asc' }, take: 1 } } } } },
       messages: { orderBy: { createdAt: 'desc' }, take: 10 },
     },
   })
@@ -33,7 +34,7 @@ export default async function LeadDetailPage({
   const { customer } = lead
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-6xl">
       {/* Back + header */}
       <div className="flex items-center gap-4">
         <Link href="/admin/sales/leads" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -56,6 +57,53 @@ export default async function LeadDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: details */}
         <div className="lg:col-span-2 space-y-4">
+          {/* Quotes */}
+          <section id="cotizaciones" className="rounded-xl border border-border bg-card p-5 scroll-mt-6">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+              Lo que cotizó el cliente
+            </h2>
+            {lead.quotes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sin cotizaciones</p>
+            ) : (
+              <div className="space-y-6">
+                {lead.quotes.map((q) => (
+                  <div
+                    key={q.id}
+                    className="rounded-lg border border-border p-3"
+                  >
+                    <div>
+                      <p className="text-xs font-medium text-foreground">{q.quoteCode}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        ${q.total.toLocaleString('es-MX')} MXN
+                      </p>
+                    </div>
+                    <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
+                      q.status === 'accepted' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                      q.status === 'sent'     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                      q.status === 'rejected' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                      'bg-muted text-muted-foreground'
+                    }`}>
+                      {q.status === 'draft' ? 'Borrador' :
+                       q.status === 'sent'  ? 'Enviada' :
+                       q.status === 'accepted' ? 'Aceptada' :
+                       q.status === 'rejected' ? 'Rechazada' : q.status}
+                    </span>
+                    <QuoteDetails quote={q} />
+                    {q.order && <Link href={`/admin/sales/orders/${q.order.id}`} className="mt-2 block text-xs text-primary hover:underline">Ver pedido</Link>}
+                    {q.order && <div className="mt-3"><OrderRevenueClassification orderId={q.order.id} reason={q.order.revenueExclusionReason} /></div>}
+                    {(!q.order || q.order.channel === 'b2b') && !['Cancelada', 'rejected', 'cancelled'].includes(q.status) && (!q.order || q.order.status === 'pending_payment' || q.order.payments.length === 0 || q.order.payments[0]?.status === 'pending') && q.order?.status !== 'cancelled' && (
+                      <CreateOrderPaymentButton
+                        quoteId={q.id}
+                        defaultProvider={paymentConfig.b2bProvider}
+                        existingProvider={q.order?.payments[0]?.provider === 'stripe' || q.order?.payments[0]?.provider === 'mercadopago' ? q.order.payments[0].provider : undefined}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
           {/* Contact card */}
           <div className="rounded-xl border border-border bg-card p-5">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
@@ -86,6 +134,7 @@ export default async function LeadDetailPage({
           </div>
 
           {/* Order intent */}
+          {(lead.boxType || lead.quantity !== null || lead.occasion || lead.message) && (
           <div className="rounded-xl border border-border bg-card p-5">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
               Intención de pedido
@@ -110,6 +159,7 @@ export default async function LeadDetailPage({
               </div>
             )}
           </div>
+          )}
 
           {/* SAT fiscal data */}
           {customer.rfc && (
@@ -136,7 +186,7 @@ export default async function LeadDetailPage({
           )}
         </div>
 
-        {/* Right: quotes + actions */}
+        {/* Right: actions */}
         <div className="space-y-4">
           {/* Actions */}
           <div className="rounded-xl border border-border bg-card p-5">
@@ -144,11 +194,12 @@ export default async function LeadDetailPage({
               Acciones
             </h2>
             <div className="space-y-2">
+              <a href="#cotizaciones" className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"><FileText className="h-4 w-4" /> Ver cotizaciones guardadas</a>
               <Link
                 href="/cotizar"
-                className="flex items-center gap-2 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-2 w-full rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <Plus className="h-4 w-4" /> Abrir cotizador
+                <Plus className="h-4 w-4" /> Nueva cotización
               </Link>
               {customer.whatsapp && (
                 <a
@@ -163,51 +214,7 @@ export default async function LeadDetailPage({
             </div>
           </div>
 
-          {/* Quotes */}
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Cotizaciones
-            </h2>
-            {lead.quotes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin cotizaciones</p>
-            ) : (
-              <div className="space-y-2">
-                {lead.quotes.map((q) => (
-                  <div
-                    key={q.id}
-                    className="rounded-lg border border-border p-3"
-                  >
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{q.quoteCode}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        ${q.total.toLocaleString('es-MX')} MXN
-                      </p>
-                    </div>
-                    <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-                      q.status === 'accepted' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                      q.status === 'sent'     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                      q.status === 'rejected' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                      'bg-muted text-muted-foreground'
-                    }`}>
-                      {q.status === 'draft' ? 'Borrador' :
-                       q.status === 'sent'  ? 'Enviada' :
-                       q.status === 'accepted' ? 'Aceptada' :
-                       q.status === 'rejected' ? 'Rechazada' : q.status}
-                    </span>
-                    {q.order && <Link href={`/admin/sales/orders/${q.order.id}`} className="mt-2 block text-xs text-primary hover:underline">Ver pedido</Link>}
-                    {q.order && <div className="mt-3"><OrderRevenueClassification orderId={q.order.id} reason={q.order.revenueExclusionReason} /></div>}
-                    {(!q.order || q.order.channel === 'b2b') && !['Cancelada', 'rejected', 'cancelled'].includes(q.status) && (!q.order || q.order.status === 'pending_payment' || q.order.payments.length === 0 || q.order.payments[0]?.status === 'pending') && q.order?.status !== 'cancelled' && (
-                      <CreateOrderPaymentButton
-                        quoteId={q.id}
-                        defaultProvider={paymentConfig.b2bProvider}
-                        existingProvider={q.order?.payments[0]?.provider === 'stripe' || q.order?.payments[0]?.provider === 'mercadopago' ? q.order.payments[0].provider : undefined}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+
         </div>
       </div>
     </div>
