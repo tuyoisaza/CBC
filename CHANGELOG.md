@@ -6,6 +6,12 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.44 — Catalog image samples
+
+- Add six PNG samples: French press, moka, pad printing, box customization, message card, and QR course.
+- Record generation prompts, brand references, provisional interpretation of Tapografía, and illustrative QR/branding limitations.
+- Verification: visual review of all six images; each PNG is below 2.1 MB. No application logic or production catalog data changed.
+
 ## v1.6.43 — Reusable checkout details and billing validation
 
 - Add optional browser-local checkout drafts with a 90-day expiry, restore button, and deletion control.
