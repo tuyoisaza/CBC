@@ -6,6 +6,12 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.48 — Siphon and personalization samples
+
+- Add a Japanese siphon reference and a separate refillable metallic butane burner extra.
+- Add a four-panel close-up showing white TU LOGO AQUÍ prints on French press, siphon, Chemex and black V60.
+- Record prompts and illustrative product limitations; visually reviewed all three PNGs. No production catalog changes.
+
 ## v1.6.47 — French press reference correction
 
 - Match the supplied kit image with an open black plastic cage, horizontal band, low base, domed lid and left handle.

@@ -1,0 +1,22 @@
+# Sifón y personalización — v1.6.48
+
+Tres muestras generadas con image_gen integrado, verificadas visualmente y no cargadas al administrador.
+
+- sifon-japones.png: sifón completo con lámpara de mecha ilustrativa.
+- personalizacion-metodos-tinta-blanca.png: cuatro acercamientos (prensa, sifón, Chemex y V60 negro), con TU LOGO AQUÍ en tinta blanca aplicada visualmente a la superficie. V60 negro conceptual para contraste.
+- quemador-butano.png: quemador metálico recargable de butano, extra vendido por separado. Modelo ilustrativo; no representa una referencia de fabricante confirmada.
+
+## Prompts finales
+
+### Sifón
+
+Use case product-mockup. One square photorealistic catalog image of a complete classic Japanese vacuum siphon coffee brewer, isolated and fully visible with generous margins. Physically accurate two-chamber brewer: upper open cylindrical borosilicate glass brewing chamber with black top rim, narrow glass tube extending into the lower round spherical glass boiling flask through a black rubber neck seal. Lower globe held at neck by a polished metal support bracket attached to a single upright stand with black curved handle and stable black round base. Small unlit spirit burner directly below the globe, appropriate gap. Empty transparent glass, visible filter assembly, no liquid, no extra detached parts. Three-quarter view. Seamless deep charcoal #262626 background and tabletop, soft warm amber #f7b84e rim lighting, elegant restrained studio photograph matching a specialty coffee product catalog, realistic glass and metal reflections. No text, logos, watermarks, people or extra props.
+
+### Personalización
+
+Create ONE square photorealistic product personalization sample image divided into exactly FOUR equal quadrants in a clean 2 by 2 grid, separated by thin charcoal gutters. Each quadrant is a tight close-up showing just part of a coffee brewing device, large and detailed, with the SAME exact words 'TU LOGO AQUÍ' printed directly onto its physical surface in opaque WHITE INK, clean elegant Raleway-style sans serif, two lines if needed. Text must follow surface perspective and curvature like actual pad printing, NOT floating captions or poster overlay. Four legible prints total. Top left: close-up of black plastic French press from reference 1, its thick black plastic horizontal band with the white print, some clear glass and left handle visible. Top right: close-up of Japanese siphon's upper glass chamber from reference 4 with white print directly on the glass, dark background visible through it, retain black rim and recognizable neck. Bottom left: close-up of Chemex from reference 2, include wood collar at top of crop and upper part of lower glass carafe bearing white printed text. Bottom right: V60 conical dripper following reference 3 SHAPE but made of BLACK ceramic so white ink is visible; show ribbed conical body and part of handle with white text following its surface. All four share the same charcoal #262626 background, warm golden #f7b84e edge light, premium macro catalog photography, realistic textures and sharp lettering. No other words, captions, titles, brand initials, watermarks, logos or props. This is a conceptual customization mockup. Preserve recognizability of each device while focusing on print detail. Reference images are product and lighting guides.
+
+### Quemador de butano
+
+Use case product-mockup. One square photorealistic catalog photograph of a standalone elegant compact REFILLABLE BUTANE GAS BURNER for Japanese siphon coffee brewing, sold separately. Not an alcohol spirit lamp, not a handheld torch, not a camping stove. Low cylindrical brushed stainless steel fuel reservoir with a stable round base, a small centered circular perforated metal burner head above it held by a short neck, tasteful machined metal adjustment knob on the right side and a small black piezo ignition push button. Precision polished chrome details, physically plausible premium tabletop siphon burner construction. Unlit, no flame, no siphon, no coffee maker, no fuel can, no accessories, no lettering or logos. Entire single burner visible, centered three-quarter slightly elevated view with 15 percent margins. Seamless dark charcoal #262626 studio background and surface, warm amber #f7b84e rim light, controlled beautiful silver metal reflections, crisp realistic materials, soft grounded shadow. Same dark warm catalog photography as the previously generated coffee devices. Object should clearly read as a separate compact gas burner.
+
