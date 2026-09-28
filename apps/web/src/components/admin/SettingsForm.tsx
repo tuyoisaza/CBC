@@ -303,7 +303,7 @@ export function SettingsForm({
         </div>
         <div className="p-5 space-y-4">
           <p className="text-xs text-muted-foreground">
-            Porcentaje de aumento sobre el precio base para pedidos de mayoreo (10+ unidades) en el cotizador.
+            Porcentaje de aumento sobre el costo base de métodos y extras para pedidos de mayoreo (10+ unidades) en el cotizador.
             Déjalo en 0% para vender al costo base + IVA; súbelo si quieres margen también en mayoreo.
             Normalmente debe ser menor que el margen de compra individual.
           </p>

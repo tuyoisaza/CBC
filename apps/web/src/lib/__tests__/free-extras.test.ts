@@ -31,6 +31,32 @@ beforeEach(() => {
 })
 
 describe('free extras', () => {
+  it('adds wholesale markup to extra costs before calculating IVA', async () => {
+    mocks.methods.mockResolvedValue([{ id: 'method', unitPrice: 100 }])
+    mocks.extras.mockResolvedValue([{ id: 'paid-extra', unitPrice: 100 }, { id: 'free-extra', unitPrice: 0 }])
+    mocks.zone.mockResolvedValue({ baseFee: 0, feePerUnit: 0 })
+    mocks.discounts.mockResolvedValue([])
+    mocks.settings.mockResolvedValue([
+      { key: 'wholesale_markup_pct', value: '20' },
+      { key: 'IVA_PCT', value: '16' },
+      { key: 'ADVANCE_PCT', value: '50' },
+    ])
+
+    const response = await calculate(request({
+      items: [{ methodId: 'method', qty: 1 }],
+      extras: [{ extraId: 'paid-extra', qty: 2 }, { extraId: 'free-extra', qty: 25 }],
+      shippingZoneId: 'zone',
+    }))
+
+    expect(response.status).toBe(200)
+    const amounts = await response.json()
+    expect(amounts.subtotal).toBe(120)
+    expect(amounts.extrasTotal).toBe(240)
+    expect(amounts.iva).toBeCloseTo(57.6)
+    expect(amounts.total).toBeCloseTo(417.6)
+    expect(amounts.advanceAmount).toBeCloseTo(208.8)
+  })
+
   it('creates an extra with a zero price', async () => {
     const response = await createExtra(request({ name: 'Tarjeta', unitPrice: 0 }))
     expect(response.status).toBe(201)

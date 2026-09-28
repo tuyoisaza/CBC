@@ -1,9 +1,10 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.48 (tag `v1.6.48` — see `git describe --tags --abbrev=0`)
+v1.6.49 (tag `v1.6.49` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
+- Extras use their entered cost plus the configured wholesale markup, then IVA; quote displays and saved extra lines include the margin and free extras remain zero (v1.6.49).
 - Japanese siphon, standalone butane burner and four-panel white-ink personalization samples (v1.6.48).
 - French press sample corrected to match supplied kit reference: black plastic band, open cage and low base (v1.6.47).
 - Free extras: admin Gratis checkbox, zero-price creation/editing, and clear quote labels without added cost (v1.6.46). Verified with 203 tests and TypeScript checks.

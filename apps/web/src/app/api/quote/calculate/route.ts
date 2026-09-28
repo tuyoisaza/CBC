@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     const settingsMap = Object.fromEntries(settings.map(s => [s.key, s.value]))
 
-    // Wholesale markup applied on top of each method's base unit price — configurable
+    // Wholesale markup applied on top of each method and extra's base cost — configurable
     // in Admin → Settings, independent from the single-purchase retail markup.
     const wholesaleMarkupPct = Number(settingsMap['wholesale_markup_pct'] ?? 0)
     const wholesaleUnitPrice = (basePrice: number) => basePrice * (1 + wholesaleMarkupPct / 100)
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     const extraMap = new Map(extras.map(e => [e.id, e]))
     const extrasTotal = parsed.extras.reduce((sum, item) => {
-      return sum + extraMap.get(item.extraId)!.unitPrice * item.qty
+      return sum + wholesaleUnitPrice(extraMap.get(item.extraId)!.unitPrice) * item.qty
     }, 0)
 
     const shippingFee = zone.baseFee + zone.feePerUnit * totalUnits

@@ -78,9 +78,6 @@ const wholesalePrice = (basePrice: number, wholesaleMarkupPct: number, ivaPct: n
   return Math.round(withMarkup * (1 + ivaPct / 100) * 100) / 100
 }
 
-// Extras carry no markup tier — tax only.
-const withTax = (rawPrice: number, ivaPct: number) => Math.round(rawPrice * (1 + ivaPct / 100) * 100) / 100
-
 const STEPS = [
   { id: 0, label: 'Productos', icon: Package },
   { id: 1, label: 'Extras', icon: Sparkles },
@@ -228,7 +225,10 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
         email,
         whatsapp,
         items: items.map((i) => ({ ...i, lineTotal: i.unitPrice * i.qty })),
-        extras: selectedExtras,
+        extras: selectedExtras.map((e) => {
+          const unitPrice = e.unitPrice * (1 + wholesaleMarkupPct / 100)
+          return { ...e, unitPrice, lineTotal: unitPrice * e.qty }
+        }),
         shippingZoneId,
         deliveryDate: deliveryDate || undefined,
         rush,
@@ -413,7 +413,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                   {extra.imageUrl && thumb(extra.imageUrl, 'h-10 w-10')}
                   <div className="flex-1">
                     <span className="text-sm font-medium text-cbc-cream">{extra.name}</span>
-                    <span className="text-xs text-gray-400 ml-2">{extra.unitPrice === 0 ? 'Gratis' : `+${fmt(withTax(extra.unitPrice, ivaPct))} c/u (con IVA)`}</span>
+                    <span className="text-xs text-gray-400 ml-2">{extra.unitPrice === 0 ? 'Gratis' : `+${fmt(wholesalePrice(extra.unitPrice, wholesaleMarkupPct, ivaPct))} c/u (con IVA)`}</span>
                   </div>
                   {isSelected && (
                     <div className="flex items-center gap-1">
@@ -503,7 +503,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                 })}
                 {selectedExtras.map((ex, i) => {
                   const e = extras.find((ee) => ee.id === ex.extraId)
-                  const unit = withTax(ex.unitPrice, ivaPct)
+                  const unit = wholesalePrice(ex.unitPrice, wholesaleMarkupPct, ivaPct)
                   return (
                     <div key={`e-${i}`} className="flex items-center gap-3">
                       {e?.imageUrl

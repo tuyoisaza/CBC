@@ -6,6 +6,13 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.49 — Apply wholesale margin to extras
+
+- Treat admin extra prices as costs and apply the configured wholesale markup before IVA in quote calculations.
+- Match extra selection, summary and saved extra line prices to the margin; zero-cost extras remain free.
+- Clarify cost and margin labels in admin; load pricing settings in the English quote page as well.
+- Verification: full 204-test suite plus the new wizard pricing regression passed; TypeScript checks passed. Tests cover markup before IVA, saved extra line prices, quantities and free extras.
+
 ## v1.6.48 — Siphon and personalization samples
 
 - Add a Japanese siphon reference and a separate refillable metallic butane burner extra.
