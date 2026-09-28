@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { OrderStatusUpdater } from '@/components/admin/sales/OrderStatusUpdater'
 import { GenerateCfdiButton } from '@/components/admin/sales/GenerateCfdiButton'
 import { OrderRevenueClassification } from '@/components/admin/sales/OrderRevenueClassification'
+import { PaymentLinkActions } from '@/components/admin/sales/PaymentLinkActions'
 
 export const metadata = { title: 'Pedido' }
 
@@ -73,7 +74,8 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           ) : (
             <div className="space-y-3">
               {order.payments.map((p) => (
-                <div key={p.id} className="flex items-center justify-between text-sm">
+                <div key={p.id} className="text-sm">
+                  <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-medium text-foreground capitalize">
                       {p.type === 'deposit' ? 'Anticipo' : p.type === 'full' ? 'Pago completo' : 'Saldo final'}
@@ -88,15 +90,11 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                     }`}>
                       {p.status === 'paid' ? 'Pagado' : p.status === 'pending' ? 'Pendiente' : p.status === 'refunded' ? 'Reembolsado' : p.status === 'charged_back' ? 'Contracargo' : 'Fallido'}
                     </span>
-                    {p.paymentLinkUrl && (p.status === 'pending' || p.status === 'failed') && (
-                      <div>
-                        <a href={p.paymentLinkUrl} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-primary hover:underline">
-                          Ver link de pago
-                        </a>
-                      </div>
-                    )}
                   </div>
+                  </div>
+                  {p.paymentLinkUrl && (p.status === 'pending' || p.status === 'failed') && order.status !== 'cancelled' && !['Cancelada', 'cancelled', 'rejected'].includes(order.quote.status) && (
+                    <PaymentLinkActions paymentId={p.id} paymentUrl={p.paymentLinkUrl} customerEmail={order.customer.email} />
+                  )}
                 </div>
               ))}
             </div>

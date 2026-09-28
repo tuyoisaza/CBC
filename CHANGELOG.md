@@ -6,6 +6,13 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.53 — Copy and email payment links
+
+- Add Copiar and Enviar por correo beside each payable order link, showing the saved recipient and copy/send feedback.
+- Send a quotation thank-you email with payment reference, amount and existing payment URL; validate recipient and payment state server-side and audit successful sends.
+- Keep provider failures visible and prevent repeated clicks while sending; email actions do not generate another payment or send WhatsApp messages.
+- Verification: 251 full-suite tests plus two additional legacy cancellation regressions passed; TypeScript and production build verified. Email providers mocked during tests; no customer email sent for validation.
+
 ## v1.6.52 — Saved quotation details in leads
 
 - Show the customer's saved quotation at the top of each lead: products, quantities, unit prices, extras, delivery information and full financial breakdown.
