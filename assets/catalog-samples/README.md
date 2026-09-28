@@ -11,7 +11,11 @@ Colección inicial de seis muestras conceptuales generadas con la herramienta in
 
 Las versiones iniciales con letras CBC quedan obsoletas: usar las variantes v2 con TU LOGO AQUÍ. No usar siglas aisladas como logotipo. Las tipografías rasterizadas son aproximaciones visuales; Raleway es la fuente corporativa y Best Wishes se reserva al logotipo. Revisar contra los productos físicos antes de publicar como fotografía real.
 
-## Revisión vigente v1.6.45
+## Corrección vigente de prensa v1.6.47
+
+Usar prensa-francesa-plastico-v2.png, basada en la referencia del kit aportada por el usuario. Ver [prompt y notas](REVISION-v1.6.47.md).
+
+## Otras referencias v1.6.45
 
 Ver [archivos preferidos y prompts de revisión](REVISION-v1.6.45.md): prensa de plástico negro, Kyoto, V60, Chemex y caja/tarjetas v2. Los archivos originales se conservan como historial.
 

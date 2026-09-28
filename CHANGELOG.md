@@ -6,6 +6,12 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.47 — French press reference correction
+
+- Match the supplied kit image with an open black plastic cage, horizontal band, low base, domed lid and left handle.
+- Preserve the previous sample and record the new preferred image and generation prompt.
+- Verification: visual inspection against the user reference; no application or production catalog changes.
+
 ## v1.6.46 — Free extras
 
 - Allow zero-priced extras in admin create and update APIs while rejecting negative prices.

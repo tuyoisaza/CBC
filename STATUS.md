@@ -1,9 +1,10 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.46 (tag `v1.6.46` — see `git describe --tags --abbrev=0`)
+v1.6.47 (tag `v1.6.47` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
+- French press sample corrected to match supplied kit reference: black plastic band, open cage and low base (v1.6.47).
 - Free extras: admin Gratis checkbox, zero-price creation/editing, and clear quote labels without added cost (v1.6.46). Verified with 203 tests and TypeScript checks.
 - Revised plastic French press, Kyoto, V60 and Chemex catalog references; client-logo box and card variants (v1.6.45).
 - Six AI-generated catalog samples for methods and extras, with prompts and conceptual-use notes (v1.6.44); stored in assets/catalog-samples, not uploaded to admin.
