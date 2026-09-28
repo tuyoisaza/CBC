@@ -9,6 +9,7 @@ import { LeadStatusSelect } from '@/components/admin/sales/LeadStatusSelect'
 import { LeadArchiveButton } from '@/components/admin/sales/LeadArchiveButton'
 import { CreateOrderPaymentButton } from '@/components/admin/sales/CreateOrderPaymentButton'
 import { getPaymentConfig } from '@/lib/payment-config'
+import { OrderRevenueClassification } from '@/components/admin/sales/OrderRevenueClassification'
 
 export const metadata = { title: 'Lead' }
 
@@ -48,7 +49,7 @@ export default async function LeadDetailPage({
 
       {lead.archivedAt && (
         <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-300">
-          Este lead está archivado y no aparece en el pipeline. Usa “Restaurar” para devolverlo.
+          Este lead está archivado y no aparece en el pipeline. Archivar no cambia los ingresos. Clasifica sus pedidos como prueba o venta no concretada para excluirlos. Usa “Restaurar” para devolverlo al Kanban.
         </div>
       )}
 
@@ -194,6 +195,7 @@ export default async function LeadDetailPage({
                        q.status === 'rejected' ? 'Rechazada' : q.status}
                     </span>
                     {q.order && <Link href={`/admin/sales/orders/${q.order.id}`} className="mt-2 block text-xs text-primary hover:underline">Ver pedido</Link>}
+                    {q.order && <div className="mt-3"><OrderRevenueClassification orderId={q.order.id} reason={q.order.revenueExclusionReason} /></div>}
                     {(!q.order || q.order.channel === 'b2b') && !['Cancelada', 'rejected', 'cancelled'].includes(q.status) && (!q.order || q.order.status === 'pending_payment' || q.order.payments.length === 0 || q.order.payments[0]?.status === 'pending') && q.order?.status !== 'cancelled' && (
                       <CreateOrderPaymentButton
                         quoteId={q.id}

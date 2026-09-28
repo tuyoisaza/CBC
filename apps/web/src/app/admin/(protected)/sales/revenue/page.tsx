@@ -1,52 +1,23 @@
-import { db } from '@/lib/db'
+import { getRevenueSummary } from '@/lib/revenue'
+import Link from 'next/link'
 import { TrendingUp, ShoppingBag, Users, DollarSign } from 'lucide-react'
 
 export const metadata = { title: 'Revenue Dashboard' }
 
-async function getRevenue() {
-  const now   = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), 1) // start of this month
-
-  const [
-    monthOrders,
-    allOrders,
-    customers,
-  ] = await Promise.all([
-    db.order.findMany({
-      where: { createdAt: { gte: start }, status: { not: 'cancelled' } },
-      include: { quote: true },
-    }),
-    db.order.findMany({
-      where: { status: { not: 'cancelled' } },
-      include: { quote: true, customer: true },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    }),
-    db.customer.count(),
-  ])
-
-  const monthRevenue = monthOrders.reduce((sum, o) => sum + o.quote.total, 0)
-  const totalRevenue = allOrders.reduce((sum, o)  => sum + o.quote.total, 0)
-  const avgOrderSize = allOrders.length > 0
-    ? Math.round(totalRevenue / allOrders.length)
-    : 0
-
-  return { monthRevenue, totalRevenue, avgOrderSize, customers, allOrders }
-}
-
 export default async function RevenuePage() {
-  const data = await getRevenue()
+  const data = await getRevenueSummary()
 
   const stats = [
-    { label: 'Revenue este mes', value: `$${data.monthRevenue.toLocaleString('es-MX')}`, icon: DollarSign, color: 'text-green-500', bg: 'bg-green-500/10' },
-    { label: 'Revenue total',    value: `$${data.totalRevenue.toLocaleString('es-MX')}`, icon: TrendingUp, color: 'text-primary',   bg: 'bg-primary/10' },
-    { label: 'Pedido promedio',  value: `$${data.avgOrderSize.toLocaleString('es-MX')}`, icon: ShoppingBag, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: 'Clientes totales', value: data.customers, icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: 'Cobrado este mes', value: `$${data.monthRevenue.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: DollarSign, color: 'text-green-500', bg: 'bg-green-500/10' },
+    { label: 'Total cobrado',    value: `$${data.totalRevenue.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: TrendingUp, color: 'text-primary',   bg: 'bg-primary/10' },
+    { label: 'Cobrado por pedido',  value: `$${data.avgOrderSize.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: ShoppingBag, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Clientes con pagos', value: data.customers, icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
   ]
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-foreground">Revenue Dashboard</h1>
+      <div><h1 className="text-2xl font-bold text-foreground">Ingresos cobrados</h1><p className="mt-2 text-sm text-muted-foreground">Solo pagos recibidos en MXN. Se excluyen pedidos cancelados o marcados como prueba o venta no concretada. Archivar un lead no cambia sus ingresos.</p></div>
+      <Link href="/admin/sales/orders" className="inline-flex text-sm font-medium text-primary hover:underline">Clasificar pruebas / ventas no concretadas</Link>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -64,26 +35,26 @@ export default async function RevenuePage() {
       {/* Recent orders */}
       <div>
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-          Pedidos recientes
+          Pedidos recientes con pagos
         </h2>
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                {['Pedido', 'Empresa', 'Total', 'Estado', 'Fecha'].map((h) => (
+                {['Pedido', 'Empresa', 'Cobrado', 'Estado', 'Fecha de pedido'].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {data.allOrders.map((order) => (
+            <tbody className="divide-y divide-border">{data.recentOrders.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Todavía no hay pagos recibidos de ventas reales.</td></tr>}
+              {data.recentOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs text-foreground">{order.orderCode}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-foreground"><Link href={`/admin/sales/orders/${order.id}`} className="text-primary hover:underline">{order.orderCode}</Link></td>
                   <td className="px-4 py-3 text-foreground">{order.customer.companyName}</td>
                   <td className="px-4 py-3 font-semibold text-foreground">
-                    ${order.quote.total.toLocaleString('es-MX')} MXN
+                    ${order.paidAmount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
                   </td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${

@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import Link from 'next/link'
+import { OrderRevenueClassification } from '@/components/admin/sales/OrderRevenueClassification'
 
 export const metadata = { title: 'Pedidos' }
 
@@ -17,12 +18,13 @@ export default async function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Pedidos activos</h1>
+      <h1 className="text-2xl font-bold text-foreground">Pedidos</h1>
+      <p className="text-sm text-muted-foreground">Marca las pruebas o ventas no concretadas para excluirlas de ingresos. Archivar una oportunidad solo la oculta del Kanban.</p>
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {['Código','Empresa','Cajas','Total MXN','Estado','Fecha'].map(h => (
+              {['Código','Empresa','Cajas','Total MXN','Estado','Fecha','Clasificación'].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
               ))}
             </tr>
@@ -42,6 +44,7 @@ export default async function OrdersPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleDateString('es-MX')}</td>
+                <td className="px-4 py-3"><OrderRevenueClassification orderId={o.id} reason={o.revenueExclusionReason} /></td>
               </tr>
             ))}
           </tbody>

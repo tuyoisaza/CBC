@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { OrderStatusUpdater } from '@/components/admin/sales/OrderStatusUpdater'
 import { GenerateCfdiButton } from '@/components/admin/sales/GenerateCfdiButton'
+import { OrderRevenueClassification } from '@/components/admin/sales/OrderRevenueClassification'
 
 export const metadata = { title: 'Pedido' }
 
@@ -40,6 +41,10 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           <p className="text-sm text-muted-foreground">{order.customer.companyName}</p>
         </div>
         <OrderStatusUpdater orderId={order.id} currentStatus={order.status} />
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5">
+        <OrderRevenueClassification orderId={order.id} reason={order.revenueExclusionReason} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

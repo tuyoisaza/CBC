@@ -1,9 +1,10 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.50 (tag `v1.6.50` — see `git describe --tags --abbrev=0`)
+v1.6.51 (tag `v1.6.51` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
+- Revenue uses collected MXN payments, monthly payment dates and complete historical totals; reversible test/not-completed exclusions available in orders and lead details, independent of archival (v1.6.51). Verified 209 suite tests plus 13 classification API/UI tests and TypeScript checks.
 - Digital coffee scale catalog image with timer, dark background and warm lighting (v1.6.50).
 - Extras use their entered cost plus the configured wholesale markup, then IVA; quote displays and saved extra lines include the margin and free extras remain zero (v1.6.49).
 - Japanese siphon, standalone butane burner and four-panel white-ink personalization samples (v1.6.48).

@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { getMonthlyRevenue } from '@/lib/revenue'
 import Link from 'next/link'
 import {
   Coffee, ShoppingBag, MessageSquare, TrendingUp,
@@ -8,24 +9,19 @@ import {
 export const metadata = { title: 'Dashboard — CBC Admin' }
 
 async function getDashboardData() {
-  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
   const [
     openLeads,
     activeOrders,
     unreadMessages,
-    monthOrders,
+    mrr,
   ] = await Promise.all([
     db.lead.count({ where: { status: { in: ['new', 'contacted', 'quoted'] } } }),
     db.order.count({ where: { status: { in: ['confirmed', 'in_production', 'ready', 'shipped'] } } }),
     db.message.count({ where: { direction: 'inbound', status: 'unread' } }),
-    db.order.findMany({
-      where: { createdAt: { gte: startOfMonth }, status: { not: 'cancelled' } },
-      include: { quote: true },
-    }),
+    getMonthlyRevenue(),
   ])
 
-  const mrr = monthOrders.reduce((sum, o) => sum + o.quote.total, 0)
   return { openLeads, activeOrders, unreadMessages, mrr }
 }
 
@@ -33,7 +29,7 @@ export default async function DashboardPage() {
   const data = await getDashboardData()
 
   const statCards = [
-    { label: 'Revenue este mes', value: `$${data.mrr.toLocaleString('es-MX')}`, sub: 'MXN',         icon: TrendingUp,    color: 'text-green-500',  bg: 'bg-green-500/10',  href: '/admin/sales/revenue' },
+    { label: 'Cobrado este mes', value: `$${data.mrr.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sub: 'MXN',         icon: TrendingUp,    color: 'text-green-500',  bg: 'bg-green-500/10',  href: '/admin/sales/revenue' },
     { label: 'Leads abiertos',   value: data.openLeads,                          sub: 'por cerrar',  icon: ShoppingBag,   color: 'text-blue-500',   bg: 'bg-blue-500/10',   href: '/admin/sales/leads' },
     { label: 'Pedidos activos',  value: data.activeOrders,                       sub: 'en proceso',  icon: Coffee,        color: 'text-primary',    bg: 'bg-primary/10',    href: '/admin/sales/orders' },
     { label: 'Sin leer',         value: data.unreadMessages,                     sub: 'mensajes',    icon: MessageSquare, color: data.unreadMessages > 0 ? 'text-red-500' : 'text-muted-foreground', bg: data.unreadMessages > 0 ? 'bg-red-500/10' : 'bg-muted', href: '/admin/service' },
@@ -73,7 +69,7 @@ export default async function DashboardPage() {
             { href: '/admin/sales/leads/new',     icon: ShoppingBag,   label: 'Nuevo lead',           desc: 'Agregar manualmente' },
             { href: '/admin/sales/products',       icon: Coffee,        label: 'Ver productos',        desc: 'Catálogo B2B' },
             { href: '/admin/service',              icon: MessageSquare, label: 'Ver mensajes',         desc: `${data.unreadMessages} sin leer` },
-            { href: '/admin/sales/revenue',        icon: TrendingUp,    label: 'Ver revenue',          desc: 'Resumen del mes' },
+            { href: '/admin/sales/revenue',        icon: TrendingUp,    label: 'Ver ingresos',          desc: 'Resumen del mes' },
           ].map(({ href, icon: Icon, label, desc }) => (
             <Link key={href} href={href}
               className="flex items-center gap-3 rounded-lg border border-border px-4 py-3 hover:border-primary/40 hover:bg-muted/30 transition-all">

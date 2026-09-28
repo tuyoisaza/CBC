@@ -102,6 +102,7 @@ model Order {
   status         String    @default("confirmed")
   // confirmed | in_production | ready | shipped | delivered | cancelled
   channel        String    @default("b2b") // b2b | retail
+  revenueExclusionReason String? // test | not_completed; reporting only, preserves payments/history
   // Retail single-purchase checkout fields
   shipping       Json?     // { name, phone, street, extNo, intNo, colonia, cp, city, state, country, references }
   shippingCP     String?

@@ -6,6 +6,14 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.51 — Real collected revenue and sale exclusions
+
+- Count paid MXN payment amounts instead of quoted totals, including partial deposits; use payment dates for monthly revenue and all records for historical totals.
+- Exclude cancelled orders and add reversible Prueba / Venta no concretada classifications in order lists, order details and lead quotations. Preserve history and audit classification changes without customer notifications.
+- Keep lead archival independent from revenue and explain this in the admin. Count customers and average collections only for eligible paid orders.
+- Add nullable Order.revenueExclusionReason with an additive migration; Railway startup schema synchronization applies it.
+- Verification: 209 full-suite tests plus 13 classification API/UI tests passed; TypeScript checks passed.
+
 ## v1.6.50 — Digital coffee scale sample
 
 - Add a standalone digital coffee scale image and its generation prompt.

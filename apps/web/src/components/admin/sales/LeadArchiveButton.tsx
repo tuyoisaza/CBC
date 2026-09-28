@@ -40,6 +40,7 @@ export function LeadArchiveButton({
         type="button"
         onClick={toggle}
         disabled={saving}
+        title="Archivar solo oculta la oportunidad del Kanban; no cambia los ingresos."
         className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
       >
         {archived ? <RotateCcw className="h-4 w-4" /> : <Archive className="h-4 w-4" />}

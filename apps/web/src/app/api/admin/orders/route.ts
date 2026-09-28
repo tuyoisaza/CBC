@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { notifyCustomerOrderStatus, sendPaymentLinkToCustomer } from '@/lib/notifications'
 import { getPaymentConfig } from '@/lib/payment-config'
 import { depositAmount, ensureOrderPayment } from '@/lib/order-payments'
+import { recordAudit } from '@/lib/audit'
 
 const createOrderSchema = z.object({
   quoteId: z.string().min(1),
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
 }
 // Update order status
 const patchSchema = z.object({
+  revenueExclusionReason: z.enum(['test', 'not_completed']).nullable().optional(),
   status:        z.enum(['pending_payment','confirmed','in_production','ready','shipped','delivered','cancelled']).optional(),
   trackingNumber: z.string().optional(),
   carrier:        z.string().optional(),
@@ -73,12 +75,23 @@ export async function PATCH(req: NextRequest) {
   const orderId = url.searchParams.get('id')
   if (!orderId) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
-  const data  = patchSchema.parse(await req.json())
+  const parsed = patchSchema.safeParse(await req.json())
+  if (!parsed.success) return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 })
+  const data = parsed.data
+  const existing = await db.order.findUnique({ where: { id: orderId } })
+  if (!existing) return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 })
   const order = await db.order.update({
     where:   { id: orderId },
     data,
     include: { customer: true },
   })
+
+  if (data.revenueExclusionReason !== undefined) {
+    await recordAudit({ actorEmail: session.user?.email }, {
+      action: 'update', entity: 'order', entityId: orderId,
+      metadata: { revenueExclusionReason: data.revenueExclusionReason, previousRevenueExclusionReason: existing.revenueExclusionReason },
+    })
+  }
 
   // Notify customer on every status change
   if (data.status && order.customer.whatsapp) {
