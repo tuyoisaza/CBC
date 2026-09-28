@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({ session: vi.fn(), findPayment: vi.fn(), send: 
 vi.mock('next-auth', () => ({ getServerSession: mocks.session }))
 vi.mock('@/lib/auth', () => ({ authOptions: {} }))
 vi.mock('@/lib/db', () => ({ db: { payment: { findUnique: mocks.findPayment } } }))
-vi.mock('@/lib/email', () => ({ sendEmail: mocks.send }))
+vi.mock('@/lib/email', () => ({ sendEmailWithResult: mocks.send }))
 vi.mock('@/lib/audit', () => ({ recordAudit: mocks.audit }))
 import { POST } from './route'
 
@@ -31,7 +31,7 @@ beforeEach(() => {
   vi.resetAllMocks()
   mocks.session.mockResolvedValue({ user: { email: 'admin@example.com' } })
   mocks.findPayment.mockResolvedValue(payment())
-  mocks.send.mockResolvedValue(true)
+  mocks.send.mockResolvedValue({ success: true })
 })
 
 describe('email saved payment link', () => {
@@ -58,9 +58,15 @@ describe('email saved payment link', () => {
     })
   })
 
-  it('reports provider failure without claiming or auditing successful delivery', async () => {
-    mocks.send.mockResolvedValue(false)
-    expect((await send()).status).toBe(502)
+  it.each([
+    ['not_configured', 503, 'EMAIL_NOT_CONFIGURED', 'Falta configurar'],
+    ['configuration_error', 503, 'EMAIL_CONFIGURATION_ERROR', 'No se pudo leer'],
+    ['provider_error', 502, 'EMAIL_PROVIDER_ERROR', 'mediante el proveedor'],
+  ])('reports %s without claiming or auditing successful delivery', async (reason, status, code, message) => {
+    mocks.send.mockResolvedValue({ success: false, reason })
+    const response = await send()
+    expect(response.status).toBe(status)
+    expect(await response.json()).toEqual({ code, error: expect.stringContaining(message as string) })
     expect(mocks.audit).not.toHaveBeenCalled()
   })
 

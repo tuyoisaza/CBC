@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { z } from 'zod'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { sendEmail } from '@/lib/email'
+import { sendEmailWithResult } from '@/lib/email'
 import { recordAudit } from '@/lib/audit'
 
 export const runtime = 'nodejs'
@@ -46,7 +46,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   const amount = escapeHtml(payment.amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
   const currency = escapeHtml(payment.currency)
   const url = escapeHtml(link.href)
-  const sent = await sendEmail({
+  const sent = await sendEmailWithResult({
     to: email!,
     subject: `Tu vínculo de pago — ${payment.order.quote.quoteCode.replace(/[\r\n]/g, '')}`,
     html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#262626;line-height:1.6">
@@ -59,7 +59,15 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
       <p>Si tienes alguna pregunta, responde a este correo. Gracias por elegir Coffee Bunn Café.</p>
     </div>`,
   })
-  if (!sent) return NextResponse.json({ error: 'No se pudo enviar el correo. Revisa la configuración de correo e intenta de nuevo.' }, { status: 502 })
+  if (!sent.success) {
+    const failures = {
+      not_configured: { code: 'EMAIL_NOT_CONFIGURED', status: 503, error: 'Falta configurar el proveedor de correo. Configura Brevo o Resend y un remitente verificado en Configuración antes de enviar.' },
+      configuration_error: { code: 'EMAIL_CONFIGURATION_ERROR', status: 503, error: 'No se pudo leer la configuración de correo. Revisa la configuración del servidor antes de intentar de nuevo.' },
+      provider_error: { code: 'EMAIL_PROVIDER_ERROR', status: 502, error: 'No se pudo enviar el correo mediante el proveedor. Revisa la clave y el remitente verificado en Configuración e intenta de nuevo.' },
+    }
+    const { status, ...body } = failures[sent.reason]
+    return NextResponse.json(body, { status })
+  }
 
   await recordAudit({ actorEmail: session.user?.email }, {
     action: 'update', entity: 'payment', entityId: payment.id,

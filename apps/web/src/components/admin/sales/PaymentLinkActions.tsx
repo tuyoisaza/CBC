@@ -12,10 +12,12 @@ export function PaymentLinkActions({ paymentId, paymentUrl, customerEmail }: {
   const [sendStatus, setSendStatus] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
+  const [needsConfiguration, setNeedsConfiguration] = useState(false)
 
   async function copy() {
     setCopyStatus('')
     setError('')
+    setNeedsConfiguration(false)
     try {
       await navigator.clipboard.writeText(paymentUrl)
       setCopyStatus('Vínculo copiado')
@@ -29,10 +31,14 @@ export function PaymentLinkActions({ paymentId, paymentUrl, customerEmail }: {
     setSending(true)
     setSendStatus('')
     setError('')
+    setNeedsConfiguration(false)
     try {
       const response = await fetch(`/api/admin/payments/${encodeURIComponent(paymentId)}/email`, { method: 'POST' })
       const result = await response.json()
-      if (!response.ok) throw new Error(result.error || 'No se pudo enviar el correo. Inténtalo de nuevo.')
+      if (!response.ok) {
+        setNeedsConfiguration(['EMAIL_NOT_CONFIGURED', 'EMAIL_CONFIGURATION_ERROR', 'EMAIL_PROVIDER_ERROR'].includes(result.code))
+        throw new Error(result.error || 'No se pudo enviar el correo. Inténtalo de nuevo.')
+      }
       setSendStatus(`Correo enviado a ${result.email}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo enviar el correo. Inténtalo de nuevo.')
@@ -57,6 +63,7 @@ export function PaymentLinkActions({ paymentId, paymentUrl, customerEmail }: {
       {copyStatus && <p role="status" className="text-xs text-green-600 dark:text-green-400">{copyStatus}</p>}
       {sendStatus && <p role="status" className="text-xs text-green-600 dark:text-green-400">{sendStatus}</p>}
       {error && <p role="alert" className="text-xs text-red-500">{error}</p>}
+      {needsConfiguration && <a href="/admin/configuration" className="inline-block text-xs text-primary underline">Configurar correo (superadministrador)</a>}
     </div>
   )
 }

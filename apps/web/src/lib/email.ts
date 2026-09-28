@@ -10,15 +10,27 @@ import { getIntegrationValues } from './integration-secrets'
 
 const FROM_NAME = 'Coffee Bunn Café'
 
-export async function sendEmail(opts: {
+type EmailOptions = {
   to: string | string[]
   subject: string
   html: string
-}): Promise<boolean> {
-  const to = Array.isArray(opts.to) ? opts.to : [opts.to]
+}
 
+export type EmailResult = { success: true } | {
+  success: false
+  reason: 'not_configured' | 'provider_error' | 'configuration_error'
+}
+
+export async function sendEmailWithResult(opts: EmailOptions): Promise<EmailResult> {
+  const to = Array.isArray(opts.to) ? opts.to : [opts.to]
+  let config: Record<string, string | undefined>
   try {
-    const config = await getIntegrationValues(['BREVO_API_KEY', 'RESEND_API_KEY', 'EMAIL_FROM', 'RESEND_FROM_EMAIL'])
+    config = await getIntegrationValues(['BREVO_API_KEY', 'RESEND_API_KEY', 'EMAIL_FROM', 'RESEND_FROM_EMAIL'])
+  } catch {
+    console.error('Email configuration unavailable')
+    return { success: false, reason: 'configuration_error' }
+  }
+  try {
     const from = config.EMAIL_FROM || config.RESEND_FROM_EMAIL || 'hola@coffeebunncafe.com'
     if (config.BREVO_API_KEY) {
       const res = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -36,7 +48,7 @@ export async function sendEmail(opts: {
         }),
       })
       if (!res.ok) throw new Error('Email provider request failed')
-      return true
+      return { success: true }
     }
 
     if (config.RESEND_API_KEY && config.RESEND_API_KEY.length > 5) {
@@ -48,13 +60,17 @@ export async function sendEmail(opts: {
         html: opts.html,
       })
       if (result.error) throw new Error('Email provider request failed')
-      return true
+      return { success: true }
     }
 
     console.warn('No email provider configured — email skipped')
-    return false
+    return { success: false, reason: 'not_configured' }
   } catch {
     console.error('Email delivery failed')
-    return false
+    return { success: false, reason: 'provider_error' }
   }
+}
+
+export async function sendEmail(opts: EmailOptions): Promise<boolean> {
+  return (await sendEmailWithResult(opts)).success
 }

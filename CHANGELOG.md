@@ -6,6 +6,13 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.54 — Actionable payment email configuration errors
+
+- Distinguish missing email provider configuration from secure configuration errors and delivery-provider failures without exposing credentials or raw provider responses.
+- Link payment email failures to provider configuration; preserve the existing boolean email API for other callers.
+- Diagnose the reported production failure as missing usable email credentials; activation requires saving the user's Brevo key and verified sender.
+- Verification: full test suite and focused email regressions passed; no real customer messages sent during diagnosis or tests.
+
 ## v1.6.53 — Copy and email payment links
 
 - Add Copiar and Enviar por correo beside each payable order link, showing the saved recipient and copy/send feedback.

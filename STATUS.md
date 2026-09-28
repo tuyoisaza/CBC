@@ -1,9 +1,10 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.53 (tag `v1.6.53` — see `git describe --tags --abbrev=0`)
+v1.6.54 (tag `v1.6.54` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
+- Payment email failures distinguish missing provider setup, unreadable configuration and provider rejection, with a direct configuration link (v1.6.54). Production diagnosis: Brevo key missing; user selected Brevo and must save its key and verified sender in Configuration.
 - Order payment links can be copied or emailed to the saved customer address, with delivery feedback and audited sends (v1.6.53).
 - Lead details show saved quotation products, quantities, extras, prices, delivery and totals prominently; distinguish viewing saved quotes from starting a new quote (v1.6.52).
 - Revenue uses collected MXN payments, monthly payment dates and complete historical totals; reversible test/not-completed exclusions available in orders and lead details, independent of archival (v1.6.51). Verified 209 suite tests plus 13 classification API/UI tests and TypeScript checks.

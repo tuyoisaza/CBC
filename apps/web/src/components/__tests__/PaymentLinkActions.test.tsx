@@ -46,6 +46,15 @@ it('disables email when no recipient is saved but still allows copying', () => {
   expect(screen.getByRole('button', { name: 'Copiar' })).not.toBeDisabled()
 })
 
+it('links to provider configuration when no usable email key is configured', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ code: 'EMAIL_NOT_CONFIGURED', error: 'Falta configurar el proveedor de correo.' }) }))
+  render(<PaymentLinkActions {...props} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Enviar por correo' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Falta configurar')
+  expect(screen.getByRole('link', { name: 'Configurar correo (superadministrador)' })).toHaveAttribute('href', '/admin/configuration')
+  expect(screen.getByRole('button', { name: 'Copiar' })).not.toBeDisabled()
+})
+
 it('reports clipboard errors', async () => {
   vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } })
   render(<PaymentLinkActions {...props} />)

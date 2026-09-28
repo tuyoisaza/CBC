@@ -15,6 +15,41 @@ describe('email', () => {
   afterEach(() => {
     process.env = { ...originalEnv }
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
+
+  it('distinguishes missing provider configuration without making a delivery request', async () => {
+    delete process.env.BREVO_API_KEY
+    delete process.env.RESEND_API_KEY
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const { sendEmailWithResult } = await import('../email')
+    expect(await sendEmailWithResult({ to: 'a@b.com', subject: 'S', html: 'X' }))
+      .toEqual({ success: false, reason: 'not_configured' })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('distinguishes unreadable configuration and never exposes its error', async () => {
+    const { getIntegrationValues } = await import('../integration-secrets')
+    vi.mocked(getIntegrationValues).mockRejectedValueOnce(new Error('secret configuration details'))
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { sendEmailWithResult } = await import('../email')
+    expect(await sendEmailWithResult({ to: 'a@b.com', subject: 'S', html: 'X' }))
+      .toEqual({ success: false, reason: 'configuration_error' })
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(log).toHaveBeenCalledWith('Email configuration unavailable')
+  })
+
+  it('distinguishes provider rejection without returning its response', async () => {
+    process.env.BREVO_API_KEY = 'test-brevo-key'
+    const responseBody = vi.fn().mockResolvedValue('secret provider details')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 401, text: responseBody }))
+    const { sendEmailWithResult } = await import('../email')
+    expect(await sendEmailWithResult({ to: 'a@b.com', subject: 'S', html: 'X' }))
+      .toEqual({ success: false, reason: 'provider_error' })
+    expect(responseBody).not.toHaveBeenCalled()
   })
 
   it('sendEmail returns false when no provider configured', async () => {
