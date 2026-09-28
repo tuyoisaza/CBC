@@ -413,7 +413,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                   {extra.imageUrl && thumb(extra.imageUrl, 'h-10 w-10')}
                   <div className="flex-1">
                     <span className="text-sm font-medium text-cbc-cream">{extra.name}</span>
-                    <span className="text-xs text-gray-400 ml-2">+{fmt(withTax(extra.unitPrice, ivaPct))} c/u (con IVA)</span>
+                    <span className="text-xs text-gray-400 ml-2">{extra.unitPrice === 0 ? 'Gratis' : `+${fmt(withTax(extra.unitPrice, ivaPct))} c/u (con IVA)`}</span>
                   </div>
                   {isSelected && (
                     <div className="flex items-center gap-1">

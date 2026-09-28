@@ -8,6 +8,7 @@ export interface Field {
   label: string
   type: 'text' | 'number' | 'boolean' | 'image'
   required?: boolean
+  allowFree?: boolean
   // Declarative (serializable) formatter — pages are Server Components, so
   // passing a function here would crash the server→client boundary.
   format?: 'currency' | 'percent' | 'infinity'
@@ -232,13 +233,25 @@ export function EntityList({
     }
     if (field.type === 'number') {
       return (
-        <input
-          type="number"
-          step="any"
-          value={values[field.key] ?? ''}
-          onChange={(e) => onChange(field.key, e.target.value === '' ? '' : Number(e.target.value))}
-          className="input-field w-full text-sm py-1"
-        />
+        <div>
+          {field.allowFree && (
+            <label className="flex items-center gap-2 text-sm mb-2">
+              <input type="checkbox" checked={values[field.key] === 0}
+                onChange={(e) => onChange(field.key, e.target.checked ? 0 : '')}
+                className="h-4 w-4 rounded border-border" />
+              Gratis
+            </label>
+          )}
+          <input
+            type="number"
+            aria-label={field.label}
+            min={field.allowFree ? 0 : undefined}
+            step="any"
+            value={values[field.key] ?? ''}
+            onChange={(e) => onChange(field.key, e.target.value === '' ? '' : Number(e.target.value))}
+            className="input-field w-full text-sm py-1"
+          />
+        </div>
       )
     }
     return (
@@ -339,7 +352,7 @@ export function EntityList({
                       <span className="text-foreground">
                         {f.type === 'boolean'
                           ? (item[f.key] ? '✓' : '—')
-                          : f.format ? formatValue(f.format, item[f.key]) : (item[f.key] ?? '—')}
+                          : f.allowFree && item[f.key] === 0 ? 'Gratis' : f.format ? formatValue(f.format, item[f.key]) : (item[f.key] ?? '—')}
                       </span>
                     )}
                   </td>

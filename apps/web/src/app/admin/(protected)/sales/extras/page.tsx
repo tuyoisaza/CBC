@@ -14,7 +14,7 @@ export default function ExtrasPage() {
         { key: 'name', label: 'Nombre', type: 'text', required: true },
         { key: 'description', label: 'Descripción', type: 'text' },
         { key: 'imageUrl', label: 'Imagen', type: 'image' },
-        { key: 'unitPrice', label: 'Precio unitario (sin IVA)', type: 'number', format: 'currency' },
+        { key: 'unitPrice', label: 'Precio unitario (sin IVA)', type: 'number', format: 'currency', allowFree: true },
         { key: 'active', label: 'Activo', type: 'boolean' },
         { key: 'sortOrder', label: 'Orden', type: 'number' },
       ]}

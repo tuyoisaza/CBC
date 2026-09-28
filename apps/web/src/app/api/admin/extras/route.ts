@@ -13,7 +13,7 @@ const schema = z.object({
   name: z.string().min(1),
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
-  unitPrice: z.number().positive(),
+  unitPrice: z.number().finite().nonnegative(),
   active: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
 })

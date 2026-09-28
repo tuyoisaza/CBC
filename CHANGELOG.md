@@ -6,6 +6,13 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.46 — Free extras
+
+- Allow zero-priced extras in admin create and update APIs while rejecting negative prices.
+- Add a Gratis checkbox to extra price inputs and show Gratis in the admin list and quote wizard.
+- Store free extras as a zero unit price; no database migration required.
+- Verification: 203 tests and TypeScript checks passed, including free-extra creation/editing and unchanged quote totals with multiple free units.
+
 ## v1.6.45 — Brewing methods and client personalization samples
 
 - Add a French press with black plastic lid, handle and lower sleeve, plus Kyoto, V60 and Chemex reference images.
