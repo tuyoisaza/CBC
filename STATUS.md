@@ -1,9 +1,10 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.44 (tag `v1.6.44` — see `git describe --tags --abbrev=0`)
+v1.6.45 (tag `v1.6.45` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
+- Revised plastic French press, Kyoto, V60 and Chemex catalog references; client-logo box and card variants (v1.6.45).
 - Six AI-generated catalog samples for methods and extras, with prompts and conceptual-use notes (v1.6.44); stored in assets/catalog-samples, not uploaded to admin.
 - Google Places address autocomplete in the retail checkout (v1.6.39/1.6.40)
 - Marketing automation removal (all social posting, content engine, approval loop, marketing admin UI, Post model)

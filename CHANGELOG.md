@@ -6,6 +6,13 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.45 — Brewing methods and client personalization samples
+
+- Add a French press with black plastic lid, handle and lower sleeve, plus Kyoto, V60 and Chemex reference images.
+- Add revised box, message card and course card samples using TU LOGO AQUÍ instead of standalone brand initials.
+- Preserve previous samples and document the preferred revisions and generation prompts.
+- Verification: visual inspection of all seven new PNGs; no production catalog data changed.
+
 ## v1.6.44 — Catalog image samples
 
 - Add six PNG samples: French press, moka, pad printing, box customization, message card, and QR course.

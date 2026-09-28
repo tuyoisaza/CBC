@@ -1,6 +1,6 @@
 # Muestras de catálogo CBC
 
-Seis muestras conceptuales generadas con la herramienta integrada image_gen, basadas en docs/brand/brand-book.md y docs/specs/product-gift-boxes.md. No se han cargado al administrador ni conectado a productos en producción.
+Colección inicial de seis muestras conceptuales generadas con la herramienta integrada image_gen, basadas en docs/brand/brand-book.md y docs/specs/product-gift-boxes.md. No se han cargado al administrador ni conectado a productos en producción.
 
 - Prensa francesa: referencia de 350 ml; modelo ilustrativo.
 - Moka italiana: modelo mini ilustrativo.
@@ -9,9 +9,13 @@ Seis muestras conceptuales generadas con la herramienta integrada image_gen, bas
 - Tarjeta de mensaje: texto y diseño de ejemplo.
 - QR + curso personalizado: QR ilustrativo NO funcional; tablet representa el curso y no un artículo incluido.
 
-Las letras CBC en los mockups son muestras, no el logotipo oficial. Las tipografías rasterizadas son aproximaciones visuales; Raleway es la fuente corporativa y Best Wishes se reserva al logotipo. Revisar contra los productos físicos antes de publicar como fotografía real.
+Las versiones iniciales con letras CBC quedan obsoletas: usar las variantes v2 con TU LOGO AQUÍ. No usar siglas aisladas como logotipo. Las tipografías rasterizadas son aproximaciones visuales; Raleway es la fuente corporativa y Best Wishes se reserva al logotipo. Revisar contra los productos físicos antes de publicar como fotografía real.
 
-## Prompts utilizados
+## Revisión vigente v1.6.45
+
+Ver [archivos preferidos y prompts de revisión](REVISION-v1.6.45.md): prensa de plástico negro, Kyoto, V60, Chemex y caja/tarjetas v2. Los archivos originales se conservan como historial.
+
+## Prompts originales (históricos)
 
 ### prensa-francesa
 
