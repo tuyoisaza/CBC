@@ -6,6 +6,11 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.50 — Digital coffee scale sample
+
+- Add a standalone digital coffee scale image and its generation prompt.
+- Verification: visual review of product, display and catalog style; no application logic or production catalog changes.
+
 ## v1.6.49 — Apply wholesale margin to extras
 
 - Treat admin extra prices as costs and apply the configured wholesale markup before IVA in quote calculations.

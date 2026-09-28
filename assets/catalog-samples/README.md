@@ -49,3 +49,7 @@ Use case: product-mockup. Create one square photorealistic catalog sample for CB
 
 Edit this catalog mug sample: preserve the same charcoal ceramic mug, cream TU MARCA print and yellow underline. Replace pale background with seamless deep charcoal #262626 studio background and surface, warm yellow #f7b84e soft rim light. Square composition with entire mug visible including handle, centered with 15 percent breathing room on all sides. No extra objects or text. Photorealistic.
 
+
+## Gramera digital v1.6.50
+
+Archivo: gramera-digital.png. Ver [prompt y notas](REVISION-v1.6.50.md).
