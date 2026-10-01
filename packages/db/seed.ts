@@ -41,10 +41,10 @@ async function main() {
 
   // Seed Extras
   const extraData = [
-    { name: 'Tapografía', unitPrice: 50, sortOrder: 0 },
-    { name: 'Personalización de caja', unitPrice: 120, sortOrder: 1 },
-    { name: 'Tarjeta de mensaje', unitPrice: 35, sortOrder: 2 },
-    { name: 'QR + curso personalizado', unitPrice: 200, sortOrder: 3 },
+    { name: 'Tampografía', unitPrice: 50, sortOrder: 0, allowedForRush: false },
+    { name: 'Personalización de caja', unitPrice: 120, sortOrder: 1, allowedForRush: true },
+    { name: 'Tarjeta de mensaje', unitPrice: 35, sortOrder: 2, allowedForRush: true },
+    { name: 'QR + curso personalizado', unitPrice: 200, sortOrder: 3, allowedForRush: true },
   ]
   for (const e of extraData) {
     const existing = await prisma.extra.findFirst({ where: { name: e.name } })
@@ -58,7 +58,6 @@ async function main() {
   // Seed Shipping Zones
   const zoneData = [
     { name: 'CDMX / Área Metropolitana', baseFee: 0, feePerUnit: 15, sortOrder: 0 },
-    { name: 'Interior del país', baseFee: 150, feePerUnit: 25, sortOrder: 1 },
     { name: 'Recolección (sin envío)', baseFee: 0, feePerUnit: 0, sortOrder: 2 },
   ]
   for (const z of zoneData) {
@@ -89,6 +88,7 @@ async function main() {
   const settingsData: { key: string; value: string }[] = [
     { key: 'MIN_PRODUCTION_DAYS', value: '15' },
     { key: 'RUSH_DAYS_THRESHOLD', value: '8' },
+    { key: 'RUSH_MIN_PRODUCTION_DAYS', value: '5' },
     { key: 'RUSH_FEE_PCT', value: '40' },
     { key: 'ADVANCE_PCT', value: '50' },
     { key: 'MIN_QTY_PER_METHOD', value: '10' },

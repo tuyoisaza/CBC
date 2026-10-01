@@ -8,7 +8,7 @@ interface Method {
   id: string; name: string; unitPrice: number; imageUrl?: string | null
 }
 interface Extra {
-  id: string; name: string; unitPrice: number; imageUrl?: string | null
+  id: string; name: string; unitPrice: number; imageUrl?: string | null; allowedForRush?: boolean
 }
 interface ShippingZone {
   id: string; name: string; baseFee: number; feePerUnit: number
@@ -126,6 +126,10 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
   const [shippingZoneId, setShippingZoneId] = useState(shippingZones.length > 0 ? shippingZones[0].id : '')
   const [deliveryDate, setDeliveryDate] = useState('')
   const [rush, setRush] = useState(false)
+  const rushExtras = extras.filter((extra) => !rush || extra.allowedForRush !== false)
+  const minDeliveryDate = new Date()
+  minDeliveryDate.setDate(minDeliveryDate.getDate() + Number(rush ? settings.RUSH_MIN_PRODUCTION_DAYS ?? 5 : settings.MIN_PRODUCTION_DAYS ?? 15))
+  const minDeliveryDateString = `${minDeliveryDate.getFullYear()}-${String(minDeliveryDate.getMonth() + 1).padStart(2, '0')}-${String(minDeliveryDate.getDate()).padStart(2, '0')}`
   const [companyName, setCompanyName] = useState('')
   const [contactName, setContactName] = useState('')
   const [email, setEmail] = useState('')
@@ -202,6 +206,21 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
     }
   }
 
+  function toggleRush(enabled: boolean) {
+    setRush(enabled)
+    if (enabled) {
+      const removed = selectedExtras.filter((extra) => extras.find((item) => item.id === extra.extraId)?.allowedForRush === false)
+      if (removed.length) {
+        setSelectedExtras((current) => current.filter((extra) => !removed.some((item) => item.extraId === extra.extraId)))
+        window.alert('La tampografía se quitó porque no está disponible para pedidos urgentes.')
+      }
+    }
+    const nextMinimum = new Date()
+    nextMinimum.setDate(nextMinimum.getDate() + Number(enabled ? settings.RUSH_MIN_PRODUCTION_DAYS ?? 5 : settings.MIN_PRODUCTION_DAYS ?? 15))
+    const nextMinimumString = `${nextMinimum.getFullYear()}-${String(nextMinimum.getMonth() + 1).padStart(2, '0')}-${String(nextMinimum.getDate()).padStart(2, '0')}`
+    if (deliveryDate && deliveryDate < nextMinimumString) setDeliveryDate('')
+  }
+
   function updateExtraQty(extraId: string, qty: number) {
     setSelectedExtras(selectedExtras.map((e) => e.extraId === extraId ? { ...e, qty, lineTotal: e.unitPrice * qty } : e))
   }
@@ -224,24 +243,11 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
         contactName,
         email,
         whatsapp,
-        items: items.map((i) => ({ ...i, lineTotal: i.unitPrice * i.qty })),
-        extras: selectedExtras.map((e) => {
-          const unitPrice = e.unitPrice * (1 + wholesaleMarkupPct / 100)
-          return { ...e, unitPrice, lineTotal: unitPrice * e.qty }
-        }),
+        items: items.map(({ methodId, qty }) => ({ methodId, qty })),
+        extras: selectedExtras.map(({ extraId, qty }) => ({ extraId, qty })),
         shippingZoneId,
         deliveryDate: deliveryDate || undefined,
         rush,
-        subtotal: calc.subtotal,
-        discount: calc.discount,
-        discountPct: calc.discountPct,
-        extrasTotal: calc.extrasTotal,
-        shippingFee: calc.shippingFee,
-        rushFee: calc.rushFee,
-        iva: calc.iva,
-        total: calc.total,
-        advancePct: calc.advancePct,
-        advanceAmount: calc.advanceAmount,
       })
       setResult(res)
       setStep(4)
@@ -396,8 +402,8 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
         {/* Step 1: Extras */}
         {step === 1 && (
           <div className="space-y-3">
-            {extras.length === 0 && <p className="text-sm text-gray-500 text-center py-4">No hay extras disponibles.</p>}
-            {extras.map((extra) => {
+            {rushExtras.length === 0 && <p className="text-sm text-gray-500 text-center py-4">No hay extras disponibles.</p>}
+            {rushExtras.map((extra) => {
               const isSelected = selectedExtras.some((e) => e.extraId === extra.id)
               return (
                 <div key={extra.id}
@@ -451,7 +457,9 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                   >
                     <span className="text-sm font-medium text-cbc-cream">{zone.name}</span>
                     <span className="text-xs text-gray-400 ml-2">
-                      {zone.baseFee > 0 ? `Base ${fmt(zone.baseFee)} + ` : ''}{fmt(zone.feePerUnit)}/unidad
+                      {zone.name === 'CDMX / Área Metropolitana' && totalUnits >= 15
+                        ? 'Envío gratis desde 15 kits'
+                        : zone.baseFee > 0 ? `Base ${fmt(zone.baseFee)} + ${fmt(zone.feePerUnit)}/unidad` : `${fmt(zone.feePerUnit)}/unidad`}
                     </span>
                   </button>
                 ))}
@@ -460,13 +468,14 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Fecha de entrega deseada</label>
-              <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)}
+              <input type="date" min={minDeliveryDateString} value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)}
                 className="w-full bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none" />
+              <p className="mt-2 text-xs text-gray-400">{rush ? 'Disponible desde 5 días después de realizar tu pedido. Aplican restricciones de personalización y recargo.' : 'Primera fecha disponible: 15 días después de realizar tu pedido.'}</p>
             </div>
 
             <div className="flex items-center gap-3">
               <label className="relative inline-flex cursor-pointer items-center">
-                <input type="checkbox" checked={rush} onChange={(e) => setRush(e.target.checked)}
+                <input type="checkbox" checked={rush} onChange={(e) => toggleRush(e.target.checked)}
                   className="sr-only peer" />
                 <div className="h-6 w-11 rounded-full bg-gray-700 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-cbc-yellow peer-checked:after:translate-x-full" />
               </label>

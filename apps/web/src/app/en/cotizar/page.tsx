@@ -7,7 +7,7 @@ import { getSingleMarkupPct, getWholesaleMarkupPct } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 
-const PUBLIC_KEYS = ['MIN_PRODUCTION_DAYS', 'RUSH_DAYS_THRESHOLD', 'RUSH_FEE_PCT', 'ADVANCE_PCT', 'MIN_QTY_PER_METHOD', 'IVA_PCT']
+const PUBLIC_KEYS = ['MIN_PRODUCTION_DAYS', 'RUSH_DAYS_THRESHOLD', 'RUSH_MIN_PRODUCTION_DAYS', 'RUSH_FEE_PCT', 'ADVANCE_PCT', 'MIN_QTY_PER_METHOD', 'IVA_PCT']
 
 export default async function CotizarPageEn({
   searchParams,
@@ -18,7 +18,7 @@ export default async function CotizarPageEn({
     Promise.all([
       db.method.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
       db.extra.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
-      db.shippingZone.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
+      db.shippingZone.findMany({ where: { active: true, name: { not: 'Interior del país' } }, orderBy: { sortOrder: 'asc' } }),
       db.volumeDiscount.findMany({ orderBy: { minQty: 'asc' } }),
       db.product.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } }),
       db.setting.findMany({ where: { key: { in: PUBLIC_KEYS } } }),

@@ -9,7 +9,7 @@ vi.mock('@/app/cotizar/actions/submitQuote', () => ({
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.clearAllMocks() })
 
-it('shows extra prices with markup and IVA, and submits their selling price before IVA', async () => {
+it('shows extra prices with markup and IVA while submitting only catalog selections', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ json: async () => ({
     subtotal: 120, discount: 0, discountPct: 0, extrasTotal: 240,
     shippingFee: 0, rushFee: 0, iva: 57.6, total: 417.6,
@@ -17,7 +17,7 @@ it('shows extra prices with markup and IVA, and submits their selling price befo
   }) }))
   render(<CotizadorWizard
     methods={[{ id: 'method', name: 'Café', unitPrice: 100 }]}
-    extras={[{ id: 'paid', name: 'Empaque', unitPrice: 100 }, { id: 'free', name: 'Tarjeta', unitPrice: 0 }]}
+    extras={[{ id: 'paid', name: 'Empaque', unitPrice: 100, allowedForRush: true }, { id: 'free', name: 'Tarjeta', unitPrice: 0, allowedForRush: true }]}
     shippingZones={[{ id: 'zone', name: 'Local', baseFee: 0, feePerUnit: 0 }]}
     volumeDiscounts={[]}
     products={[{ id: 'product', slug: 'cafe', name: 'Café', subtitle: null, price: 100, images: [], methodId: 'method' }]}
@@ -44,10 +44,8 @@ it('shows extra prices with markup and IVA, and submits their selling price befo
   await waitFor(() => expect(screen.getByRole('button', { name: 'Enviar cotización' })).toBeEnabled())
   fireEvent.click(screen.getByRole('button', { name: 'Enviar cotización' }))
   await waitFor(() => expect(submitQuote).toHaveBeenCalledWith(expect.objectContaining({
-    extras: [
-      { extraId: 'paid', name: 'Empaque', qty: 2, unitPrice: 120, lineTotal: 240 },
-      { extraId: 'free', name: 'Tarjeta', qty: 1, unitPrice: 0, lineTotal: 0 },
-    ],
-    extrasTotal: 240,
+    items: [{ methodId: 'method', qty: 1 }],
+    extras: [{ extraId: 'paid', qty: 2 }, { extraId: 'free', qty: 1 }],
   })))
+  expect(submitQuote).not.toHaveBeenCalledWith(expect.objectContaining({ total: expect.any(Number), subtotal: expect.any(Number) }))
 })

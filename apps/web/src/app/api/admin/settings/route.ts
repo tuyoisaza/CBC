@@ -11,7 +11,7 @@ const BUSINESS_KEYS = [
   'site_logo_url', 'logo_size', 'logo_alignment', 'logo_link',
   'single_purchase_markup', 'wholesale_markup_pct', 'retail_shipping_cost', 'retail_free_shipping_threshold',
   'payments_single_providers', 'payments_b2b_provider', 'payments_oxxo_enabled', 'payments_msi_enabled',
-  'MIN_PRODUCTION_DAYS', 'RUSH_DAYS_THRESHOLD', 'RUSH_FEE_PCT', 'ADVANCE_PCT', 'MIN_QTY_PER_METHOD', 'IVA_PCT',
+  'MIN_PRODUCTION_DAYS', 'RUSH_DAYS_THRESHOLD', 'RUSH_MIN_PRODUCTION_DAYS', 'RUSH_FEE_PCT', 'ADVANCE_PCT', 'MIN_QTY_PER_METHOD', 'IVA_PCT',
 ] as const
 
 const schema = z.object({

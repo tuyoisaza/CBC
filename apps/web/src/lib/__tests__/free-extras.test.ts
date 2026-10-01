@@ -34,7 +34,7 @@ describe('free extras', () => {
   it('adds wholesale markup to extra costs before calculating IVA', async () => {
     mocks.methods.mockResolvedValue([{ id: 'method', unitPrice: 100 }])
     mocks.extras.mockResolvedValue([{ id: 'paid-extra', unitPrice: 100 }, { id: 'free-extra', unitPrice: 0 }])
-    mocks.zone.mockResolvedValue({ baseFee: 0, feePerUnit: 0 })
+    mocks.zone.mockResolvedValue({ id: 'zone', name: 'Recolección (sin envío)', active: true, baseFee: 0, feePerUnit: 0 })
     mocks.discounts.mockResolvedValue([])
     mocks.settings.mockResolvedValue([
       { key: 'wholesale_markup_pct', value: '20' },
@@ -79,8 +79,8 @@ describe('free extras', () => {
 
   it('keeps every quote amount unchanged when multiple free extras are selected', async () => {
     mocks.methods.mockResolvedValue([{ id: 'method', unitPrice: 100 }])
-    mocks.extras.mockResolvedValue([{ id: 'extra', unitPrice: 0 }])
-    mocks.zone.mockResolvedValue({ baseFee: 50, feePerUnit: 2 })
+    mocks.extras.mockResolvedValue([{ id: 'extra', unitPrice: 0, allowedForRush: true }])
+    mocks.zone.mockResolvedValue({ id: 'zone', name: 'Recolección (sin envío)', active: true, baseFee: 50, feePerUnit: 2 })
     mocks.discounts.mockResolvedValue([{ minQty: 10, maxQty: null, discountPct: 10 }])
     mocks.settings.mockResolvedValue([
       { key: 'wholesale_markup_pct', value: '20' },

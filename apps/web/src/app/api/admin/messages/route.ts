@@ -75,6 +75,16 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json(message)
 }
 
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const id = new URL(req.url).searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+  const result = await db.message.updateMany({ where: { id, direction: 'inbound', deletedAt: null, status: { in: ['read', 'replied'] } }, data: { deletedAt: new Date() } })
+  if (!result.count) return NextResponse.json({ error: 'Message not found or not eligible for deletion' }, { status: 404 })
+  return NextResponse.json({ success: true })
+}
+
 // Get messages (for inbox)
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -86,6 +96,7 @@ export async function GET(req: NextRequest) {
 
   const messages = await db.message.findMany({
     where: {
+      deletedAt: null,
       ...(leadId ? { leadId } : {}),
       ...(from   ? { from }   : {}),
     },

@@ -27,15 +27,15 @@ export async function POST(req: NextRequest) {
 
     const [methods, extras, zone, discounts, settings] = await withDbRetry(() =>
       Promise.all([
-        db.method.findMany({ where: { id: { in: parsed.items.map(i => i.methodId) } } }),
-        db.extra.findMany({ where: { id: { in: parsed.extras.map(e => e.extraId) } } }),
+        db.method.findMany({ where: { id: { in: parsed.items.map(i => i.methodId) }, active: true } }),
+        db.extra.findMany({ where: { id: { in: parsed.extras.map(e => e.extraId) }, active: true } }),
         db.shippingZone.findUnique({ where: { id: parsed.shippingZoneId } }),
         db.volumeDiscount.findMany({ orderBy: { minQty: 'asc' } }),
         db.setting.findMany({ where: { key: { in: ['RUSH_FEE_PCT', 'ADVANCE_PCT', 'IVA_PCT', 'wholesale_markup_pct'] } } }),
       ]),
     )
 
-    if (!zone) return NextResponse.json({ error: 'Invalid zone' }, { status: 400 })
+    if (!zone || !zone.active || zone.name === 'Interior del país' || !['CDMX / Área Metropolitana', 'Recolección (sin envío)'].includes(zone.name)) return NextResponse.json({ error: 'Invalid or unavailable shipping zone' }, { status: 400 })
 
     const foundMethodIds = new Set(methods.map(m => m.id))
     const missingMethods = parsed.items.filter(i => !foundMethodIds.has(i.methodId))
@@ -47,6 +47,9 @@ export async function POST(req: NextRequest) {
     const missingExtras = parsed.extras.filter(e => !foundExtraIds.has(e.extraId))
     if (missingExtras.length > 0) {
       return NextResponse.json({ error: 'Invalid extras', details: missingExtras.map(e => e.extraId) }, { status: 400 })
+    }
+    if (parsed.rush && extras.some((extra) => !extra.allowedForRush)) {
+      return NextResponse.json({ error: 'One or more extras are unavailable for rush orders' }, { status: 400 })
     }
 
     const settingsMap = Object.fromEntries(settings.map(s => [s.key, s.value]))
@@ -71,7 +74,9 @@ export async function POST(req: NextRequest) {
       return sum + wholesaleUnitPrice(extraMap.get(item.extraId)!.unitPrice) * item.qty
     }, 0)
 
-    const shippingFee = zone.baseFee + zone.feePerUnit * totalUnits
+    const shippingFee = zone.name === 'CDMX / Área Metropolitana' && totalUnits >= 15
+      ? 0
+      : zone.baseFee + zone.feePerUnit * totalUnits
 
     const rushFeePct = Number(settingsMap['RUSH_FEE_PCT'] ?? 40)
     const rushFee = parsed.rush ? (subtotal - discount) * (rushFeePct / 100) : 0

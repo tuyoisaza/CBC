@@ -3,22 +3,7 @@
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { sendQuoteToCustomer } from '@/lib/notifications'
-
-const itemSchema = z.object({
-  methodId: z.string().min(1),
-  methodName: z.string().min(1),
-  qty: z.number().int().positive(),
-  unitPrice: z.number().nonnegative(),
-  lineTotal: z.number().nonnegative(),
-})
-
-const extraItemSchema = z.object({
-  extraId: z.string().min(1),
-  name: z.string().min(1),
-  qty: z.number().int().positive(),
-  unitPrice: z.number().nonnegative(),
-  lineTotal: z.number().nonnegative(),
-})
+import { calculateQuoteForSave, quoteSelectionSchema } from '@/lib/quote-server-calculation'
 
 // Loose international phone check: strip everything but digits, require 10–15.
 const whatsappSchema = z.string().transform((v) => v.replace(/[^\d]/g, '')).pipe(
@@ -30,21 +15,7 @@ const submitQuoteSchema = z.object({
   contactName: z.string().trim().min(1, 'El nombre es requerido'),
   email: z.string().trim().email('Correo electrónico inválido'),
   whatsapp: whatsappSchema,
-  items: z.array(itemSchema).min(1, 'Agrega al menos un producto'),
-  extras: z.array(extraItemSchema),
-  shippingZoneId: z.string().min(1),
-  deliveryDate: z.string().optional(),
-  rush: z.boolean(),
-  subtotal: z.number(),
-  discount: z.number(),
-  discountPct: z.number(),
-  extrasTotal: z.number(),
-  shippingFee: z.number(),
-  rushFee: z.number(),
-  iva: z.number(),
-  total: z.number(),
-  advancePct: z.number(),
-  advanceAmount: z.number(),
+  ...quoteSelectionSchema.shape,
 })
 
 export async function submitQuote(input: z.infer<typeof submitQuoteSchema>) {
@@ -53,6 +24,13 @@ export async function submitQuote(input: z.infer<typeof submitQuoteSchema>) {
     throw new Error(parsed.error.issues[0]?.message || 'Datos de cotización inválidos')
   }
   const data = parsed.data
+
+  let quoteCalc
+  try {
+    quoteCalc = await calculateQuoteForSave(db, data)
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Datos de cotización inválidos')
+  }
 
   const customer = await db.customer.upsert({
     where: { whatsapp: data.whatsapp },
@@ -72,20 +50,20 @@ export async function submitQuote(input: z.infer<typeof submitQuoteSchema>) {
       quoteCode,
       leadId: lead.id,
       customerId: customer.id,
-      items: data.items as any,
-      extraItems: data.extras as any,
-      shippingZoneId: data.shippingZoneId,
-      deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : null,
-      rush: data.rush,
-      subtotal: data.subtotal,
-      discount: data.discount,
-      discountPct: data.discountPct,
-      shippingFee: data.shippingFee,
-      rushFee: data.rushFee,
-      iva: data.iva,
-      total: data.total,
-      advancePct: data.advancePct,
-      advanceAmount: data.advanceAmount,
+      items: quoteCalc.items as any,
+      extraItems: quoteCalc.extras as any,
+      shippingZoneId: quoteCalc.shippingZoneId,
+      deliveryDate: quoteCalc.deliveryDate,
+      rush: quoteCalc.rush,
+      subtotal: quoteCalc.subtotal,
+      discount: quoteCalc.discount,
+      discountPct: quoteCalc.discountPct,
+      shippingFee: quoteCalc.shippingFee,
+      rushFee: quoteCalc.rushFee,
+      iva: quoteCalc.iva,
+      total: quoteCalc.total,
+      advancePct: quoteCalc.advancePct,
+      advanceAmount: quoteCalc.advanceAmount,
       status: 'Cotización creada',
     },
   })
@@ -101,11 +79,11 @@ export async function submitQuote(input: z.infer<typeof submitQuoteSchema>) {
     const mById = new Map(methodRows.map((m) => [m.id, m]))
     const eById = new Map(extraRows.map((e) => [e.id, e]))
     const lines = [
-      ...data.items.map((i) => {
+      ...quoteCalc.items.map((i) => {
         const m = mById.get(i.methodId)
         return { name: m?.name ?? i.methodName, description: m?.description ?? null, imageUrl: m?.imageUrl ?? null, qty: i.qty }
       }),
-      ...data.extras.map((e) => {
+      ...quoteCalc.extras.map((e) => {
         const x = eById.get(e.extraId)
         return { name: x?.name ?? e.name, description: x?.description ?? null, imageUrl: x?.imageUrl ?? null, qty: e.qty }
       }),
@@ -116,16 +94,16 @@ export async function submitQuote(input: z.infer<typeof submitQuoteSchema>) {
       companyName: data.companyName,
       quoteCode,
       lines,
-      subtotal: data.subtotal,
-      discount: data.discount,
-      discountPct: data.discountPct,
-      extrasTotal: data.extrasTotal,
-      shippingFee: data.shippingFee,
-      rushFee: data.rushFee,
-      iva: data.iva,
-      total: data.total,
-      advancePct: data.advancePct,
-      advanceAmount: data.advanceAmount,
+      subtotal: quoteCalc.subtotal,
+      discount: quoteCalc.discount,
+      discountPct: quoteCalc.discountPct,
+      extrasTotal: quoteCalc.extrasTotal,
+      shippingFee: quoteCalc.shippingFee,
+      rushFee: quoteCalc.rushFee,
+      iva: quoteCalc.iva,
+      total: quoteCalc.total,
+      advancePct: quoteCalc.advancePct,
+      advanceAmount: quoteCalc.advanceAmount,
       deliveryDate: data.deliveryDate ?? null,
     })
   } catch (err) {

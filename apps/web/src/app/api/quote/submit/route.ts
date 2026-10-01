@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 import { createLogger } from '@/lib/logger'
 import { notifyNewQuote, sendLeadAutoAck } from '@/lib/notifications'
+import { calculateQuoteForSave, quoteSelectionSchema } from '@/lib/quote-server-calculation'
 
 const log = createLogger('api/quote/submit')
 
@@ -13,21 +14,7 @@ const submitSchema = z.object({
   contactName: z.string().min(1),
   email: z.string().email(),
   whatsapp: z.string().min(8),
-  items: z.array(z.object({ methodId: z.string(), methodName: z.string(), qty: z.number().int().positive(), unitPrice: z.number(), lineTotal: z.number() })),
-  extras: z.array(z.object({ extraId: z.string(), name: z.string(), qty: z.number().int().positive(), unitPrice: z.number(), lineTotal: z.number() })).optional().default([]),
-  shippingZoneId: z.string(),
-  deliveryDate: z.string().optional().refine(val => !val || !isNaN(Date.parse(val)), { message: 'Invalid delivery date' }),
-  rush: z.boolean().default(false),
-  subtotal: z.number(),
-  discount: z.number(),
-  discountPct: z.number(),
-  extrasTotal: z.number().optional().default(0),
-  shippingFee: z.number(),
-  rushFee: z.number(),
-  iva: z.number(),
-  total: z.number(),
-  advancePct: z.number(),
-  advanceAmount: z.number(),
+  ...quoteSelectionSchema.shape,
 })
 
 export async function POST(req: NextRequest) {
@@ -39,29 +26,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const parsed = submitSchema.parse(body)
 
+    const quoteCalc = await calculateQuoteForSave(db, parsed)
     const result = await db.$transaction(async (tx) => {
-      const methodIds = parsed.items.map(i => i.methodId)
-      const extraIds = parsed.extras.map(e => e.extraId)
-
-      const [foundMethods, foundExtras, zone] = await Promise.all([
-        tx.method.findMany({ where: { id: { in: methodIds } } }),
-        tx.extra.findMany({ where: { id: { in: extraIds } } }),
-        tx.shippingZone.findUnique({ where: { id: parsed.shippingZoneId } }),
-      ])
-
-      const foundMethodIds = new Set(foundMethods.map(m => m.id))
-      const missingMethods = parsed.items.filter(i => !foundMethodIds.has(i.methodId))
-      if (missingMethods.length > 0) {
-        throw new Error(`Invalid methods: ${missingMethods.map(i => i.methodId).join(', ')}`)
-      }
-
-      const foundExtraIds = new Set(foundExtras.map(e => e.id))
-      const missingExtras = parsed.extras.filter(e => !foundExtraIds.has(e.extraId))
-      if (missingExtras.length > 0) {
-        throw new Error(`Invalid extras: ${missingExtras.map(e => e.extraId).join(', ')}`)
-      }
-
-      if (!zone) throw new Error('Invalid shipping zone')
 
       const customer = await tx.customer.upsert({
         where: { whatsapp: parsed.whatsapp },
@@ -85,25 +51,25 @@ export async function POST(req: NextRequest) {
           quoteCode,
           leadId: lead.id,
           customerId: customer.id,
-          items: parsed.items,
-          extraItems: parsed.extras,
-          shippingZoneId: parsed.shippingZoneId,
-          deliveryDate: parsed.deliveryDate ? new Date(parsed.deliveryDate) : null,
-          rush: parsed.rush,
-          subtotal: parsed.subtotal,
-          discount: parsed.discount,
-          discountPct: parsed.discountPct,
-          shippingFee: parsed.shippingFee,
-          rushFee: parsed.rushFee,
-          iva: parsed.iva,
-          total: parsed.total,
-          advancePct: parsed.advancePct,
-          advanceAmount: parsed.advanceAmount,
+          items: quoteCalc.items,
+          extraItems: quoteCalc.extras,
+          shippingZoneId: quoteCalc.shippingZoneId,
+          deliveryDate: quoteCalc.deliveryDate,
+          rush: quoteCalc.rush,
+          subtotal: quoteCalc.subtotal,
+          discount: quoteCalc.discount,
+          discountPct: quoteCalc.discountPct,
+          shippingFee: quoteCalc.shippingFee,
+          rushFee: quoteCalc.rushFee,
+          iva: quoteCalc.iva,
+          total: quoteCalc.total,
+          advancePct: quoteCalc.advancePct,
+          advanceAmount: quoteCalc.advanceAmount,
           status: 'Cotización creada',
         },
       })
 
-      return { quoteId: quote.id, leadId: lead.id, quoteCode, companyName: parsed.companyName, contactName: parsed.contactName, email: parsed.email, whatsapp: parsed.whatsapp, total: parsed.total, items: parsed.items }
+      return { quoteId: quote.id, leadId: lead.id, quoteCode, companyName: parsed.companyName, contactName: parsed.contactName, email: parsed.email, whatsapp: parsed.whatsapp, total: quoteCalc.total, items: quoteCalc.items }
     })
 
     notifyNewQuote({
@@ -146,7 +112,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
     }
-    if (error instanceof Error && (error.message.startsWith('Invalid methods') || error.message.startsWith('Invalid extras') || error.message === 'Invalid shipping zone')) {
+    if (error instanceof Error && /Invalid|requires|allowed for rush|requires at least/.test(error.message)) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
     log.error({ path: '/api/quote/submit', method: 'POST', error }, 'Failed to submit quote')

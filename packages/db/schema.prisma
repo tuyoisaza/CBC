@@ -229,6 +229,7 @@ model Message {
   aiDraft   String?  // Claude-generated reply suggestion
   sentAt    DateTime?
   createdAt DateTime @default(now())
+  deletedAt DateTime?
 }
 
 // ─── Settings & i18n ──────────────────────────────────────────────────────────
@@ -291,6 +292,7 @@ model Extra {
   imageUrl    String?  // representa el extra en la cotización y el correo
   unitPrice   Float
   active      Boolean  @default(true)
+  allowedForRush Boolean @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

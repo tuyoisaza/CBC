@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Phone, Send, Sparkles, Check, ExternalLink } from 'lucide-react'
+import { Phone, Send, Sparkles, Check, ExternalLink, Trash2 } from 'lucide-react'
 
 interface Message {
   id: string
@@ -31,6 +31,7 @@ export function InboxList({ messages }: { messages: Message[] }) {
   const [selected, setSelected]   = useState<Message | null>(messages[0] ?? null)
   const [reply, setReply]         = useState('')
   const [sending, setSending]     = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const router = useRouter()
 
   function useDraft() {
@@ -69,6 +70,19 @@ export function InboxList({ messages }: { messages: Message[] }) {
     }
   }
 
+  async function deleteMessage() {
+    if (!selected || selected.status === 'unread' || !window.confirm('¿Eliminar este mensaje?')) return
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/messages?id=${selected.id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('No se pudo eliminar el mensaje')
+      setSelected(messages.find((message) => message.id !== selected.id) ?? null)
+      router.refresh()
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (messages.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border p-12 text-center">
@@ -87,7 +101,14 @@ export function InboxList({ messages }: { messages: Message[] }) {
         {messages.map((msg) => (
           <button
             key={msg.id}
-            onClick={() => setSelected(msg)}
+            onClick={async () => {
+              setSelected(msg)
+              if (msg.status === 'unread') {
+                await fetch(`/api/admin/messages?id=${msg.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'read' }) })
+                setSelected({ ...msg, status: 'read' })
+                router.refresh()
+              }
+            }}
             className={`w-full text-left rounded-xl border p-4 transition-all ${
               selected?.id === msg.id
                 ? 'border-primary bg-primary/10'
@@ -134,6 +155,7 @@ export function InboxList({ messages }: { messages: Message[] }) {
                   Ver lead <ExternalLink className="h-3 w-3" />
                 </a>
               )}
+              {selected.status !== 'unread' && <button type="button" onClick={deleteMessage} disabled={deleting} className="flex items-center gap-1 rounded-lg border border-red-900/50 px-3 py-1.5 text-xs text-red-400 hover:bg-red-950/30 disabled:opacity-50"><Trash2 className="h-3.5 w-3.5" />Eliminar</button>}
               <a
                 href={`https://wa.me/${selected.from.replace(/\D/g, '')}`}
                 target="_blank"

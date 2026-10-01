@@ -6,6 +6,16 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.55 — B2B fulfillment rules, quote security and catalog preview
+
+- Restrict B2B shipping to CDMX / Área Metropolitana and pickup; enforce free CDMX shipping from 15 kits and reject inactive or unsupported zones.
+- Recalculate methods, extras, volume discounts, shipping, rush fee, IVA, total and deposit from server catalog/configuration data before saving.
+- Enforce standard delivery from 15 days and rush delivery from 5 days; block rush-disallowed extras and remove them from the selected set when urgency is enabled.
+- Add structured rush eligibility for extras and correct Tapografía to Tampografía; preserve existing interior-zone records as inactive.
+- Add a product-led B2B catalog preview with images, kit details, methods, extras and preselected quote entry.
+- Add audited soft deletion for read/replied inbound service messages.
+- Verification: 267 full-suite tests passed (with 1 updated wizard test), TypeScript and production build passed.
+
 ## v1.6.54 — Actionable payment email configuration errors
 
 - Distinguish missing email provider configuration from secure configuration errors and delivery-provider failures without exposing credentials or raw provider responses.

@@ -5,7 +5,7 @@ export const metadata = { title: 'Servicio al cliente' }
 
 export default async function ServicePage() {
   const messages = await db.message.findMany({
-    where:   { direction: 'inbound' },
+    where:   { direction: 'inbound', deletedAt: null },
     orderBy: { createdAt: 'desc' },
     take:    50,
     include: { lead: { include: { customer: true } } },
