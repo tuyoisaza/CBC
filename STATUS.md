@@ -1,9 +1,10 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.55 (tag `v1.6.55` — see `git describe --tags --abbrev=0`)
+v1.6.56 (tag `v1.6.56` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
+- Homepage-ready conceptual French press gift-kit image using the approved press model, Nayarit bag label, Coffee Bunn Café logo and oversized customizable postcard mockup (v1.6.56).
 - B2B quotes restrict delivery to CDMX or pickup, apply free CDMX shipping at 15 kits, enforce 15-day standard / 5-day rush delivery and rush-extra rules, and recalculate all saved amounts on the server; add a B2B catalog preview and audited soft deletion for read customer-service messages (v1.6.55).
 - Payment email failures distinguish missing provider setup, unreadable configuration and provider rejection, with a direct configuration link (v1.6.54). Production diagnosis: Brevo key missing; user selected Brevo and must save its key and verified sender in Configuration.
 - Order payment links can be copied or emailed to the saved customer address, with delivery feedback and audited sends (v1.6.53).

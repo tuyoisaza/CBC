@@ -6,6 +6,12 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.56 — French press gift kit homepage image
+
+- Add a horizontal conceptual product image for the French press gift kit, following the approved campaign kit, Nayarit bag label, official logo and Domo box references.
+- Show one large customizable postcard mockup with brand colors and an illustrative recipe-video QR; keep the moka image out of this iteration while the press kit is reviewed.
+- Clarify that the generated image and QR are illustrative and must be verified before live product use.
+
 ## v1.6.55 — B2B fulfillment rules, quote security and catalog preview
 
 - Restrict B2B shipping to CDMX / Área Metropolitana and pickup; enforce free CDMX shipping from 15 kits and reject inactive or unsupported zones.
