@@ -1,0 +1,45 @@
+diff --git a/apps/web/middleware.ts b/apps/web/middleware.ts
+index fd9e7b3..30721d2 100644
+--- a/apps/web/middleware.ts
++++ b/apps/web/middleware.ts
+@@ -33,6 +33,7 @@ export default function middleware(req: NextRequest): NextResponse {
+     '/login',
+     '/en',
+     '/cotizar',
++    '/catalogo-b2b',
+     '/productos',
+     '/contacto',
+     '/tracking',
+diff --git a/apps/web/src/lib/__tests__/catalog-public-route.test.ts b/apps/web/src/lib/__tests__/catalog-public-route.test.ts
+new file mode 100644
+index 0000000..9af313c
+--- /dev/null
++++ b/apps/web/src/lib/__tests__/catalog-public-route.test.ts
+@@ -0,0 +1,14 @@
++import { beforeEach, expect, it, vi } from 'vitest'
++import { NextRequest, NextResponse } from 'next/server'
++const mocks = vi.hoisted(() => ({ auth: vi.fn() }))
++vi.mock('next-auth/middleware', () => ({ withAuth: () => mocks.auth }))
++import middleware from '../../../middleware'
++beforeEach(() => { mocks.auth.mockReset(); mocks.auth.mockReturnValue(NextResponse.next()) })
++it.each(['/catalogo-b2b', '/catalogo-b2b/extra/filtros', '/en/catalogo-b2b', '/en/catalogo-b2b/method/prensa', '/cotizar'])('allows anonymous browsing: %s', path => {
++  expect(middleware(new NextRequest('http://localhost:3000' + path)).status).toBe(200)
++  expect(mocks.auth).not.toHaveBeenCalled()
++})
++it('keeps admin routes behind authentication', () => {
++  middleware(new NextRequest('http://localhost:3000/admin/sales/extras'))
++  expect(mocks.auth).toHaveBeenCalledOnce()
++})
+diff --git a/scripts/qa/b2b-catalog.cjs b/scripts/qa/b2b-catalog.cjs
+index 5498505..05e2747 100644
+--- a/scripts/qa/b2b-catalog.cjs
++++ b/scripts/qa/b2b-catalog.cjs
+@@ -22,7 +22,7 @@ async function main() {
+   await db.extra.create({ data: { id: 'qa-hidden', name: 'Oculto QA', unitPrice: 1, catalogVisible: false } })
+   await db.extra.create({ data: { id: 'qa-inactive', name: 'Inactivo QA', unitPrice: 1, active: false } })
+   for (const route of ['/catalogo-b2b', `/catalogo-b2b/extra/${extra.slug}`, '/cotizar', `/cotizar?extra=${extra.id}&qty=50`, '/en/catalogo-b2b', `/en/catalogo-b2b/extra/${extra.id}`]) {
+-    const response = await fetch(base + route)
++    const response = await fetch(base + route, { redirect: 'manual' })
+     assert.equal(response.status, 200, route)
+   }
+   assert.equal((await fetch(base + '/catalogo-b2b/extra/qa-hidden')).status, 404)
