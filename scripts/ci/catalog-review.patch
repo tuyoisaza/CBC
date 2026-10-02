@@ -1,50 +1,69 @@
 diff --git a/apps/web/src/components/__tests__/B2BCatalog.test.tsx b/apps/web/src/components/__tests__/B2BCatalog.test.tsx
-index 45f6985..91ce62e 100644
+index 45f6985..b6095e6 100644
 --- a/apps/web/src/components/__tests__/B2BCatalog.test.tsx
 +++ b/apps/web/src/components/__tests__/B2BCatalog.test.tsx
-@@ -44,6 +44,8 @@ it('edits long copy, legacy photos, gallery order, and package settings', async
-   expect(screen.getByLabelText('Descripción completa')).toHaveValue(entry.description)
-   expect(screen.getByRole('img', { name: 'Fotografía 1' })).toHaveAttribute('src', '/legacy.jpg')
-   fireEvent.change(screen.getByLabelText('Descripción completa'), { target: { value: 'Primero\n\nSegundo párrafo con detalles.' } })
+@@ -3,0 +4 @@ import { CatalogView } from '../catalog/CatalogView'
++import { QuoteDetails } from '../admin/sales/QuoteDetails'
+@@ -46,0 +48,2 @@ it('edits long copy, legacy photos, gallery order, and package settings', async
 +  expect(screen.getByLabelText('Costo unitario (sin IVA)')).toBeValid()
 +  expect(screen.getByRole('button', { name: 'Guardar cambios' }).closest('form')).toBeValid()
-   fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
-   await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/admin/extras/filters', expect.objectContaining({ method: 'PATCH', body: expect.stringContaining('Segundo párrafo') })))
- })
+@@ -84,0 +88,7 @@ it('shows calculation failures and never reuses the previous total', async () =>
++
++it('renders an extras-only saved quote without reporting lost product details', () => {
++  render(<QuoteDetails quote={{ items: [], extraItems: [{ name: 'Filtros', qty: 50, unitLabel: 'paquete', unitsPerPack: 100, unitPrice: 120, lineTotal: 6000 }], subtotal: 0, iva: 960, total: 6960 }} />)
++  expect(screen.getByText('Sin kits ni métodos en esta cotización.')).toBeInTheDocument()
++  expect(screen.getByText('paquete de 100 piezas')).toBeInTheDocument()
++  expect(screen.queryByText('No se guardó el detalle de estos conceptos.')).not.toBeInTheDocument()
++})
 diff --git a/apps/web/src/components/admin/sales/ExtraCatalogManager.tsx b/apps/web/src/components/admin/sales/ExtraCatalogManager.tsx
-index ad4b1f8..3054e1c 100644
+index ad4b1f8..4e70eae 100644
 --- a/apps/web/src/components/admin/sales/ExtraCatalogManager.tsx
 +++ b/apps/web/src/components/admin/sales/ExtraCatalogManager.tsx
-@@ -133,7 +133,7 @@ export function ExtraCatalogManager() {
-           <label className="block text-sm">Añadir fotografías<input type="file" multiple accept="image/png,image/jpeg" className="mt-2 block text-sm" onChange={event => { void upload(event.target.files); event.target.value = '' }} /></label>
-         </section>
-         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+@@ -117,2 +117,2 @@ export function ExtraCatalogManager() {
+-        <label className="block text-sm">Descripción corta<textarea rows={2} maxLength={320} value={draft.shortDescription || ''} onChange={event => update('shortDescription', event.target.value)} className="input-field mt-1 w-full" /></label>
+-        <label className="block text-sm">Descripción completa<textarea rows={10} maxLength={20000} value={draft.description || ''} onChange={event => update('description', event.target.value)} placeholder="Contenido, materiales, medidas, compatibilidad, usos y condiciones. Los párrafos se conservan en la ficha pública." className="input-field mt-1 w-full" /></label>
++        <label className="block text-sm">Descripción corta<textarea aria-label="Descripción corta" rows={2} maxLength={320} value={draft.shortDescription || ''} onChange={event => update('shortDescription', event.target.value)} className="input-field mt-1 w-full" /></label>
++        <label className="block text-sm">Descripción completa<textarea aria-label="Descripción completa" rows={10} maxLength={20000} value={draft.description || ''} onChange={event => update('description', event.target.value)} placeholder="Contenido, materiales, medidas, compatibilidad, usos y condiciones. Los párrafos se conservan en la ficha pública." className="input-field mt-1 w-full" /></label>
+@@ -136 +136 @@ export function ExtraCatalogManager() {
 -          <div><label className="text-sm">Costo unitario (sin IVA)<input aria-label="Costo unitario (sin IVA)" required type="number" min={0} step="0.01" value={draft.unitPrice} onChange={event => update('unitPrice', event.target.value === '' ? '' : Number(event.target.value))} className="input-field mt-1 w-full" /></label><label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.unitPrice === 0} onChange={event => update('unitPrice', event.target.checked ? 0 : '')} />Gratis</label></div>
 +          <div><label className="text-sm">Costo unitario (sin IVA)<input aria-label="Costo unitario (sin IVA)" required type="number" inputMode="decimal" min={0} step="any" value={draft.unitPrice} onChange={event => update('unitPrice', event.target.value === '' ? '' : Number(event.target.value))} className="input-field mt-1 w-full" /></label><label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.unitPrice === 0} onChange={event => update('unitPrice', event.target.checked ? 0 : '')} />Gratis</label></div>
-           <label className="text-sm">Unidad de venta<input required maxLength={80} value={draft.unitLabel} onChange={event => update('unitLabel', event.target.value)} placeholder="pieza / paquete / servicio" className="input-field mt-1 w-full" /></label>
-           <label className="text-sm">Piezas por unidad de venta<input required type="number" min={1} max={100000} step={1} value={draft.unitsPerPack} onChange={event => update('unitsPerPack', Number(event.target.value))} className="input-field mt-1 w-full" /></label>
-           <label className="text-sm">Pedido mínimo<input required type="number" min={1} max={100000} step={1} value={draft.minQty} onChange={event => update('minQty', Number(event.target.value))} className="input-field mt-1 w-full" /></label>
+diff --git a/apps/web/src/components/admin/sales/QuoteDetails.tsx b/apps/web/src/components/admin/sales/QuoteDetails.tsx
+index f6a7c2e..7c64848 100644
+--- a/apps/web/src/components/admin/sales/QuoteDetails.tsx
++++ b/apps/web/src/components/admin/sales/QuoteDetails.tsx
+@@ -94 +94 @@ function SavedItems({ value, label }: { value: unknown; label: string }) {
+-      ) : <p className="text-sm text-muted-foreground">{label === 'Extras' && Array.isArray(value) ? 'Sin extras' : 'No se guardó el detalle de estos conceptos.'}</p>}
++      ) : <p className="text-sm text-muted-foreground">{Array.isArray(value) ? label === 'Extras' ? 'Sin extras' : 'Sin kits ni métodos en esta cotización.' : 'No se guardó el detalle de estos conceptos.'}</p>}
+diff --git a/apps/web/src/components/catalog/CatalogDetail.tsx b/apps/web/src/components/catalog/CatalogDetail.tsx
+index 0174186..6abe67f 100644
+--- a/apps/web/src/components/catalog/CatalogDetail.tsx
++++ b/apps/web/src/components/catalog/CatalogDetail.tsx
+@@ -19,0 +20 @@ export async function CatalogDetail({ kind, slug, lang = 'es' }: { kind: string;
++        <div className="min-w-0">
+@@ -20,0 +22 @@ export async function CatalogDetail({ kind, slug, lang = 'es' }: { kind: string;
++        </div>
 diff --git a/apps/web/src/components/catalog/CatalogView.tsx b/apps/web/src/components/catalog/CatalogView.tsx
 index 70713ce..29d388c 100644
 --- a/apps/web/src/components/catalog/CatalogView.tsx
 +++ b/apps/web/src/components/catalog/CatalogView.tsx
-@@ -37,7 +37,7 @@ export function CatalogView({ entries, lang = 'es' }: { entries: CatalogEntry[];
-             <p className="mt-3 line-clamp-3 text-sm text-gray-400">{entry.shortDescription}</p>
-             <p className="mt-4 text-sm text-gray-300">{saleUnit(entry)} · {es ? 'Mínimo' : 'Minimum'} {entry.minQty}</p>
-             <p className="mt-2 font-semibold text-cbc-cream">{entry.price === 0 ? (es ? 'Gratis' : 'Free') : new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(entry.price)} <span className="text-xs font-normal text-gray-400">MXN / {entry.unitLabel} · {es ? 'con IVA' : 'tax included'}</span></p>
+@@ -40 +40 @@ export function CatalogView({ entries, lang = 'es' }: { entries: CatalogEntry[];
 -            <p className="mt-2 text-xs text-gray-400">{entry.sellableStandalone ? (es ? 'Cotizable sin comprar un kit.' : 'Available without a kit purchase.') : (es ? 'Complemento de un kit.' : 'Kit add-on.')}</p>
 +            <p className="mt-2 text-xs text-gray-400">{entry.kind === 'method' ? (es ? 'Cotiza por volumen.' : 'Request a bulk quote.') : entry.sellableStandalone ? (es ? 'Cotizable sin comprar un kit.' : 'Available without a kit purchase.') : (es ? 'Complemento de un kit.' : 'Kit add-on.')}</p>
-             <Link href={href} className="mt-6 block rounded-lg border border-cbc-yellow/40 px-4 py-3 text-center font-semibold text-cbc-yellow hover:bg-cbc-yellow/10">{es ? 'Ver detalles' : 'View details'}</Link>
-           </div>
-         </article>
+diff --git a/apps/web/src/components/productos/ProductGallery.tsx b/apps/web/src/components/productos/ProductGallery.tsx
+index 2756a5b..062918b 100644
+--- a/apps/web/src/components/productos/ProductGallery.tsx
++++ b/apps/web/src/components/productos/ProductGallery.tsx
+@@ -42 +42 @@ export function ProductGallery({ media, aspectClass = 'aspect-[16/10]' }: { medi
+-          className="w-full h-full object-cover"
++          className={`w-full h-full ${aspectClass === 'aspect-video' ? 'object-contain' : 'object-cover'}`}
+@@ -64 +64 @@ export function ProductGallery({ media, aspectClass = 'aspect-[16/10]' }: { medi
+-            <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
++            <img src={item.thumbnail} alt="" className={`w-full h-full ${aspectClass === 'aspect-video' ? 'object-contain' : 'object-cover'}`} />
 diff --git a/scripts/qa/b2b-catalog.cjs b/scripts/qa/b2b-catalog.cjs
-index 05e2747..822fd36 100644
+index 05e2747..fe64083 100644
 --- a/scripts/qa/b2b-catalog.cjs
 +++ b/scripts/qa/b2b-catalog.cjs
-@@ -70,8 +70,31 @@ async function main() {
-       assert(await mobile.getByRole('link', { name: 'Ver detalles', exact: true }).count() >= 1)
-       assert(await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Catalog overflows mobile viewport')
-       await mobile.screenshot({ path: '/tmp/cbc-catalog-mobile.png' })
+@@ -72,0 +73,27 @@ async function main() {
 +      // Admin validation uses only a test identity signed with the isolated CI secret.
 +      const { encode } = require('../../apps/web/node_modules/next-auth/jwt')
 +      const admin = await db.user.create({ data: { email: 'admin-qa@example.invalid', name: 'Catalog QA', active: true, isSuperadmin: true } })
@@ -52,9 +71,13 @@ index 05e2747..822fd36 100644
 +      const adminContext = await browser.newContext({ viewport: { width: 1920, height: 1080 } })
 +      await adminContext.addCookies([{ name: 'next-auth.session-token', value: token, url: base, httpOnly: true, sameSite: 'Lax' }])
 +      const editor = await adminContext.newPage()
++      editor.on('pageerror', error => console.error('Admin browser error:', error))
 +      await editor.goto(base + '/admin/sales/extras')
 +      await editor.getByRole('heading', { name: 'Extras y catálogo B2B' }).waitFor()
 +      await editor.locator('article').filter({ hasText: extra.name }).getByRole('button', { name: 'Editar', exact: true }).click()
++      await editor.getByRole('heading', { name: 'Editar ficha', exact: true }).waitFor()
++      await editor.getByRole('heading', { name: 'Editar ficha', exact: true }).scrollIntoViewIfNeeded()
++      await editor.screenshot({ path: '/tmp/cbc-catalog-admin.png' })
 +      const description = 'Descripción extendida guardada desde el navegador.\n\nSegundo párrafo con características del paquete de prueba.'
 +      await editor.getByLabel('Descripción completa', { exact: true }).fill(description)
 +      await editor.getByLabel('Costo unitario (sin IVA)', { exact: true }).fill('100.25')
@@ -68,9 +91,6 @@ index 05e2747..822fd36 100644
 +      assert.equal(edited.images[0], images[1])
 +      assert.equal(edited.imageUrl, images[1])
 +      await adminContext.close()
-     } finally { await browser.close() }
-   }
+@@ -75 +102 @@ async function main() {
 -  console.log('PASS: catalog routes, visibility, isolated extras-only calculation/save, package snapshots, browser quote flow and mobile layout.')
 +  console.log('PASS: catalog routes, visibility, isolated extras-only calculation/save, package snapshots, browser quote flow, mobile layout and authenticated admin editing.')
- }
- main().catch(error => { console.error(error); process.exitCode = 1 }).finally(() => db.$disconnect())
