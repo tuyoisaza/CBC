@@ -51,7 +51,8 @@ jobs:
           PY
           git fetch origin main --tags
           git checkout --detach origin/main
-          test "$(git rev-parse 'HEAD^{tree}')" = ac93add5617aa3d1d4303dad11d8ec3c92f5a47a
+          test "$(git rev-parse HEAD)" = ac93add5617aa3d1d4303dad11d8ec3c92f5a47a
+          git show HEAD:packages/db/schema.prisma > /tmp/cbc-baseline.prisma
           git apply --check --unidiff-zero /tmp/cbc-release.patch
           git apply --index --unidiff-zero /tmp/cbc-release.patch
           git apply --index /tmp/cbc-fixes.patch
@@ -63,10 +64,27 @@ jobs:
       - run: npm install --global pnpm@11.0.9
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile 2>&1 | tee /tmp/cbc-install.log
-      - name: Validate additive database schema
+      - name: Validate additive migration with existing data
         run: |
           pnpm --filter @cbc/db exec prisma validate
-          pnpm --filter @cbc/db exec prisma db push
+          pnpm --filter @cbc/db exec prisma db push --schema /tmp/cbc-baseline.prisma --skip-generate
+          echo 'INSERT INTO "Extra" ("id", "name", "description", "imageUrl", "unitPrice", "updatedAt") VALUES ('"'qa-legacy', 'Legacy migration QA', 'Preserved description', 'https://example.com/old.png', 123.45, CURRENT_TIMESTAMP"');' | pnpm --filter @cbc/db exec prisma db execute --schema /tmp/cbc-baseline.prisma --stdin
+          pnpm --filter @cbc/db exec prisma db push 2>&1 | tee /tmp/cbc-migration.log
+          node - <<'JS'
+          const assert = require('node:assert/strict')
+          const { PrismaClient } = require('./packages/db/node_modules/@prisma/client')
+          const db = new PrismaClient()
+          ;(async () => {
+            const row = await db.extra.findUniqueOrThrow({ where: { id: 'qa-legacy' } })
+            assert.equal(row.unitPrice, 123.45)
+            assert.equal(row.description, 'Preserved description')
+            assert.equal(row.imageUrl, 'https://example.com/old.png')
+            assert.deepEqual(row.images, [])
+            assert.equal(row.unitsPerPack, 1)
+            assert.equal(row.unitLabel, 'pieza')
+            console.log('PASS: legacy extra data preserved after additive schema update.')
+          })().catch(e => { console.error(e); process.exitCode = 1 }).finally(() => db.$disconnect())
+          JS
       - name: Full regression suite
         run: pnpm --filter @cbc/web test 2>&1 | tee /tmp/cbc-tests.log
       - name: TypeScript check
