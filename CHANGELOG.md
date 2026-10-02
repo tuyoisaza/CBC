@@ -6,6 +6,12 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.58 — Italian moka kit homepage image
+
+- Add a homepage-ready moka gift kit image matching the French-press companion: horizontal transparent Domo box, elevated view, kraft base, crinkle paper and red bow.
+- Keep the moka and Puebla coffee pouch visible, with an enlarged brand-color postcard reading «Tu logo aquí» and «Tu mensaje aquí».
+- Document the generated image as conceptual product artwork, not verified inventory photography.
+
 ## v1.6.57 — Isolated French press kit homepage image
 
 - Refine the French press product image directly from the supplied approved post, removing its surrounding logo and promotional copy.

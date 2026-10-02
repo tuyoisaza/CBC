@@ -2,12 +2,17 @@
 
 Colección inicial de seis muestras conceptuales generadas con la herramienta integrada image_gen, basadas en docs/brand/brand-book.md y docs/specs/product-gift-boxes.md. No se han cargado al administrador ni conectado a productos en producción.
 
-## Kit de prensa para homepage v1.6.57
+## Kits para homepage v1.6.58
 
 - `kit-prensa-homepage.png`: fotografía horizontal 16:9 conceptual, basada en el post de producto entregado por el equipo. Muestra únicamente el kit centrado, sin logotipo promocional ni textos alrededor.
 - Conserva la caja Domo con moño rojo, la prensa compacta con jaula de plástico negro y la bolsa Nayarit. Incluye una sola tarjeta postcard horizontal ligeramente ampliada, en amarillo, carbón y crema, con «Tu logo aquí» y «Tu mensaje aquí», acomodada en primer plano para mantener visibles ambos productos.
 - Propuesta generada con IA; no representa fotografía verificada de inventario. La tarjeta es un ejemplo visual y sus medidas finales deben confirmarse antes de producir.
-- La propuesta anterior de moka queda fuera de esta iteración mientras el equipo revisa primero el kit de prensa.
+
+### Moka italiana
+
+- `kit-moka-homepage.png`: fotografía horizontal 16:9 conceptual basada en el post de moka aprobado y compuesta para acompañar la foto de prensa francesa.
+- Usa la misma caja Domo transparente acostada, vista elevada, base kraft, papel picado y moño rojo. Presenta la moka mini de aluminio y la bolsa negra Puebla con una postcard de marca ampliada al frente, con «Tu logo aquí» y «Tu mensaje aquí».
+- Propuesta generada con IA; no representa fotografía verificada de inventario. La tarjeta es ilustrativa y sus medidas finales deben confirmarse antes de producir.
 
 - Prensa francesa: referencia de 350 ml; modelo ilustrativo.
 - Moka italiana: modelo mini ilustrativo.
