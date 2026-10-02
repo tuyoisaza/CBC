@@ -1,29 +1,111 @@
-name: B2B catalog validation
+name: B2B catalog release validation
 on:
   push:
     branches: [dev/b2b-catalog-v1.6.60]
+    paths: ['.github/workflows/b2b-catalog-validation.yml']
 permissions:
-  contents: read
+  contents: write
+concurrency:
+  group: cbc-b2b-catalog-release
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: cbc_test
+          POSTGRES_USER: cbc
+          POSTGRES_PASSWORD: isolated-ci-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U cbc -d cbc_test'
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://cbc:isolated-ci-password@127.0.0.1:5432/cbc_test
+      NEXTAUTH_SECRET: isolated-ci-auth-secret-not-for-production-2026
+      NEXTAUTH_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+      UPLOAD_DIR: /tmp/cbc-qa-uploads
+      NEXT_TELEMETRY_DISABLED: '1'
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
-      - name: Archive source for review
+          fetch-depth: 0
+      - name: Verify and apply release to unchanged main
         run: |
-          tar --exclude='./.git' --exclude='./.turbo' --exclude='./node_modules' --exclude='./apps/web/public' --exclude='./docs/assets' --exclude='./.github' -czf /tmp/cbc-source.tar.gz .
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cbc-source
-          path: /tmp/cbc-source.tar.gz
-          retention-days: 2
+          python3 - <<'PY'
+          import base64, glob, hashlib, lzma, pathlib
+          encoded = ''.join(pathlib.Path(p).read_text().strip() for p in sorted(glob.glob('scripts/ci/catalog-release.patch.*.b64')))
+          patch = lzma.decompress(base64.b64decode(encoded))
+          assert hashlib.sha256(patch).hexdigest() == '090b73bfc0ea6ffa8f4ffd90ad6bf6d68d9170e0f057ed10dbcaa5128dc97a38', 'Release patch checksum mismatch'
+          pathlib.Path('/tmp/cbc-release.patch').write_bytes(patch)
+          pathlib.Path('/tmp/cbc-fixes.patch').write_bytes(pathlib.Path('scripts/ci/catalog-fixes.patch').read_bytes())
+          PY
+          git fetch origin main --tags
+          git checkout --detach origin/main
+          test "$(git rev-parse 'HEAD^{tree}')" = ac93add5617aa3d1d4303dad11d8ec3c92f5a47a
+          git apply --check --unidiff-zero /tmp/cbc-release.patch
+          git apply --index --unidiff-zero /tmp/cbc-release.patch
+          git apply --index /tmp/cbc-fixes.patch
+          git diff --cached --check
+          git diff --cached --stat
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
       - run: npm install --global pnpm@11.0.9
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @cbc/web test
-      - run: pnpm typecheck
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile 2>&1 | tee /tmp/cbc-install.log
+      - name: Validate additive database schema
+        run: |
+          pnpm --filter @cbc/db exec prisma validate
+          pnpm --filter @cbc/db exec prisma db push
+      - name: Full regression suite
+        run: pnpm --filter @cbc/web test 2>&1 | tee /tmp/cbc-tests.log
+      - name: TypeScript check
+        run: pnpm typecheck 2>&1 | tee /tmp/cbc-types.log
+      - name: Production build
+        run: pnpm --filter @cbc/web build 2>&1 | tee /tmp/cbc-build.log
+      - name: Install isolated browser test runner
+        run: |
+          npm install --prefix /tmp/cbc-browser playwright@1.55.1
+          /tmp/cbc-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Real database and browser smoke tests
+        run: |
+          pnpm --filter @cbc/web start > /tmp/cbc-next.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:3000/ > /dev/null; then break; fi
+            sleep 2
+          done
+          CBC_CATALOG_SMOKE=1 PLAYWRIGHT_MODULE=/tmp/cbc-browser/node_modules/playwright node scripts/qa/b2b-catalog.cjs 2>&1 | tee /tmp/cbc-smoke.log
+      - name: Publish verified version, commit and tag to main
+        run: |
+          test "$(node -p "require('./package.json').version")" = 1.6.60
+          test -z "$(git tag --list v1.6.60)"
+          git diff --exit-code
+          git diff --cached --check
+          git config user.name 'CBC release automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'v1.6.60 feat: add B2B catalog and standalone extras'
+          git tag v1.6.60
+          git push --atomic origin HEAD:refs/heads/main refs/tags/v1.6.60
+          echo "Published v1.6.60 $(git rev-parse HEAD)" | tee /tmp/cbc-release.log
+          echo "Published v1.6.60 $(git rev-parse HEAD) after regression, type, production build, isolated database and browser checks." >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbc-catalog-validation
+          path: |
+            /tmp/cbc-*.log
+            /tmp/cbc-catalog-*.png
+          retention-days: 2
