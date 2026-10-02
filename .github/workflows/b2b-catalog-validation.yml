@@ -47,7 +47,8 @@ jobs:
           patch = lzma.decompress(base64.b64decode(encoded))
           assert hashlib.sha256(patch).hexdigest() == '090b73bfc0ea6ffa8f4ffd90ad6bf6d68d9170e0f057ed10dbcaa5128dc97a38', 'Release patch checksum mismatch'
           pathlib.Path('/tmp/cbc-release.patch').write_bytes(patch)
-          pathlib.Path('/tmp/cbc-fixes.patch').write_bytes(pathlib.Path('scripts/ci/catalog-fixes.patch').read_bytes())
+          for name in ['fixes', 'review']:
+            pathlib.Path(f'/tmp/cbc-{name}.patch').write_bytes(pathlib.Path(f'scripts/ci/catalog-{name}.patch').read_bytes())
           PY
           git fetch origin main --tags
           git checkout --detach origin/main
@@ -56,6 +57,7 @@ jobs:
           git apply --check --unidiff-zero /tmp/cbc-release.patch
           git apply --index --unidiff-zero /tmp/cbc-release.patch
           git apply --index /tmp/cbc-fixes.patch
+          git apply --index /tmp/cbc-review.patch
           git diff --cached --check
           git diff --cached --stat
       - uses: actions/setup-node@v4
@@ -88,10 +90,14 @@ jobs:
             console.log('PASS: legacy extra data preserved after additive schema update.')
           })().catch(e => { console.error(e); process.exitCode = 1 }).finally(() => db.$disconnect())
           JS
-      - name: Full regression suite
-        run: pnpm --filter @cbc/web test 2>&1 | tee /tmp/cbc-tests.log
-      - name: TypeScript check
-        run: pnpm typecheck 2>&1 | tee /tmp/cbc-types.log
+      - name: Full regression suite and TypeScript
+        run: |
+          set +e
+          pnpm --filter @cbc/web test 2>&1 | tee /tmp/cbc-tests.log
+          tests=${PIPESTATUS[0]}
+          pnpm typecheck 2>&1 | tee /tmp/cbc-types.log
+          types=${PIPESTATUS[0]}
+          test "$tests" = 0 && test "$types" = 0
       - name: Production build
         run: pnpm --filter @cbc/web build 2>&1 | tee /tmp/cbc-build.log
       - name: Install isolated browser test runner
