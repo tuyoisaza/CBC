@@ -329,7 +329,7 @@ export function ProductForm({ product }: ProductFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Videos (YouTube)</label>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Videos (YouTube o Instagram)</label>
           {videos.length > 0 && (
             <div className="mb-3 space-y-2">
               {videos.map((v, i) => (
@@ -348,7 +348,7 @@ export function ProductForm({ product }: ProductFormProps) {
             <div className="flex-1 min-w-[200px]">
               <label className="block text-xs text-muted-foreground mb-0.5">URL del video</label>
               <input value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)}
-                className="input-field w-full" placeholder="https://youtube.com/watch?v=..." />
+                className="input-field w-full" placeholder="Enlace de YouTube o Instagram (reel/post público)" />
             </div>
             <div className="w-36">
               <label className="block text-xs text-muted-foreground mb-0.5">Título</label>

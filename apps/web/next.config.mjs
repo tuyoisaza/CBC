@@ -49,7 +49,7 @@ const nextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://assets.coffeebunncafe.com https://coffeebunncafe.com https://www.coffeebunncafe.com https://img.youtube.com https://maps.gstatic.com https://maps.googleapis.com",
               "connect-src 'self' https://api.stripe.com https://app.posthog.com https://*.ingest.sentry.io https://maps.googleapis.com",
-              "frame-src https://js.stripe.com https://www.youtube.com",
+              "frame-src https://js.stripe.com https://www.youtube.com https://www.instagram.com",
             ].join('; '),
           },
         ],

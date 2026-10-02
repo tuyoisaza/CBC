@@ -8,7 +8,8 @@ interface MediaItem {
   url: string
   thumbnail: string
   title: string
-  videoId?: string | null
+  platform?: 'youtube' | 'instagram'
+  embedUrl?: string
 }
 
 export function ProductGallery({ media }: { media: MediaItem[] }) {
@@ -29,7 +30,10 @@ export function ProductGallery({ media }: { media: MediaItem[] }) {
       <div
         className="aspect-[16/10] rounded-2xl overflow-hidden bg-[#1e1e1e] cursor-pointer relative group"
         onClick={() => {
-          if (active.type === 'video' && active.videoId) setShowVideo(true)
+          if (active.type === 'video') {
+            if (active.embedUrl) setShowVideo(true)
+            else window.open(active.url, '_blank', 'noopener,noreferrer')
+          }
         }}
       >
         <img
@@ -67,12 +71,12 @@ export function ProductGallery({ media }: { media: MediaItem[] }) {
       </div>
 
       {/* Video overlay */}
-      {showVideo && active.type === 'video' && active.videoId && (
+      {showVideo && active.type === 'video' && active.embedUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
           onClick={() => setShowVideo(false)}
         >
-          <div className="relative w-full max-w-4xl aspect-video">
+          <div className={`relative w-full ${active.platform === 'instagram' ? 'max-w-md aspect-[4/5]' : 'max-w-4xl aspect-video'}`} onClick={(event) => event.stopPropagation()}>
             <button
               onClick={() => setShowVideo(false)}
               className="absolute -top-10 right-0 text-white hover:text-gray-300"
@@ -80,11 +84,15 @@ export function ProductGallery({ media }: { media: MediaItem[] }) {
               <X className="h-6 w-6" />
             </button>
             <iframe
-              src={`https://www.youtube.com/embed/${active.videoId}?autoplay=1`}
+              src={active.platform === 'youtube' ? `${active.embedUrl}?autoplay=1` : active.embedUrl}
               className="w-full h-full rounded-xl"
-              allow="autoplay; encrypted-media"
+              title={active.title}
+              allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
               allowFullScreen
             />
+            <a href={active.url} target="_blank" rel="noopener noreferrer" className="absolute bottom-2 left-2 rounded-md bg-black/80 px-3 py-2 text-xs font-medium text-white underline decoration-white/50 underline-offset-2 hover:bg-black">
+              {active.platform === 'instagram' ? 'Si no carga, abrir en Instagram ↗' : 'Abrir video en YouTube ↗'}
+            </a>
           </div>
         </div>
       )}

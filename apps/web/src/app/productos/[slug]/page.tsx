@@ -8,13 +8,9 @@ import { CheckoutResultBanner, type CheckoutStatus } from '@/components/producto
 import { getSingleMarkupPct, priceWithTax } from '@/lib/pricing'
 import { getPaymentConfig } from '@/lib/payment-config'
 import { getRetailShippingConfig } from '@/lib/shipping'
+import { getProductVideoEmbed } from '@/lib/product-video'
 
 export const dynamic = 'force-dynamic'
-
-function getYouTubeId(url: string): string | null {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
-  return match?.[1] || null
-}
 
 const CHECKOUT_STATUSES: CheckoutStatus[] = ['exito', 'pendiente', 'fallo', 'cancelado']
 
@@ -60,13 +56,14 @@ export default async function ProductDetailPage({
   const allMedia = [
     ...product.images.map((url) => ({ type: 'image' as const, url, thumbnail: url, title: product.name })),
     ...videos.map((v) => {
-      const id = getYouTubeId(v.url)
+      const embed = getProductVideoEmbed(v.url)
       return {
         type: 'video' as const,
         url: v.url,
-        thumbnail: id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '',
+        thumbnail: embed?.platform === 'youtube' ? `https://img.youtube.com/vi/${embed.videoId}/hqdefault.jpg` : product.images[0] ?? '',
         title: v.title || product.name,
-        videoId: id,
+        platform: embed?.platform,
+        embedUrl: embed?.embedUrl,
       }
     }),
   ]

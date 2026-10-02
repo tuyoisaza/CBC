@@ -6,6 +6,13 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.59 — YouTube and Instagram product videos
+
+- Detect standard YouTube watch, short, live and embed links plus Instagram posts, Reels and TV posts; load the matching player in the product gallery.
+- Keep a direct open-in-new-tab link beside every embedded video, and open unsupported video providers in a new tab.
+- Use the product image as the Instagram video thumbnail, allow Instagram frames through the site CSP and clarify video-link support in product administration.
+- Verification: URL parser and gallery fallback regressions, TypeScript, full test suite and production build.
+
 ## v1.6.58 — Italian moka kit homepage image
 
 - Add a homepage-ready moka gift kit image matching the French-press companion: horizontal transparent Domo box, elevated view, kraft base, crinkle paper and red bow.
