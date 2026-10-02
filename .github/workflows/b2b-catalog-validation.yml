@@ -57,7 +57,7 @@ jobs:
           git apply --check --unidiff-zero /tmp/cbc-release.patch
           git apply --index --unidiff-zero /tmp/cbc-release.patch
           git apply --index /tmp/cbc-fixes.patch
-          git apply --index /tmp/cbc-review.patch
+          git apply --index --unidiff-zero /tmp/cbc-review.patch
           git diff --cached --check
           git diff --cached --stat
       - uses: actions/setup-node@v4
