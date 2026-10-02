@@ -1,0 +1,29 @@
+name: B2B catalog validation
+on:
+  push:
+    branches: [dev/b2b-catalog-v1.6.60]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Archive source for review
+        run: |
+          tar --exclude='./.git' --exclude='./.turbo' --exclude='./node_modules' --exclude='./apps/web/public' --exclude='./docs/assets' --exclude='./.github' -czf /tmp/cbc-source.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cbc-source
+          path: /tmp/cbc-source.tar.gz
+          retention-days: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --global pnpm@11.0.9
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @cbc/web test
+      - run: pnpm typecheck
