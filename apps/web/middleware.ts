@@ -33,6 +33,7 @@ export default function middleware(req: NextRequest): NextResponse {
     '/login',
     '/en',
     '/cotizar',
+    '/catalogo-b2b',
     '/productos',
     '/contacto',
     '/tracking',

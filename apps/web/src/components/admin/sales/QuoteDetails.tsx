@@ -1,3 +1,5 @@
+import { saleUnit } from '@/lib/extra-catalog'
+
 type SavedQuote = {
   items: unknown
   extraItems?: unknown
@@ -41,6 +43,7 @@ function rows(value: unknown) {
     const typeLabel = type === 'shipping' ? 'Envío' : type === 'prensa' ? 'Prensa francesa' : type === 'moka' ? 'Moka' : type
     return {
       name: text(row.methodName) ?? text(row.name) ?? text(row.description) ?? typeLabel ?? 'Producto sin descripción guardada',
+      presentation: text(row.unitLabel) ? saleUnit({ unitLabel: text(row.unitLabel), unitsPerPack: number(row.unitsPerPack) }) : null,
       quantity: number(row.qty) ?? number(row.quantity),
       unitPrice: number(row.unitPrice),
       lineTotal: number(row.lineTotal) ?? number(row.subtotal),
@@ -79,7 +82,7 @@ function SavedItems({ value, label }: { value: unknown; label: string }) {
             <tbody className="divide-y divide-border">
               {items.map((item, index) => (
                 <tr key={index}>
-                  <td className="px-3 py-2 min-w-32 break-words">{item.name}</td>
+                  <td className="px-3 py-2 min-w-32 break-words">{item.name}{item.presentation && <span className="mt-1 block text-xs text-muted-foreground">{item.presentation}</span>}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{item.quantity ?? '—'}</td>
                   <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">{money(item.unitPrice)}</td>
                   <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">{money(item.lineTotal)}</td>
@@ -88,7 +91,7 @@ function SavedItems({ value, label }: { value: unknown; label: string }) {
             </tbody>
           </table>
         </div>
-      ) : <p className="text-sm text-muted-foreground">{label === 'Extras' && Array.isArray(value) ? 'Sin extras' : 'No se guardó el detalle de estos conceptos.'}</p>}
+      ) : <p className="text-sm text-muted-foreground">{Array.isArray(value) ? label === 'Extras' ? 'Sin extras' : 'Sin kits ni métodos en esta cotización.' : 'No se guardó el detalle de estos conceptos.'}</p>}
     </div>
   )
 }

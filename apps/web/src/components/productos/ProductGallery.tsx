@@ -12,14 +12,14 @@ interface MediaItem {
   embedUrl?: string
 }
 
-export function ProductGallery({ media }: { media: MediaItem[] }) {
+export function ProductGallery({ media, aspectClass = 'aspect-[16/10]' }: { media: MediaItem[]; aspectClass?: 'aspect-video' | 'aspect-[16/10]' }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [showVideo, setShowVideo] = useState(false)
   const active = media[activeIndex]
 
   if (media.length === 0) {
     return (
-      <div className="aspect-[16/10] rounded-2xl bg-[#1e1e1e] flex items-center justify-center text-gray-500">
+      <div className={`${aspectClass} rounded-2xl bg-[#1e1e1e] flex items-center justify-center text-gray-500`}>
         Sin imágenes
       </div>
     )
@@ -28,7 +28,7 @@ export function ProductGallery({ media }: { media: MediaItem[] }) {
   return (
     <>
       <div
-        className="aspect-[16/10] rounded-2xl overflow-hidden bg-[#1e1e1e] cursor-pointer relative group"
+        className={`${aspectClass} rounded-2xl overflow-hidden bg-[#1e1e1e] cursor-pointer relative group`}
         onClick={() => {
           if (active.type === 'video') {
             if (active.embedUrl) setShowVideo(true)
@@ -39,7 +39,7 @@ export function ProductGallery({ media }: { media: MediaItem[] }) {
         <img
           src={active.thumbnail}
           alt={active.title}
-          className="w-full h-full object-cover"
+          className={`w-full h-full ${aspectClass === 'aspect-video' ? 'object-contain' : 'object-cover'}`}
         />
         {active.type === 'video' && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
@@ -56,11 +56,12 @@ export function ProductGallery({ media }: { media: MediaItem[] }) {
           <button
             key={i}
             onClick={() => setActiveIndex(i)}
+            aria-label={`Ver ${item.title}, imagen ${i + 1}`}
             className={`relative w-20 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
               i === activeIndex ? 'border-cbc-yellow' : 'border-transparent hover:border-cbc-yellow/50'
             }`}
           >
-            <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+            <img src={item.thumbnail} alt="" className={`w-full h-full ${aspectClass === 'aspect-video' ? 'object-contain' : 'object-cover'}`} />
             {item.type === 'video' && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                 <Play className="h-5 w-5 text-white" />

@@ -27,6 +27,7 @@ export function PublicFooter({ lang = 'es' }: PublicFooterProps) {
                   {tr('public.quote')}
                 </a>
               </li>
+              <li><a href={lang === 'es' ? '/catalogo-b2b' : '/en/catalogo-b2b'} className="text-gray-500 hover:text-cbc-yellow transition-colors">{lang === 'es' ? 'Catálogo B2B' : 'B2B catalog'}</a></li>
               <li>
                 <a href={lang === 'es' ? '/tracking' : '/en/tracking'}
                   className="text-gray-500 hover:text-cbc-yellow transition-colors">

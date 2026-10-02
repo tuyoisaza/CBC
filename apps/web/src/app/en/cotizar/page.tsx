@@ -1,3 +1,5 @@
+import { requestedQuantity } from '@/lib/extra-catalog'
+import { CatalogNav } from '@/components/catalog/CatalogNav'
 import Link from 'next/link'
 import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
@@ -12,7 +14,7 @@ const PUBLIC_KEYS = ['MIN_PRODUCTION_DAYS', 'RUSH_DAYS_THRESHOLD', 'RUSH_MIN_PRO
 export default async function CotizarPageEn({
   searchParams,
 }: {
-  searchParams: Promise<{ product?: string }>
+  searchParams: Promise<{ product?: string; extra?: string; method?: string; qty?: string }>
 }) {
   const [methods, extras, shippingZones, volumeDiscounts, products, settings, markupPct, wholesaleMarkupPct] = await withDbRetry(() =>
     Promise.all([
@@ -33,10 +35,15 @@ export default async function CotizarPageEn({
 
   const params = await searchParams
   const tr = (path: string) => t('en', path)
+  const selectedExtra = params.extra ? extras.find(extra => extra.id === params.extra || extra.slug === params.extra) : undefined
+  const selectedMethod = methods.find(method => method.id === params.method)
+  const minimum = selectedExtra?.minQty ?? Number(settingsMap.MIN_QTY_PER_METHOD ?? 10)
+  const quantity = requestedQuantity(params.qty, minimum)
 
   return (
-    <main className="min-h-screen bg-cbc-black py-24">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-cbc-black pb-24">
+      <CatalogNav lang="en" />
+      <div className="mx-auto max-w-4xl px-4 pt-12 sm:px-6 lg:px-8">
         <Link
           href="/en"
           className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
@@ -49,6 +56,10 @@ export default async function CotizarPageEn({
           <p className="text-gray-400">{tr('cotizar.subtitle')}</p>
         </div>
         <CotizadorWizard
+          key={`${params.product ?? ''}-${params.extra ?? ''}-${params.method ?? ''}-${quantity}`}
+          preselectedExtra={selectedExtra?.id}
+          preselectedMethod={selectedMethod?.id}
+          initialQuantity={quantity}
           methods={JSON.parse(JSON.stringify(methods))}
           extras={JSON.parse(JSON.stringify(extras))}
           shippingZones={JSON.parse(JSON.stringify(shippingZones))}

@@ -1,3 +1,4 @@
+import { CatalogNav } from '@/components/catalog/CatalogNav'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { t } from '@/lib/i18n'
 
@@ -9,6 +10,7 @@ export default function HomePageEn() {
   return (
     <>
       <main>
+        <CatalogNav lang="en" />
         <section className="relative overflow-hidden min-h-[90vh] flex items-center cbc-gradient">
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
             <div className="max-w-2xl animate-fade-in">
@@ -26,7 +28,7 @@ export default function HomePageEn() {
                    className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all">
                   {tr('home.getQuote')}
                 </a>
-                <a href="/en/cotizar"
+                <a href="/en/catalogo-b2b"
                    className="inline-flex items-center justify-center rounded-md border border-cbc-yellow/40 px-8 py-4 text-base font-semibold text-cbc-yellow hover:bg-cbc-yellow/10 transition-colors">
                   {tr('home.viewCatalog')}
                 </a>

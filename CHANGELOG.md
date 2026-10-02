@@ -6,6 +6,14 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.60 — B2B catalog and standalone extras
+
+- Separate Catálogo B2B from Cotizar, with searchable ES/EN catalog routes and full detail pages for existing methods/kits and extras.
+- Expand extra administration with multiple photos, cover ordering, long descriptions, visibility, standalone eligibility, rush eligibility, sale-unit labels, package contents and minimum quantities.
+- Allow extras-only and mixed quotes using one authoritative calculation service. Preserve kit-only volume discounts/free-shipping eligibility; calculate standalone shipping and rush fees without treating package contents as kit counts.
+- Snapshot piece/package presentation in quote lines and show extras in saved order details and sale-unit counts. Preserve legacy images, IDs, costs, quote history and current kit links.
+- Add schema migration, calculator/data/API/UI regression coverage, and an isolated PostgreSQL/browser smoke test. Release checks run the full test suite, TypeScript and production build before publishing.
+
 ## v1.6.59 — YouTube and Instagram product videos
 
 - Detect standard YouTube watch, short, live and embed links plus Instagram posts, Reels and TV posts; load the matching player in the product gallery.

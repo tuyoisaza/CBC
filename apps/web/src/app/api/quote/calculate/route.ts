@@ -2,110 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db, withDbRetry } from '@/lib/db'
 import { z } from 'zod'
 import { createLogger } from '@/lib/logger'
+import { calculateQuoteForSave, quoteSelectionSchema, QuoteValidationError } from '@/lib/quote-server-calculation'
 
 const log = createLogger('api/quote/calculate')
-
 export const dynamic = 'force-dynamic'
-
-const calcSchema = z.object({
-  items: z.array(z.object({
-    methodId: z.string(),
-    qty: z.number().int().positive(),
-  })).min(1, 'At least one item is required'),
-  extras: z.array(z.object({
-    extraId: z.string(),
-    qty: z.number().int().positive().default(1),
-  })).optional().default([]),
-  shippingZoneId: z.string(),
-  rush: z.boolean().default(false),
-})
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const parsed = calcSchema.parse(body)
-
-    const [methods, extras, zone, discounts, settings] = await withDbRetry(() =>
-      Promise.all([
-        db.method.findMany({ where: { id: { in: parsed.items.map(i => i.methodId) }, active: true } }),
-        db.extra.findMany({ where: { id: { in: parsed.extras.map(e => e.extraId) }, active: true } }),
-        db.shippingZone.findUnique({ where: { id: parsed.shippingZoneId } }),
-        db.volumeDiscount.findMany({ orderBy: { minQty: 'asc' } }),
-        db.setting.findMany({ where: { key: { in: ['RUSH_FEE_PCT', 'ADVANCE_PCT', 'IVA_PCT', 'wholesale_markup_pct'] } } }),
-      ]),
-    )
-
-    if (!zone || !zone.active || zone.name === 'Interior del país' || !['CDMX / Área Metropolitana', 'Recolección (sin envío)'].includes(zone.name)) return NextResponse.json({ error: 'Invalid or unavailable shipping zone' }, { status: 400 })
-
-    const foundMethodIds = new Set(methods.map(m => m.id))
-    const missingMethods = parsed.items.filter(i => !foundMethodIds.has(i.methodId))
-    if (missingMethods.length > 0) {
-      return NextResponse.json({ error: 'Invalid methods', details: missingMethods.map(i => i.methodId) }, { status: 400 })
-    }
-
-    const foundExtraIds = new Set(extras.map(e => e.id))
-    const missingExtras = parsed.extras.filter(e => !foundExtraIds.has(e.extraId))
-    if (missingExtras.length > 0) {
-      return NextResponse.json({ error: 'Invalid extras', details: missingExtras.map(e => e.extraId) }, { status: 400 })
-    }
-    if (parsed.rush && extras.some((extra) => !extra.allowedForRush)) {
-      return NextResponse.json({ error: 'One or more extras are unavailable for rush orders' }, { status: 400 })
-    }
-
-    const settingsMap = Object.fromEntries(settings.map(s => [s.key, s.value]))
-
-    // Wholesale markup applied on top of each method and extra's base cost — configurable
-    // in Admin → Settings, independent from the single-purchase retail markup.
-    const wholesaleMarkupPct = Number(settingsMap['wholesale_markup_pct'] ?? 0)
-    const wholesaleUnitPrice = (basePrice: number) => basePrice * (1 + wholesaleMarkupPct / 100)
-
-    const methodMap = new Map(methods.map(m => [m.id, m]))
-    const subtotal = parsed.items.reduce((sum, item) => {
-      return sum + wholesaleUnitPrice(methodMap.get(item.methodId)!.unitPrice) * item.qty
-    }, 0)
-
-    const totalUnits = parsed.items.reduce((sum, i) => sum + i.qty, 0)
-    const discountTier = discounts.filter(d => d.minQty <= totalUnits && (d.maxQty === null || d.maxQty >= totalUnits)).at(-1)
-    const discountPct = discountTier?.discountPct ?? 0
-    const discount = subtotal * (discountPct / 100)
-
-    const extraMap = new Map(extras.map(e => [e.id, e]))
-    const extrasTotal = parsed.extras.reduce((sum, item) => {
-      return sum + wholesaleUnitPrice(extraMap.get(item.extraId)!.unitPrice) * item.qty
-    }, 0)
-
-    const shippingFee = zone.name === 'CDMX / Área Metropolitana' && totalUnits >= 15
-      ? 0
-      : zone.baseFee + zone.feePerUnit * totalUnits
-
-    const rushFeePct = Number(settingsMap['RUSH_FEE_PCT'] ?? 40)
-    const rushFee = parsed.rush ? (subtotal - discount) * (rushFeePct / 100) : 0
-
-    const ivaPct = Number(settingsMap['IVA_PCT'] ?? 16)
-    const afterDiscount = subtotal - discount + extrasTotal + shippingFee + rushFee
-    const iva = afterDiscount * (ivaPct / 100)
-    const total = afterDiscount + iva
-
-    const advancePct = Number(settingsMap['ADVANCE_PCT'] ?? 50)
-    const advanceAmount = total * (advancePct / 100)
-
-    return NextResponse.json({
-      subtotal,
-      discount,
-      discountPct,
-      extrasTotal,
-      shippingFee,
-      rushFee,
-      iva,
-      total,
-      advancePct,
-      advanceAmount,
-    })
+    const input = quoteSelectionSchema.parse(await req.json())
+    const result = await withDbRetry(() => calculateQuoteForSave(db, input))
+    const { subtotal, discount, discountPct, extrasTotal, shippingFee, rushFee, iva, total, advancePct, advanceAmount } = result
+    return NextResponse.json({ subtotal, discount, discountPct, extrasTotal, shippingFee, rushFee, iva, total, advancePct, advanceAmount })
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
-    }
+    if (error instanceof z.ZodError) return NextResponse.json({ error: 'Datos de cotización inválidos', details: error.errors }, { status: 400 })
+    if (error instanceof QuoteValidationError) return NextResponse.json({ error: error.message }, { status: 400 })
     log.error({ path: '/api/quote/calculate', method: 'POST', error }, 'Failed to calculate quote')
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: 'No se pudo calcular la cotización.' }, { status: 500 })
   }
 }

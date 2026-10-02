@@ -35,7 +35,7 @@ it('shows extra prices with markup and IVA while submitting only catalog selecti
   fireEvent.click(within(freeRow).getByRole('button'))
   fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
   fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
-  expect(screen.getByText('2 × $139.20 (con IVA)')).toBeInTheDocument()
+  expect(screen.getByText(/2 × \$139\.20 \(con IVA\)/)).toBeInTheDocument()
 
   fireEvent.change(screen.getByPlaceholderText('Tu empresa'), { target: { value: 'CBC' } })
   fireEvent.change(screen.getByPlaceholderText('Tu nombre'), { target: { value: 'Cliente' } })

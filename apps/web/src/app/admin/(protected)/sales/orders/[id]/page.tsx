@@ -1,3 +1,4 @@
+import { QuoteDetails } from '@/components/admin/sales/QuoteDetails'
 import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -101,6 +102,8 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           )}
         </div>
       </div>
+
+      <QuoteDetails quote={order.quote} />
 
       {/* CFDI section */}
       <div className="rounded-xl border border-border bg-card p-5">

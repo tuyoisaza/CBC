@@ -1,3 +1,4 @@
+import { quoteSaleUnits } from '@/lib/quote-records'
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import { OrderRevenueClassification } from '@/components/admin/sales/OrderRevenueClassification'
@@ -24,7 +25,7 @@ export default async function OrdersPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {['Código','Empresa','Cajas','Total MXN','Estado','Fecha','Clasificación'].map(h => (
+              {['Código','Empresa','Unidades de venta','Total MXN','Estado','Fecha','Clasificación'].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
               ))}
             </tr>
@@ -36,7 +37,7 @@ export default async function OrdersPage() {
                   <Link href={`/admin/sales/orders/${o.id}`} className="font-mono text-xs text-primary hover:underline">{o.orderCode}</Link>
                 </td>
                 <td className="px-4 py-3 font-medium text-foreground">{o.customer.companyName}</td>
-                <td className="px-4 py-3 text-muted-foreground">{(o.quote.items as any[]).reduce((s,i)=>s+i.quantity,0)}</td>
+                <td className="px-4 py-3 text-muted-foreground">{quoteSaleUnits(o.quote)}</td>
                 <td className="px-4 py-3 font-semibold text-foreground">${o.quote.total.toLocaleString('es-MX')}</td>
                 <td className="px-4 py-3">
                   <span className="rounded-full bg-primary/10 text-primary text-xs px-2 py-0.5 font-medium">

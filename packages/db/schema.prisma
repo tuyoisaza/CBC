@@ -286,6 +286,14 @@ model Method {
 }
 
 model Extra {
+  slug        String?  @unique
+  shortDescription String?
+  images      String[] @default([])
+  catalogVisible Boolean @default(true)
+  sellableStandalone Boolean @default(true)
+  unitLabel   String   @default("pieza")
+  unitsPerPack Int     @default(1)
+  minQty      Int      @default(1)
   id          String   @id @default(cuid())
   name        String
   description String?

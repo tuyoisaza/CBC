@@ -131,7 +131,7 @@ export default async function ProductDetailPage({
                 Cotizar
               </Link>
               <Link
-                href="/cotizar"
+                href="/catalogo-b2b"
                 className="inline-flex items-center justify-center rounded-md border border-cbc-yellow/40 px-8 py-4 text-base font-semibold text-cbc-yellow hover:bg-cbc-yellow/10 transition-colors"
               >
                 Ver Catálogo B2B

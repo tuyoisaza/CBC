@@ -1,3 +1,4 @@
+import { CatalogNav } from '@/components/catalog/CatalogNav'
 import Link from 'next/link'
 import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
@@ -52,6 +53,7 @@ export default async function HomePage() {
   return (
     <>
       <main>
+        <CatalogNav lang="es" />
         <section className="relative overflow-hidden cbc-gradient">
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
             <div className="max-w-2xl animate-fade-in">
@@ -178,7 +180,7 @@ export default async function HomePage() {
                    className="inline-flex items-center justify-center gap-2 rounded-md bg-cbc-yellow px-8 py-4 text-base font-semibold text-black hover:bg-cbc-yellow/90 transition-all hover:shadow-lg focus-visible:ring-2 focus-visible:ring-cbc-yellow">
                   {tr('home.talkToSales')}
                 </a>
-                <a href="/cotizar"
+                <a href="/catalogo-b2b"
                    className="inline-flex items-center justify-center rounded-md border border-cbc-yellow/40 px-8 py-4 text-base font-semibold text-cbc-yellow hover:bg-cbc-yellow/10 transition-colors">
                   {tr('home.viewCatalog')}
                 </a>

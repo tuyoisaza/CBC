@@ -3,20 +3,14 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { extraWriteSchema, extraWriteData } from '@/lib/extra-schema'
 import { createLogger } from '@/lib/logger'
 
 const log = createLogger('admin/extras')
 
 export const dynamic = 'force-dynamic'
 
-const schema = z.object({
-  name: z.string().min(1),
-  description: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
-  unitPrice: z.number().finite().nonnegative(),
-  active: z.boolean().optional(),
-  sortOrder: z.number().int().optional(),
-})
+const schema = extraWriteSchema
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -26,6 +20,7 @@ export async function GET() {
     const items = await db.extra.findMany({ orderBy: { sortOrder: 'asc' } })
     return NextResponse.json(items)
   } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') return NextResponse.json({ error: 'Ese enlace ya está en uso. Elige otro.' }, { status: 409 })
     log.error({ path: '/api/admin/extras', method: 'GET', error }, 'Failed to fetch extras')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
@@ -37,13 +32,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const data = schema.parse(body)
+    const data = extraWriteData(schema.parse(body))
     const item = await db.extra.create({ data })
     return NextResponse.json(item, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
     }
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') return NextResponse.json({ error: 'Ese enlace ya está en uso. Elige otro.' }, { status: 409 })
     log.error({ path: '/api/admin/extras', method: 'POST', error }, 'Failed to create extra')
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }

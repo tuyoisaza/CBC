@@ -85,7 +85,7 @@ export async function submitQuote(input: z.infer<typeof submitQuoteSchema>) {
       }),
       ...quoteCalc.extras.map((e) => {
         const x = eById.get(e.extraId)
-        return { name: x?.name ?? e.name, description: x?.description ?? null, imageUrl: x?.imageUrl ?? null, qty: e.qty }
+        return { name: e.description, description: x?.description ?? null, imageUrl: x?.images?.[0] ?? x?.imageUrl ?? null, qty: e.qty }
       }),
     ]
     await sendQuoteToCustomer({

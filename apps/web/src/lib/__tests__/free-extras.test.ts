@@ -10,7 +10,7 @@ vi.mock('@/lib/db', () => ({
   db: {
     extra: { create: mocks.create, update: mocks.update, findMany: mocks.extras },
     method: { findMany: mocks.methods },
-    shippingZone: { findUnique: mocks.zone },
+    shippingZone: { findFirst: mocks.zone },
     volumeDiscount: { findMany: mocks.discounts },
     setting: { findMany: mocks.settings },
   },
@@ -37,6 +37,7 @@ describe('free extras', () => {
     mocks.zone.mockResolvedValue({ id: 'zone', name: 'Recolección (sin envío)', active: true, baseFee: 0, feePerUnit: 0 })
     mocks.discounts.mockResolvedValue([])
     mocks.settings.mockResolvedValue([
+      { key: 'MIN_QTY_PER_METHOD', value: '1' },
       { key: 'wholesale_markup_pct', value: '20' },
       { key: 'IVA_PCT', value: '16' },
       { key: 'ADVANCE_PCT', value: '50' },
@@ -83,6 +84,7 @@ describe('free extras', () => {
     mocks.zone.mockResolvedValue({ id: 'zone', name: 'Recolección (sin envío)', active: true, baseFee: 50, feePerUnit: 2 })
     mocks.discounts.mockResolvedValue([{ minQty: 10, maxQty: null, discountPct: 10 }])
     mocks.settings.mockResolvedValue([
+      { key: 'MIN_QTY_PER_METHOD', value: '1' },
       { key: 'wholesale_markup_pct', value: '20' },
       { key: 'IVA_PCT', value: '16' },
       { key: 'RUSH_FEE_PCT', value: '40' },

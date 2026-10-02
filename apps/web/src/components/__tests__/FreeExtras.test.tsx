@@ -19,8 +19,9 @@ it('saves a new free extra as zero and lets the admin switch back to a paid pric
   expect(screen.getByRole('checkbox', { name: 'Gratis' })).not.toBeChecked()
   fireEvent.change(price, { target: { value: '0' } })
   expect(screen.getByRole('checkbox', { name: 'Gratis' })).toBeChecked()
+  fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Tarjeta' } })
   fireEvent.click(screen.getByRole('button', { name: 'Crear' }))
-  await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/admin/extras', expect.objectContaining({ method: 'POST', body: JSON.stringify({ unitPrice: 0 }) })))
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/admin/extras', expect.objectContaining({ method: 'POST', body: expect.stringContaining('\"unitPrice\":0') })))
 })
 
 it('recognizes an existing free extra when editing', async () => {

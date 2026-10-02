@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 import { createLogger } from '@/lib/logger'
 import { notifyNewQuote, sendLeadAutoAck } from '@/lib/notifications'
-import { calculateQuoteForSave, quoteSelectionSchema } from '@/lib/quote-server-calculation'
+import { calculateQuoteForSave, quoteSelectionSchema, QuoteValidationError } from '@/lib/quote-server-calculation'
 
 const log = createLogger('api/quote/submit')
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      return { quoteId: quote.id, leadId: lead.id, quoteCode, companyName: parsed.companyName, contactName: parsed.contactName, email: parsed.email, whatsapp: parsed.whatsapp, total: quoteCalc.total, items: quoteCalc.items }
+      return { quoteId: quote.id, leadId: lead.id, quoteCode, companyName: parsed.companyName, contactName: parsed.contactName, email: parsed.email, whatsapp: parsed.whatsapp, total: quoteCalc.total, items: quoteCalc.items, extras: quoteCalc.extras }
     })
 
     notifyNewQuote({
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       whatsapp: result.whatsapp,
       total: result.total,
       quoteCode: result.quoteCode,
-      items: result.items.map((i: any) => `${i.qty}× ${i.methodName}`).join(', '),
+      items: [...result.items.map((i: any) => `${i.qty}× ${i.methodName}`), ...result.extras.map((i: any) => `${i.qty}× ${i.description}`)].join(', '),
     }).catch(() => {})
 
     // Speed-to-lead: instant acknowledgment in Lorena's voice (never prices).
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
     }
-    if (error instanceof Error && /Invalid|requires|allowed for rush|requires at least/.test(error.message)) {
+    if (error instanceof QuoteValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
     log.error({ path: '/api/quote/submit', method: 'POST', error }, 'Failed to submit quote')

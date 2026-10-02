@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Check, ChevronLeft, ChevronRight, Plus, X, Package, Sparkles, Truck, FileText, CheckCircle, Minus } from 'lucide-react'
+import { catalogImages, saleUnit, requestedQuantity, deliveryDateAfter } from '@/lib/extra-catalog'
 import { submitQuote } from '../actions/submitQuote'
 
 interface Method {
   id: string; name: string; unitPrice: number; imageUrl?: string | null
 }
 interface Extra {
-  id: string; name: string; unitPrice: number; imageUrl?: string | null; allowedForRush?: boolean
+  id: string; name: string; unitPrice: number; imageUrl?: string | null; images?: string[]; description?: string | null; shortDescription?: string | null; slug?: string | null; unitLabel?: string; unitsPerPack?: number; minQty?: number; sellableStandalone?: boolean; allowedForRush?: boolean
 }
 interface ShippingZone {
   id: string; name: string; baseFee: number; feePerUnit: number
@@ -32,6 +33,9 @@ interface WizardProps {
   volumeDiscounts: VolumeDiscount[]
   products: Product[]
   settings: Record<string, string>
+  preselectedExtra?: string
+  preselectedMethod?: string
+  initialQuantity?: number
   preselectedProduct?: string
 }
 
@@ -80,20 +84,20 @@ const wholesalePrice = (basePrice: number, wholesaleMarkupPct: number, ivaPct: n
 
 const STEPS = [
   { id: 0, label: 'Productos', icon: Package },
-  { id: 1, label: 'Extras', icon: Sparkles },
+  { id: 1, label: 'Accesorios y extras', icon: Sparkles },
   { id: 2, label: 'Envío', icon: Truck },
   { id: 3, label: 'Resumen', icon: FileText },
   { id: 4, label: 'Listo', icon: CheckCircle },
 ]
 
-export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscounts, products, settings, preselectedProduct }: WizardProps) {
+export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscounts, products, settings, preselectedProduct, preselectedExtra, preselectedMethod, initialQuantity }: WizardProps) {
   const minQty = Number(settings.MIN_QTY_PER_METHOD ?? 10)
   const markupPct = Number(settings.SINGLE_PURCHASE_MARKUP_PCT ?? 20)
   const wholesaleMarkupPct = Number(settings.WHOLESALE_MARKUP_PCT ?? 0)
   const ivaPct = Number(settings.IVA_PCT ?? 16)
   const tiers = [...volumeDiscounts].sort((a, b) => a.minQty - b.minQty)
 
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(preselectedExtra && extras.find(extra => extra.id === preselectedExtra)?.sellableStandalone !== false ? 1 : 0)
   const [lightbox, setLightbox] = useState<string | null>(null)
 
   // Clickable thumbnail — opens the image full-size in an overlay.
@@ -111,31 +115,40 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
   // matching what /api/quote/calculate actually uses. Tax and retail markup are only
   // applied at display time, never stored in state, so numbers never drift apart.
   const [items, setItems] = useState<QuoteItem[]>(() => {
+    const directMethod = methods.find(method => method.id === preselectedMethod)
+    if (directMethod) {
+      const qty = requestedQuantity(String(initialQuantity), minQty)
+      return [{ methodId: directMethod.id, methodName: directMethod.name, qty, unitPrice: directMethod.unitPrice, lineTotal: directMethod.unitPrice * qty }]
+    }
     if (preselectedProduct) {
       const prod = products.find((p) => p.slug === preselectedProduct || p.id === preselectedProduct)
       if (prod && prod.methodId) {
         const method = methods.find((m) => m.id === prod.methodId)
         if (method) {
-          return [{ methodId: method.id, methodName: method.name, qty: minQty, unitPrice: method.unitPrice, lineTotal: method.unitPrice * minQty }]
+          return [{ methodId: method.id, methodName: method.name, qty: requestedQuantity(String(initialQuantity), minQty), unitPrice: method.unitPrice, lineTotal: method.unitPrice * requestedQuantity(String(initialQuantity), minQty) }]
         }
       }
     }
     return []
   })
-  const [selectedExtras, setSelectedExtras] = useState<QuoteExtra[]>([])
+  const [selectedExtras, setSelectedExtras] = useState<QuoteExtra[]>(() => {
+    const extra = extras.find(item => item.id === preselectedExtra)
+    if (!extra) return []
+    const qty = requestedQuantity(String(initialQuantity), extra.minQty ?? 1)
+    return [{ extraId: extra.id, name: extra.name, qty, unitPrice: extra.unitPrice, lineTotal: extra.unitPrice * qty }]
+  })
   const [shippingZoneId, setShippingZoneId] = useState(shippingZones.length > 0 ? shippingZones[0].id : '')
-  const [deliveryDate, setDeliveryDate] = useState('')
+  const [deliveryDate, setDeliveryDate] = useState(() => deliveryDateAfter(Number(settings.MIN_PRODUCTION_DAYS ?? 15)))
   const [rush, setRush] = useState(false)
   const rushExtras = extras.filter((extra) => !rush || extra.allowedForRush !== false)
-  const minDeliveryDate = new Date()
-  minDeliveryDate.setDate(minDeliveryDate.getDate() + Number(rush ? settings.RUSH_MIN_PRODUCTION_DAYS ?? 5 : settings.MIN_PRODUCTION_DAYS ?? 15))
-  const minDeliveryDateString = `${minDeliveryDate.getFullYear()}-${String(minDeliveryDate.getMonth() + 1).padStart(2, '0')}-${String(minDeliveryDate.getDate()).padStart(2, '0')}`
+  const minDeliveryDateString = deliveryDateAfter(Number(rush ? settings.RUSH_MIN_PRODUCTION_DAYS ?? 5 : settings.MIN_PRODUCTION_DAYS ?? 15))
   const [companyName, setCompanyName] = useState('')
   const [contactName, setContactName] = useState('')
   const [email, setEmail] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [calc, setCalc] = useState<CalcResult | null>(null)
   const [calcLoading, setCalcLoading] = useState(false)
+  const [calcError, setCalcError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [result, setResult] = useState<{ quoteId: string; quoteCode: string } | null>(null)
@@ -153,30 +166,37 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
       items: items.map((i) => ({ methodId: i.methodId, qty: i.qty })),
       extras: selectedExtras.map((e) => ({ extraId: e.extraId, qty: e.qty })),
       shippingZoneId,
+      deliveryDate: deliveryDate || undefined,
       rush,
     }
-  }, [items, selectedExtras, shippingZoneId, rush])
+  }, [items, selectedExtras, shippingZoneId, rush, deliveryDate])
 
   useEffect(() => {
-    if (items.length === 0 || !shippingZoneId) return
+    let current = true
+    const controller = new AbortController()
+    setCalc(null); setCalcError('')
+    if ((!items.length && !selectedExtras.length) || !shippingZoneId) { setCalcLoading(false); return }
     setCalcLoading(true)
     fetch('/api/quote/calculate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(calcPayload()),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(calcPayload()), signal: controller.signal,
     })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) return
-        setCalc(data)
+      .then(async response => {
+        const data = await response.json()
+        if (response.ok === false || data.error) throw new Error(data.error || 'No se pudo calcular la cotización.')
+        if (current) setCalc(data)
       })
-      .catch(() => {})
-      .finally(() => setCalcLoading(false))
+      .catch(error => { if (current) setCalcError(error instanceof Error ? error.message : 'Error al calcular.') })
+      .finally(() => { if (current) setCalcLoading(false) })
+    return () => { current = false; controller.abort() }
   }, [calcPayload])
 
   function addItem() {
-    const method = methods[0]
-    if (!method) return
+    const method = methods.find(candidate => !items.some(item => item.methodId === candidate.id))
+    if (!method) {
+      if (items[0]) updateItem(0, 'qty', items[0].qty + minQty)
+      return
+    }
     setItems([...items, { methodId: method.id, methodName: method.name, qty: minQty, unitPrice: method.unitPrice, lineTotal: method.unitPrice * minQty }])
   }
 
@@ -187,6 +207,13 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
   function updateItem(i: number, field: 'methodId' | 'qty', value: string | number) {
     const copy = [...items]
     if (field === 'methodId') {
+      const existing = copy.findIndex((item, index) => index !== i && item.methodId === value)
+      if (existing >= 0) {
+        copy[existing] = { ...copy[existing], qty: copy[existing].qty + copy[i].qty }
+        copy[existing].lineTotal = copy[existing].unitPrice * copy[existing].qty
+        setItems(copy.filter((_, index) => index !== i))
+        return
+      }
       const method = methods.find((m) => m.id === value)
       if (method) {
         copy[i] = { ...copy[i], methodId: method.id, methodName: method.name, unitPrice: method.unitPrice, lineTotal: method.unitPrice * copy[i].qty }
@@ -202,7 +229,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
     if (existing) {
       setSelectedExtras(selectedExtras.filter((e) => e.extraId !== extra.id))
     } else {
-      setSelectedExtras([...selectedExtras, { extraId: extra.id, name: extra.name, qty: 1, unitPrice: extra.unitPrice, lineTotal: extra.unitPrice }])
+      setSelectedExtras([...selectedExtras, { extraId: extra.id, name: extra.name, qty: extra.minQty ?? 1, unitPrice: extra.unitPrice, lineTotal: extra.unitPrice * (extra.minQty ?? 1) }])
     }
   }
 
@@ -212,29 +239,34 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
       const removed = selectedExtras.filter((extra) => extras.find((item) => item.id === extra.extraId)?.allowedForRush === false)
       if (removed.length) {
         setSelectedExtras((current) => current.filter((extra) => !removed.some((item) => item.extraId === extra.extraId)))
-        window.alert('La tampografía se quitó porque no está disponible para pedidos urgentes.')
+        window.alert('Se quitaron los complementos no disponibles para pedidos urgentes.')
       }
     }
-    const nextMinimum = new Date()
-    nextMinimum.setDate(nextMinimum.getDate() + Number(enabled ? settings.RUSH_MIN_PRODUCTION_DAYS ?? 5 : settings.MIN_PRODUCTION_DAYS ?? 15))
-    const nextMinimumString = `${nextMinimum.getFullYear()}-${String(nextMinimum.getMonth() + 1).padStart(2, '0')}-${String(nextMinimum.getDate()).padStart(2, '0')}`
-    if (deliveryDate && deliveryDate < nextMinimumString) setDeliveryDate('')
+    const nextMinimumString = deliveryDateAfter(Number(enabled ? settings.RUSH_MIN_PRODUCTION_DAYS ?? 5 : settings.MIN_PRODUCTION_DAYS ?? 15))
+    if (!deliveryDate || deliveryDate < nextMinimumString) setDeliveryDate(nextMinimumString)
   }
 
   function updateExtraQty(extraId: string, qty: number) {
     setSelectedExtras(selectedExtras.map((e) => e.extraId === extraId ? { ...e, qty, lineTotal: e.unitPrice * qty } : e))
   }
 
+  const validSelection = (items.length > 0 || selectedExtras.length > 0)
+    && items.every(item => Number.isSafeInteger(item.qty) && item.qty >= minQty && item.qty <= 100000)
+    && selectedExtras.every(item => {
+      const extra = extras.find(candidate => candidate.id === item.extraId)
+      return !!extra && Number.isSafeInteger(item.qty) && item.qty >= (extra.minQty ?? 1) && item.qty <= 100000
+        && (items.length > 0 || extra.sellableStandalone !== false) && (!rush || extra.allowedForRush !== false)
+    })
   const canContinue = (() => {
-    if (step === 0) return items.length > 0 && items.every((i) => i.qty >= minQty)
-    if (step === 3) {
-      return !!(companyName.trim() && contactName.trim() && isValidEmail(email) && isValidWhatsapp(whatsapp))
-    }
+    if (step === 0) return items.every(item => item.qty >= minQty && item.qty <= 100000)
+    if (step === 1) return validSelection
+    if (step === 2) return validSelection && !!shippingZoneId && !!deliveryDate && deliveryDate >= minDeliveryDateString
+    if (step === 3) return validSelection && !!(companyName.trim() && contactName.trim() && isValidEmail(email) && isValidWhatsapp(whatsapp))
     return true
   })()
 
   async function handleSubmit() {
-    if (!calc) return
+    if (!calc || calcLoading || calcError || !validSelection) return
     setSubmitting(true)
     setSubmitError('')
     try {
@@ -276,6 +308,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
       </div>
 
       <div className="p-6 sm:p-8">
+        {calcError && <p role="alert" className="mb-4 rounded-lg border border-red-800 p-3 text-sm text-red-300">{calcError}</p>}
         {step < 4 && (
           <h2 className="text-xl font-bold text-cbc-cream mb-6">{STEPS[step].label}</h2>
         )}
@@ -283,6 +316,10 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
         {/* Step 0: Products */}
         {step === 0 && (
           <div className="space-y-6">
+            <div className="rounded-lg border border-gray-700 p-4 text-sm text-gray-300">
+              <p>¿Solo necesitas filtros, accesorios o piezas sueltas?</p>
+              <button type="button" onClick={() => setStep(1)} className="mt-2 text-cbc-yellow underline">Cotizar accesorios sin un kit</button>
+            </div>
             {/* Predefined boxes */}
             {products.length > 0 && (
               <div>
@@ -407,27 +444,31 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
               const isSelected = selectedExtras.some((e) => e.extraId === extra.id)
               return (
                 <div key={extra.id}
-                  className={`flex items-center gap-4 rounded-xl border p-4 transition-colors ${
+                  className={`flex flex-wrap items-center gap-4 rounded-xl border p-4 transition-colors ${
                     isSelected ? 'border-cbc-yellow bg-cbc-yellow/10' : 'border-gray-700 bg-cbc-black'
                   }`}>
-                  <button type="button" onClick={() => toggleExtra(extra)}
+                  <button type="button" aria-label={`Seleccionar ${extra.name}`} disabled={!items.length && extra.sellableStandalone === false && !isSelected} onClick={() => toggleExtra(extra)}
                     className={`h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
                       isSelected ? 'bg-cbc-yellow border-cbc-yellow' : 'border-gray-500'
                     }`}>
                     {isSelected && <Check className="h-3 w-3 text-black" />}
                   </button>
-                  {extra.imageUrl && thumb(extra.imageUrl, 'h-10 w-10')}
+                  {catalogImages(extra)[0] && thumb(catalogImages(extra)[0], 'h-10 w-10')}
                   <div className="flex-1">
                     <span className="text-sm font-medium text-cbc-cream">{extra.name}</span>
                     <span className="text-xs text-gray-400 ml-2">{extra.unitPrice === 0 ? 'Gratis' : `+${fmt(wholesalePrice(extra.unitPrice, wholesaleMarkupPct, ivaPct))} c/u (con IVA)`}</span>
+                    <p className="mt-1 text-xs text-gray-400">{saleUnit(extra)} · Mínimo {extra.minQty ?? 1}</p>
+                    {(extra.shortDescription || extra.description) && <p className="mt-2 whitespace-pre-wrap text-xs text-gray-400">{extra.shortDescription || extra.description}</p>}
+                    {!items.length && extra.sellableStandalone === false && <p className="mt-1 text-xs text-amber-300">Este complemento requiere agregar un kit.</p>}
+                    {isSelected && (extra.unitsPerPack ?? 1) > 1 && <p className="mt-1 text-xs text-cbc-yellow">{selectedExtras.find(item => item.extraId === extra.id)?.qty} × {extra.unitsPerPack} = {((selectedExtras.find(item => item.extraId === extra.id)?.qty ?? 0) * (extra.unitsPerPack ?? 1)).toLocaleString('es-MX')} piezas en total</p>}
                   </div>
                   {isSelected && (
                     <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => updateExtraQty(extra.id, Math.max(1, (selectedExtras.find((e) => e.extraId === extra.id)?.qty ?? 1) - 1))}
+                      <button type="button" onClick={() => updateExtraQty(extra.id, Math.max(extra.minQty ?? 1, (selectedExtras.find((e) => e.extraId === extra.id)?.qty ?? 1) - 1))}
                         className="p-1 text-gray-400 hover:text-cbc-cream">
                         <Minus className="h-3.5 w-3.5" />
                       </button>
-                      <span className="text-white text-sm w-6 text-center">{selectedExtras.find((e) => e.extraId === extra.id)?.qty ?? 1}</span>
+                      <input type="number" aria-label={`Cantidad de ${extra.name}`} min={extra.minQty ?? 1} max={100000} step={1} value={selectedExtras.find(e => e.extraId === extra.id)?.qty || ''} onChange={event => updateExtraQty(extra.id, Number(event.target.value))} className="w-20 rounded border border-gray-700 bg-cbc-black px-2 py-1 text-center text-sm text-white" />
                       <button type="button" onClick={() => updateExtraQty(extra.id, (selectedExtras.find((e) => e.extraId === extra.id)?.qty ?? 1) + 1)}
                         className="p-1 text-gray-400 hover:text-cbc-cream">
                         <Plus className="h-3.5 w-3.5" />
@@ -467,8 +508,8 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Fecha de entrega deseada</label>
-              <input type="date" min={minDeliveryDateString} value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)}
+              <label htmlFor="delivery-date" className="block text-sm font-medium text-gray-300 mb-2">Fecha de entrega deseada</label>
+              <input id="delivery-date" type="date" min={minDeliveryDateString} value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)}
                 className="w-full bg-cbc-black border border-gray-700 rounded-md px-4 py-3 text-white focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none" />
               <p className="mt-2 text-xs text-gray-400">{rush ? 'Disponible desde 5 días después de realizar tu pedido. Aplican restricciones de personalización y recargo.' : 'Primera fecha disponible: 15 días después de realizar tu pedido.'}</p>
             </div>
@@ -481,7 +522,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
               </label>
               <div>
                 <span className="text-sm text-cbc-cream font-medium">Pedido urgente</span>
-                <p className="text-xs text-gray-400">Recargo del {settings.RUSH_FEE_PCT ?? 40}% sobre el subtotal con descuento</p>
+                <p className="text-xs text-gray-400">Recargo del {settings.RUSH_FEE_PCT ?? 40}% {items.length ? 'sobre el subtotal de kits con descuento' : 'sobre los accesorios'}</p>
               </div>
             </div>
           </div>
@@ -515,12 +556,12 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                   const unit = wholesalePrice(ex.unitPrice, wholesaleMarkupPct, ivaPct)
                   return (
                     <div key={`e-${i}`} className="flex items-center gap-3">
-                      {e?.imageUrl
-                        ? thumb(e.imageUrl, 'h-11 w-11')
+                      {e && catalogImages(e)[0]
+                        ? thumb(catalogImages(e)[0], 'h-11 w-11')
                         : <div className="h-11 w-11 rounded-md border border-gray-800 bg-gray-900 shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-cbc-cream truncate">{ex.name}</p>
-                        <p className="text-xs text-gray-400">{ex.qty} × {fmt(unit)} (con IVA)</p>
+                        <p className="text-xs text-gray-400">{ex.qty} × {fmt(unit)} (con IVA) · {saleUnit(e ?? {})}</p>
                       </div>
                       <span className="text-sm text-cbc-cream">{fmt(unit * ex.qty)}</span>
                     </div>
@@ -558,7 +599,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                     </div>
                   )}
                   <div className="flex justify-between text-gray-300">
-                    <span>IVA (16%)</span><span>{fmt(calc.iva)}</span>
+                    <span>IVA ({ivaPct}%)</span><span>{fmt(calc.iva)}</span>
                   </div>
                   <div className="border-t border-gray-700 pt-2 flex justify-between font-bold text-cbc-cream text-base">
                     <span>Total</span><span>{fmt(calc.total)}</span>
@@ -658,7 +699,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!canContinue || submitting || !calc}
+              disabled={!canContinue || submitting || !calc || calcLoading || !!calcError}
               className="flex items-center gap-2 rounded-lg bg-cbc-yellow text-black font-semibold px-6 py-2.5 text-sm hover:bg-cbc-yellow/90 disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Enviando...' : <Check className="h-4 w-4" />}

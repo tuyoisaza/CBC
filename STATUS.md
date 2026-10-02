@@ -1,9 +1,10 @@
 # STATUS — Coffee Bunn Café Platform
 
 ## Current Version
-v1.6.59 (tag `v1.6.59` — see `git describe --tags --abbrev=0`)
+v1.6.60 (tag `v1.6.60` — see `git describe --tags --abbrev=0`)
 
 ## Completed Slices
+- Standalone B2B catalog with distinct quote navigation, method/kit and extra detail pages, multi-photo extra editing, long descriptions and explicit piece/package presentations. Extras-only quotes share server-side validation and pricing with kit quotes and retain presentation in saved orders (v1.6.60). See `docs/deploy/b2b-extra-catalog.md`; release gated on full tests, TypeScript, production build and isolated browser/database smoke checks.
 - Product galleries detect YouTube and Instagram links, embed supported videos, and provide a direct new-tab fallback for restricted or unsupported embeds (v1.6.59).
 - Add a matching Italian moka homepage kit image using the French-press Domo box, elevated angle, red bow and a visible customizable postcard (v1.6.58).
 - Refine the French press kit homepage image from the team's supplied post: isolate and center the kit, remove surrounding post copy and enlarge the branded customizable postcard (v1.6.57).
