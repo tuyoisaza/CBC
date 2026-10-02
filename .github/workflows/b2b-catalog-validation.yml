@@ -67,8 +67,11 @@ jobs:
       - name: Validate additive migration with existing data
         run: |
           pnpm --filter @cbc/db exec prisma validate
+          node packages/db/prepare-extra-catalog.cjs
           pnpm --filter @cbc/db exec prisma db push --schema /tmp/cbc-baseline.prisma --skip-generate
           echo 'INSERT INTO "Extra" ("id", "name", "description", "imageUrl", "unitPrice", "updatedAt") VALUES ('"'qa-legacy', 'Legacy migration QA', 'Preserved description', 'https://example.com/old.png', 123.45, CURRENT_TIMESTAMP"');' | pnpm --filter @cbc/db exec prisma db execute --schema /tmp/cbc-baseline.prisma --stdin
+          node packages/db/prepare-extra-catalog.cjs
+          node packages/db/prepare-extra-catalog.cjs
           pnpm --filter @cbc/db exec prisma db push 2>&1 | tee /tmp/cbc-migration.log
           node - <<'JS'
           const assert = require('node:assert/strict')
