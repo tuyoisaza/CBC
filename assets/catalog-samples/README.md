@@ -2,11 +2,11 @@
 
 Colección inicial de seis muestras conceptuales generadas con la herramienta integrada image_gen, basadas en docs/brand/brand-book.md y docs/specs/product-gift-boxes.md. No se han cargado al administrador ni conectado a productos en producción.
 
-## Kit de prensa para homepage v1.6.56
+## Kit de prensa para homepage v1.6.57
 
-- `kit-prensa-homepage.png`: fotografía horizontal 16:9 conceptual, basada directamente en el kit de prensa del post de campaña aprobado, el logo oficial, la etiqueta Nayarit y la referencia de orientación de la caja Domo.
-- Incluye la prensa compacta con estructura abierta de plástico negro, bolsa negra Nayarit y una sola tarjeta tipo postcard de empresa (proporción objetivo 15 × 12 cm) con amarillo, carbón y crema, placeholders «TU LOGO AQUÍ» y «TU MENSAJE AQUÍ», y QR ilustrativo para receta en video.
-- Propuesta generada con IA; no representa fotografía verificada de inventario. El QR no es funcional y la tarjeta aún es un ejemplo visual. Revisar texto y medidas contra los artes finales antes de publicar.
+- `kit-prensa-homepage.png`: fotografía horizontal 16:9 conceptual, basada en el post de producto entregado por el equipo. Muestra únicamente el kit centrado, sin logotipo promocional ni textos alrededor.
+- Conserva la caja Domo con moño rojo, la prensa compacta con jaula de plástico negro y la bolsa Nayarit. Incluye una sola tarjeta postcard horizontal ligeramente ampliada, en amarillo, carbón y crema, con «Tu logo aquí» y «Tu mensaje aquí», acomodada en primer plano para mantener visibles ambos productos.
+- Propuesta generada con IA; no representa fotografía verificada de inventario. La tarjeta es un ejemplo visual y sus medidas finales deben confirmarse antes de producir.
 - La propuesta anterior de moka queda fuera de esta iteración mientras el equipo revisa primero el kit de prensa.
 
 - Prensa francesa: referencia de 350 ml; modelo ilustrativo.

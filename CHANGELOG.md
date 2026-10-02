@@ -6,6 +6,12 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.57 — Isolated French press kit homepage image
+
+- Refine the French press product image directly from the supplied approved post, removing its surrounding logo and promotional copy.
+- Enlarge the single landscape postcard, position it in the foreground, and use the brand yellow, charcoal and cream with «Tu logo aquí» and «Tu mensaje aquí» placeholders.
+- Keep the existing kit composition and both products recognizable in a homepage-ready 16:9 image.
+
 ## v1.6.56 — French press gift kit homepage image
 
 - Add a horizontal conceptual product image for the French press gift kit, following the approved campaign kit, Nayarit bag label, official logo and Domo box references.
