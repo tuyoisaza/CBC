@@ -1,22 +1,3 @@
-# Agent Instructions
-
-## Version bump rule
-
-When the current request authorizes a commit for a completed change, increment the patch version and begin the commit subject with that version. PHDK v2.31.1 is interactive and request-driven: historical standing authorization does not independently permit commits, tags, pushes, merges, or deployments. Each git action must be authorized by the current request. Continue the project's existing version series (`v1.6.x`) without reusing versions.
-
-- If the commit is a new feature: `v1.6.x feat: ...`
-- If the commit is a bug fix: `v1.6.x fix: ...`
-- Update the root `package.json` version, `STATUS.md`, and `CHANGELOG.md` to match the release.
-- A release tag must match `package.json`; create or push a tag only when the current request explicitly authorizes that release action.
-- The website reads the root `package.json` version at build time (see `apps/web/next.config.mjs`); keep it synchronized with the release tag.
-
-## General
-
-- Work interactively on the current explicit user request and stop after its deliverable.
-- Do not delegate to subagents, agent teams, or background workers.
-- Preserve owner pause/stop instructions; a maintenance request does not resume older work.
-- Keep the product and stack decisions in `ARCHITECTURE_DECISIONS.md`; historical workflow text does not grant current git or external-service permissions.
-
 <!-- PHDK-MANAGED:START -->
 ## PHDK managed rules — interactive-only
 
