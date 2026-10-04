@@ -1,7 +1,27 @@
 # STATUS — Coffee Bunn Café Platform
 
+## 2026-10-04 — PHDK standards maintenance
+
+PHDK standards: pre-versioned PHDK kit (no vendored standards) → v2.31.1
+Upstream: https://github.com/tuyoisaza/PHDK
+Upstream commit: a5f45b5d727c40eb2897f0eaf4fbe6fc310417e9
+Date: 2026-10-04
+Product version metadata: v1.6.61.
+
+Synchronized the 23 manifest mappings and the applicable native PHDK rules. The active
+rules now require interactive work on the current request, with no autopilot, delegation,
+background work, GitHub Actions, or scheduled execution. Existing stricter owner controls
+and product/stack decisions remain in force.
+
+Verification: all 23 vendored files match the pinned upstream sources byte-for-byte;
+native managed blocks match the canonical block; source/diff and path review completed.
+No application build, browser test, live-service probe, or deployment was used to verify
+this documentation maintenance. Conflicts: none in the inspected committed snapshot.
+The existing task file and product backlog remain unchanged and inactive; this sync does
+not resume earlier implementation work or establish production behavior.
+
 ## Current Version
-v1.6.60 (tag `v1.6.60` — see `git describe --tags --abbrev=0`)
+v1.6.61 (PHDK maintenance version; release tag not created by this sync)
 
 ## Completed Slices
 - Standalone B2B catalog with distinct quote navigation, method/kit and extra detail pages, multi-photo extra editing, long descriptions and explicit piece/package presentations. Extras-only quotes share server-side validation and pricing with kit quotes and retain presentation in saved orders (v1.6.60). See `docs/deploy/b2b-extra-catalog.md`; release gated on full tests, TypeScript, production build and isolated browser/database smoke checks.

@@ -6,6 +6,17 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.61 — 2026-10-04
+
+### Changed
+- Synchronize the existing PHDK integration to v2.31.1 from canonical upstream `a5f45b5d727c40eb2897f0eaf4fbe6fc310417e9` using its 23-file manifest.
+- Refresh active assistant rules for interactive, current-request execution and preserve stricter owner controls and product/stack decisions.
+- Retire earlier standing git/delegation permissions; retain the project's version-metadata requirements for authorized commits.
+
+### Verification
+- Vendored mappings and native managed blocks match upstream byte-for-byte; source/diff and path review completed.
+- Product code, dependencies, and existing workflow/deployment configuration are unchanged. No application build, browser test, or live-service check was run for this maintenance.
+
 ## v1.6.60 — B2B catalog and standalone extras
 
 - Separate Catálogo B2B from Cotizar, with searchable ES/EN catalog routes and full detail pages for existing methods/kits and extras.

@@ -1,0 +1,278 @@
+# VERIFICATION_LOOP.md
+
+## Purpose
+
+This file defines the evidence required to complete a code change within `EXECUTION_SCOPE.md`, the authoritative boundary for every PHDK agent.
+
+Verification uses repository review, static checks, local builds, and risk-triggered unit or in-process integration tests. A successful check proves only the behavior it actually exercised; it does not prove that a deployed application works.
+
+---
+
+## Core Rule
+
+"It should work" is not evidence. Use the smallest permitted check that answers the question:
+
+```txt
+source and diff review
+→ targeted static checks
+→ local build when affected
+→ local unit/in-process integration tests when risk requires them
+→ accurate report of evidence and remaining uncertainty
+```
+
+Do not launch an application for verification, call an application endpoint, connect to a database, probe a live service, or operate a cloud dashboard. This includes localhost HTTP probes, preview/staging/production services, customer accounts, OAuth providers, and metered APIs. Git/GitHub repository operations and an authorized push to an existing deployment pipeline remain governed by `EXECUTION_SCOPE.md` and the release standards.
+
+Browser verification is prohibited: no headed or headless browser, UI interaction, screenshots, browser-based E2E tests, Playwright, Puppeteer, Cypress, Selenium, browser-mode test runners, chrome-devtools, or browser MCP. Another skill, subagent, runner, or external tool cannot bypass this boundary.
+
+---
+
+## Code Verification Loop
+
+For every working slice:
+
+1. **Review the changed source and diff** against the requested behavior and security requirements.
+2. **Inspect commands before running them** so test, build, install, or hook scripts do not start browsers, reach services, perform migrations, provision infrastructure, or deploy.
+3. **Run targeted static checks** on the affected code while iterating.
+4. **Run the smallest local automated test** when `TESTING_STANDARD.md` identifies a risk trigger. Integrations run in process with test doubles for external dependencies, without a network listener or database connection.
+5. **Before push/release**, run the applicable repository static/build gate once. Documentation-only work needs source/diff and applicable formatting checks, not application test scaffolding.
+6. **Record actual results and limits** in the final report and `STATUS.md`. For UI or deployed behavior, state `visual/runtime unverified`.
+
+A human may independently examine the application. PHDK does not require that examination as a gate for continuing code work or a permitted GitHub push, and the agent must not claim to have performed it or assign it to the human merely to close a checklist.
+
+---
+
+## Command Strategy
+
+### During iteration
+
+Run only the checks needed to answer the current question, using the project's existing scripts:
+
+```txt
+git diff --check
+pnpm typecheck
+pnpm lint
+targeted package build when bundling is affected
+targeted local unit/in-process integration test when risk requires it
+```
+
+Do not repeatedly run install + full build + full test suites after every small edit.
+
+### Before push/release
+
+Run each applicable gate once:
+
+```txt
+pnpm install --frozen-lockfile   — only when dependency/lockfile verification is needed
+pnpm typecheck
+pnpm lint
+pnpm format:check
+pnpm build
+```
+
+The scripts must stay within `EXECUTION_SCOPE.md`. Use an existing offline/test configuration when available. If a command requires a browser, live database, provider credentials, network service, or deployment, do not run it; report the dependency and the verification gap. Do not alter production behavior or add an in-memory production fallback merely to make a check pass.
+
+Report risk-triggered test commands separately. Missing runtime evidence is not permission to add a service probe, recurring workflow, backup job, dependency bot, or browser harness.
+
+---
+
+## Product Health Check Standard
+
+The following sections specify application code for authorized product users and operators. They do not authorize PHDK agents to call these endpoints, press diagnostic buttons, retrieve live logs, or inspect a deployed service. Verify the implementation through source review and permitted local tests.
+
+### Public health
+
+Every API service implements a public, minimal endpoint:
+
+```txt
+GET /health
+```
+
+Example response contract:
+
+```json
+{
+  "status": "ok",
+  "service": "api",
+  "version": "vX.Y.Z",
+  "environment": "production"
+}
+```
+
+It must never expose secrets, configuration values, private data, or verbose internals. The example is a contract, not evidence of a running service.
+
+### Protected deep health
+
+Every app-style project implements an admin-protected endpoint:
+
+```txt
+GET /health/deep
+```
+
+Its safe response contract includes the **endpoint diagnostic registry** and, when applicable:
+
+- API/runtime status
+- database connectivity and migration state
+- auth/session configuration
+- required environment-variable presence — names/status only, never values
+- version, git SHA, build timestamp, environment, uptime
+- metered-provider configuration/circuit-breaker state without secrets or paid calls
+- latest safe probe results, when supplied by authorized product use
+- current correlation ID / diagnostic run ID
+
+Review these contracts and access controls in code. Local tests replace database, clock, environment, and provider adapters with deterministic doubles.
+
+---
+
+## Endpoint Diagnostic Registry
+
+Every API route that matters to product behavior registers diagnostic metadata once, close to the route/schema definition. The admin diagnostics UI and `/health/deep` consume that same metadata; do not maintain a second handwritten endpoint inventory.
+
+Minimum fields:
+
+```txt
+id
+method
+path
+purpose
+authRequired
+requiredRoles
+probeMode
+expectedStatuses
+sanitizedRequestExample
+sanitizedSuccessExample
+sanitizedErrorExamples
+```
+
+### Product probe modes
+
+Each endpoint is explicitly classified for authorized product use:
+
+- **safe_read** — no mutation or external cost.
+- **validation_only** — routing/auth/validation only; no side effect.
+- **dry_run** — a true rollback/sandbox/dry-run guarantee is required.
+- **manual_only** — destructive, financially consequential, privacy-sensitive, or otherwise unsafe for automatic execution.
+
+Product code must never automatically execute `manual_only` probes or call a metered API merely to make health green. A `safe_read` label is not permission for an agent to run the probe.
+
+---
+
+## Protected Product Probe Endpoint
+
+Authorized human-operated admin tooling may execute a named diagnostic probe through:
+
+```txt
+POST /health/deep/probes/:id
+```
+
+The implementation must:
+
+- require admin/developer authorization
+- honor the registered probe mode and reject unsafe automatic execution
+- return sanitized evidence, not unrestricted payloads
+- attach a correlation ID and record latency/outcome
+- exclude secrets, tokens, cookies, raw stack traces, and private response bodies
+
+Example response contract:
+
+```json
+{
+  "id": "reports.list",
+  "status": "pass",
+  "method": "GET",
+  "path": "/api/reports",
+  "httpStatus": 200,
+  "latencyMs": 87,
+  "correlationId": "req_82fd91"
+}
+```
+
+Test authorization, mode enforcement, and redaction locally when their risk changes. Use fake handlers and adapters; do not execute the product probe against a service.
+
+---
+
+## Product Admin Diagnostics
+
+For app-style projects, `/admin/system` or `/admin/debug` implements a Diagnostics section with:
+
+- human-triggered **Run safe probes** control
+- one row/card per registered endpoint: method, path, purpose, auth/role, probe mode
+- **Test** control only for modes permitted by the product's safety policy
+- expected statuses and sanitized request/success/error examples
+- last actual status, latency, correlation ID, and related safe log summary when available
+- **Copy diagnostics** action
+
+A human-supplied redacted report may provide context for a code fix. It does not authorize the agent to access the runtime, reproduce the incident in a browser, or trigger diagnostic actions. Never fabricate probe results when none exist.
+
+---
+
+## Verification by Slice Type
+
+### Foundation
+
+- [ ] Applicable typecheck/lint/format/build checks pass or failures are reported.
+- [ ] Health response contracts and protected deep-health access are reviewed in source.
+- [ ] Diagnostic registry wiring and report redaction are implemented where required.
+- [ ] No browser, external service, cloud resource, or recurring automation is created for verification.
+
+### Auth / authorization
+
+- [ ] Source enforces secure auth/session configuration and redacts secrets.
+- [ ] Local tests cover unauthenticated, wrong-role, and authorized decisions when the boundary changes.
+- [ ] Tests replace OAuth, sessions, persistence, and network dependencies with local doubles.
+- [ ] Correlation IDs and safe logging paths are reviewed in code.
+
+### Feature / UI
+
+- [ ] Source matches the requested behavior, routes, permissions, and data flow.
+- [ ] Loading/empty/error states and i18n/accessibility requirements are reviewed in source.
+- [ ] Important execution boundaries have structured logging; no fake production data is introduced.
+- [ ] Relevant risk-triggered local tests pass or failures are reported.
+- [ ] UI appearance, browser interaction, and deployed behavior are reported as `visual/runtime unverified`.
+
+### Data / destructive changes
+
+- [ ] Migration files and compatibility/rollback notes are reviewed without applying migrations.
+- [ ] High-risk deterministic transformations are checked with local fixtures and test doubles.
+- [ ] Destructive behavior cannot run through an automatic product health probe.
+- [ ] No database, backup, restoration, or production-state operation is performed by the agent.
+- [ ] Database execution and operational recovery remain explicitly unverified.
+
+---
+
+## Honest Reporting Rule
+
+If a permitted check fails, investigate and repair within the approved code scope. Do not delete failing risk-required tests or use prohibited tools to make a report green.
+
+Record blocked checks with their reason. Source review does not establish visual correctness, live health, database compatibility in a running service, or production success. An existing GitHub pipeline result can be reported with its exact status and scope; it does not prove a browser flow or live service was verified by the agent.
+
+---
+
+## Verification Report Format
+
+```txt
+Verification:
+
+Source/diff review:
+  [affected behavior, security boundaries, source references]
+
+Static/build gate:
+  typecheck:     pass / fail / not run + reason
+  lint:          pass / fail / not run + reason
+  format:check:  pass / fail / not run + reason
+  build:         pass / fail / not run + reason
+
+Local automated tests:
+  [not required + no risk trigger] OR [risk trigger + command/result]
+
+Visual/runtime:
+  visual/runtime unverified — browser and live-service verification are outside PHDK scope
+
+GitHub deployment, if in scope:
+  [existing pipeline + commit/status/reference, or not requested/not configured]
+
+Changed files:
+  [list]
+
+Known failures / gaps:
+  [list, severity, and source of uncertainty]
+```
