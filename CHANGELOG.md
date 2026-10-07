@@ -6,6 +6,16 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.62 — Privacy policy and terms
+
+- Add public, responsive Spanish and English privacy-policy and terms-and-conditions pages.
+- Add persistent footer links on every public page, with localized labels.
+- Include clear treatment of quote/order data, payments, personalization, delivery, ARCO requests and contact information.
+
+### Verification
+- TypeScript validation and production build completed locally.
+- Visual/runtime behavior was not exercised; it requires deployment and is outside the local verification scope.
+
 ## v1.6.61 — 2026-10-04
 
 ### Changed

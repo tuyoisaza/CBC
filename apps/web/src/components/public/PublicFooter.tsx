@@ -51,6 +51,18 @@ export function PublicFooter({ lang = 'es' }: PublicFooterProps) {
                   {tr('public.admin')}
                 </a>
               </li>
+              <li>
+                <a href={lang === 'es' ? '/politica-de-privacidad' : '/en/privacy-policy'}
+                  className="text-gray-500 hover:text-cbc-yellow transition-colors">
+                  {tr('public.privacyPolicy')}
+                </a>
+              </li>
+              <li>
+                <a href={lang === 'es' ? '/terminos-y-condiciones' : '/en/terms-and-conditions'}
+                  className="text-gray-500 hover:text-cbc-yellow transition-colors">
+                  {tr('public.termsConditions')}
+                </a>
+              </li>
             </ul>
           </div>
         </div>

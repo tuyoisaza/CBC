@@ -6,7 +6,7 @@ PHDK standards: pre-versioned PHDK kit (no vendored standards) → v2.31.1
 Upstream: https://github.com/tuyoisaza/PHDK
 Upstream commit: a5f45b5d727c40eb2897f0eaf4fbe6fc310417e9
 Date: 2026-10-04
-Product version metadata: v1.6.61.
+Product version metadata: v1.6.62.
 
 Synchronized the 23 manifest mappings and the applicable native PHDK rules. The active
 rules now require interactive work on the current request, with no autopilot, delegation,
@@ -21,9 +21,10 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.61 (PHDK maintenance version; release tag not created by this sync)
+v1.6.62
 
 ## Completed Slices
+- Public footer now links to Spanish and English privacy-policy and terms-and-conditions pages. The Spanish pages describe quote/order, payment, personalization and data-handling practices (v1.6.62).
 - Standalone B2B catalog with distinct quote navigation, method/kit and extra detail pages, multi-photo extra editing, long descriptions and explicit piece/package presentations. Extras-only quotes share server-side validation and pricing with kit quotes and retain presentation in saved orders (v1.6.60). See `docs/deploy/b2b-extra-catalog.md`; release gated on full tests, TypeScript, production build and isolated browser/database smoke checks.
 - Product galleries detect YouTube and Instagram links, embed supported videos, and provide a direct new-tab fallback for restricted or unsupported embeds (v1.6.59).
 - Add a matching Italian moka homepage kit image using the French-press Domo box, elevated angle, red bow and a visible customizable postcard (v1.6.58).

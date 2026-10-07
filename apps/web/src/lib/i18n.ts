@@ -58,6 +58,8 @@ export const translations = {
     rights: { es: 'Todos los derechos reservados.', en: 'All rights reserved.' },
     tracking: { es: 'Rastrear Pedido', en: 'Track Order' },
     whatsapp: { es: 'WhatsApp', en: 'WhatsApp' },
+    privacyPolicy: { es: 'Política de privacidad', en: 'Privacy Policy' },
+    termsConditions: { es: 'Términos y condiciones', en: 'Terms and Conditions' },
   },
   home: {
     eyebrow: { es: 'B2B / Regalos Corporativos', en: 'B2B / Corporate Gifts' },
