@@ -65,20 +65,10 @@ const isValidWhatsapp = (v: string) => {
   return digits.length >= 10 && digits.length <= 15
 }
 
-const TAX_RATE = 0.16 // 16% IVA
-
-// Single-purchase retail price: base + markup + tax (matches homepage / product page)
-const calcPriceWithTax = (basePrice: number, markupPct: number) => {
-  const withMarkup = Math.round(basePrice * (1 + markupPct / 100) * 100) / 100
-  return Math.round(withMarkup * (1 + TAX_RATE) * 100) / 100
-}
-
-// Bulk/wholesale display price: base + configurable wholesale markup + tax.
-// Mirrors exactly what /api/quote/calculate computes server-side, so the unit
-// price shown here always matches the real subtotal math (just for display —
-// items[].unitPrice in state always stays the raw base rate).
-const wholesalePrice = (basePrice: number, wholesaleMarkupPct: number, ivaPct: number) => {
-  const withMarkup = basePrice * (1 + wholesaleMarkupPct / 100)
+// Public list price: base + the single-purchase markup + tax. The server applies
+// the same base price before deducting volume discounts in the quote summary.
+const retailPrice = (basePrice: number, markupPct: number, ivaPct: number) => {
+  const withMarkup = basePrice * (1 + markupPct / 100)
   return Math.round(withMarkup * (1 + ivaPct / 100) * 100) / 100
 }
 
@@ -93,9 +83,10 @@ const STEPS = [
 export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscounts, products, settings, preselectedProduct, preselectedExtra, preselectedMethod, initialQuantity }: WizardProps) {
   const minQty = Number(settings.MIN_QTY_PER_METHOD ?? 10)
   const markupPct = Number(settings.SINGLE_PURCHASE_MARKUP_PCT ?? 20)
-  const wholesaleMarkupPct = Number(settings.WHOLESALE_MARKUP_PCT ?? 0)
   const ivaPct = Number(settings.IVA_PCT ?? 16)
   const tiers = [...volumeDiscounts].sort((a, b) => a.minQty - b.minQty)
+  const basePriceForMethod = (methodId: string, fallback: number) =>
+    products.find((product) => product.methodId === methodId)?.price ?? fallback
 
   const [step, setStep] = useState(preselectedExtra && extras.find(extra => extra.id === preselectedExtra)?.sellableStandalone !== false ? 1 : 0)
   const [lightbox, setLightbox] = useState<string | null>(null)
@@ -111,9 +102,8 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
       <img src={src} alt="" className="h-full w-full object-cover" />
     </button>
   )
-  // Item unitPrice/lineTotal are always the raw wholesale rate (method.unitPrice) —
-  // matching what /api/quote/calculate actually uses. Tax and retail markup are only
-  // applied at display time, never stored in state, so numbers never drift apart.
+  // Item unitPrice/lineTotal keep the catalog base rate. Public retail markup and
+  // tax are applied only for display; the server recalculates both authoritatively.
   const [items, setItems] = useState<QuoteItem[]>(() => {
     const directMethod = methods.find(method => method.id === preselectedMethod)
     if (directMethod) {
@@ -350,13 +340,13 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                       >
                         <h3 className="font-semibold text-cbc-cream">{prod.name}</h3>
                         {prod.subtitle && <p className="text-sm text-gray-400 mt-0.5">{prod.subtitle}</p>}
-                        <p className="text-sm text-cbc-yellow mt-2">{fmt(calcPriceWithTax(prod.price, markupPct))} <span className="text-gray-500 text-xs">precio unitario (con IVA)</span></p>
+                        <p className="text-sm text-cbc-yellow mt-2">{fmt(retailPrice(prod.price, markupPct, ivaPct))} <span className="text-gray-500 text-xs">precio unitario (con IVA)</span></p>
                       </button>
                     )
                   })}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Precio de pieza única con IVA. Para pedidos de {minQty}+ cajas usa el pedido personalizado: precio de mayoreo y descuento por volumen.
+                  Precio unitario con IVA. Los descuentos por volumen se muestran en el resumen de tu cotización.
                 </p>
               </div>
             )}
@@ -384,7 +374,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                     <select value={item.methodId} onChange={(e) => updateItem(i, 'methodId', e.target.value)}
                       className="flex-1 bg-cbc-black border border-gray-700 rounded-md px-3 py-2 text-white text-sm focus:ring-2 focus:ring-cbc-yellow focus:border-transparent outline-none">
                       {methods.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name} — {fmt(wholesalePrice(m.unitPrice, wholesaleMarkupPct, ivaPct))} c/u mayoreo (con IVA)</option>
+                        <option key={m.id} value={m.id}>{m.name} — {fmt(retailPrice(basePriceForMethod(m.id, m.unitPrice), markupPct, ivaPct))} c/u (con IVA)</option>
                       ))}
                     </select>
                     <div className="flex items-center gap-1">
@@ -398,7 +388,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                         <Plus className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-sm text-cbc-yellow w-24 text-right">{fmt(wholesalePrice(item.unitPrice, wholesaleMarkupPct, ivaPct) * item.qty)}</span>
+                    <span className="text-sm text-cbc-yellow w-24 text-right">{fmt(retailPrice(basePriceForMethod(item.methodId, item.unitPrice), markupPct, ivaPct) * item.qty)}</span>
                     <button type="button" onClick={() => removeItem(i)}
                       className="p-1.5 text-gray-500 hover:text-red-400 transition-colors">
                       <X className="h-4 w-4" />
@@ -456,7 +446,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                   {catalogImages(extra)[0] && thumb(catalogImages(extra)[0], 'h-10 w-10')}
                   <div className="flex-1">
                     <span className="text-sm font-medium text-cbc-cream">{extra.name}</span>
-                    <span className="text-xs text-gray-400 ml-2">{extra.unitPrice === 0 ? 'Gratis' : `+${fmt(wholesalePrice(extra.unitPrice, wholesaleMarkupPct, ivaPct))} c/u (con IVA)`}</span>
+                    <span className="text-xs text-gray-400 ml-2">{extra.unitPrice === 0 ? 'Gratis' : `+${fmt(retailPrice(extra.unitPrice, markupPct, ivaPct))} c/u (con IVA)`}</span>
                     <p className="mt-1 text-xs text-gray-400">{saleUnit(extra)} · Mínimo {extra.minQty ?? 1}</p>
                     {(extra.shortDescription || extra.description) && <p className="mt-2 whitespace-pre-wrap text-xs text-gray-400">{extra.shortDescription || extra.description}</p>}
                     {!items.length && extra.sellableStandalone === false && <p className="mt-1 text-xs text-amber-300">Este complemento requiere agregar un kit.</p>}
@@ -537,7 +527,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
               <div className="space-y-3">
                 {items.map((item, i) => {
                   const m = methods.find((mm) => mm.id === item.methodId)
-                  const unit = wholesalePrice(item.unitPrice, wholesaleMarkupPct, ivaPct)
+                  const unit = retailPrice(basePriceForMethod(item.methodId, item.unitPrice), markupPct, ivaPct)
                   return (
                     <div key={`m-${i}`} className="flex items-center gap-3">
                       {m?.imageUrl
@@ -553,7 +543,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                 })}
                 {selectedExtras.map((ex, i) => {
                   const e = extras.find((ee) => ee.id === ex.extraId)
-                  const unit = wholesalePrice(ex.unitPrice, wholesaleMarkupPct, ivaPct)
+                  const unit = retailPrice(ex.unitPrice, markupPct, ivaPct)
                   return (
                     <div key={`e-${i}`} className="flex items-center gap-3">
                       {e && catalogImages(e)[0]

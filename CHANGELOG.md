@@ -6,6 +6,16 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.65 — Align B2B box pricing
+
+- Use each linked Box product's retail base price in the B2B catalog and quote calculation instead of the method cost.
+- Apply the configured retail markup consistently, then show volume discounts as a separate quote deduction.
+- Remove wholesale-price copy that implied a different starting price.
+
+### Verification
+- 314 automated tests, TypeScript validation, and production build completed locally.
+- Visual/runtime behavior was not exercised; it requires deployment and is outside the local verification scope.
+
 ## v1.6.64 — Simplify B2B catalog copy
 
 - Remove the purchase-mode callout from the B2B catalog hero in Spanish and English.

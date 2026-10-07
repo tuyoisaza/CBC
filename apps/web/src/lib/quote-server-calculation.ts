@@ -22,11 +22,11 @@ export async function calculateQuoteForSave(db: any, input: z.infer<typeof quote
   const methodIds = input.items.map((item) => item.methodId)
   const extraIds = input.extras.map((item) => item.extraId)
   const [methods, extras, zone, discounts, settings] = await Promise.all([
-    db.method.findMany({ where: { id: { in: methodIds }, active: true } }),
+    db.method.findMany({ where: { id: { in: methodIds }, active: true }, include: { products: { where: { active: true }, orderBy: { sortOrder: 'asc' } } } }),
     db.extra.findMany({ where: { id: { in: extraIds }, active: true } }),
     db.shippingZone.findFirst({ where: { id: input.shippingZoneId, active: true, name: { in: ['CDMX / Área Metropolitana', 'Recolección (sin envío)'] } } }),
     db.volumeDiscount.findMany({ orderBy: { minQty: 'asc' } }),
-    db.setting.findMany({ where: { key: { in: ['MIN_QTY_PER_METHOD', 'MIN_PRODUCTION_DAYS', 'RUSH_MIN_PRODUCTION_DAYS', 'RUSH_FEE_PCT', 'ADVANCE_PCT', 'IVA_PCT', 'wholesale_markup_pct'] } } }),
+    db.setting.findMany({ where: { key: { in: ['MIN_QTY_PER_METHOD', 'MIN_PRODUCTION_DAYS', 'RUSH_MIN_PRODUCTION_DAYS', 'RUSH_FEE_PCT', 'ADVANCE_PCT', 'IVA_PCT', 'single_purchase_markup'] } } }),
   ])
   const methodMap = new Map(methods.map((row: any) => [row.id, row]))
   const extraMap = new Map(extras.map((row: any) => [row.id, row]))
@@ -65,9 +65,10 @@ export async function calculateQuoteForSave(db: any, input: z.infer<typeof quote
     if (requested.getTime() < minDate) throw new QuoteValidationError(input.rush ? 'Rush delivery requires at least 5 days' : 'Normal delivery requires at least 15 days')
   }
 
-  const markup = numberSetting('wholesale_markup_pct', 0)
+  const markup = numberSetting('single_purchase_markup', 20)
   const price = (base: number) => base * (1 + markup / 100)
-  const subtotal = input.items.reduce((sum, item) => sum + price((methodMap.get(item.methodId) as any).unitPrice) * item.qty, 0)
+  const methodBasePrice = (method: any) => method.products?.[0]?.price ?? method.unitPrice
+  const subtotal = input.items.reduce((sum, item) => sum + price(methodBasePrice(methodMap.get(item.methodId))) * item.qty, 0)
   const totalUnits = input.items.reduce((sum, item) => sum + item.qty, 0)
   const tier = discounts.filter((d: any) => d.minQty <= totalUnits && (d.maxQty === null || d.maxQty >= totalUnits)).at(-1)
   const discountPct = tier?.discountPct ?? 0
@@ -85,7 +86,7 @@ export async function calculateQuoteForSave(db: any, input: z.infer<typeof quote
   return {
     items: input.items.map((item) => {
       const method = methodMap.get(item.methodId) as any
-      const unitPrice = price(method.unitPrice)
+      const unitPrice = price(methodBasePrice(method))
       return { methodId: method.id, methodName: method.name, qty: item.qty, unitPrice, lineTotal: unitPrice * item.qty }
     }),
     extras: input.extras.map((item) => {

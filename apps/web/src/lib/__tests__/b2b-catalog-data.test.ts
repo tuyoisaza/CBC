@@ -4,7 +4,7 @@ vi.mock('@/lib/db', () => ({ withDbRetry: (fn: () => unknown) => fn(), db: {
   method: { findMany: mocks.methods }, extra: { findMany: mocks.extras },
   setting: { findMany: async () => [{ key: 'IVA_PCT', value: '16' }] },
 } }))
-vi.mock('@/lib/pricing', () => ({ getWholesaleMarkupPct: async () => 20 }))
+vi.mock('@/lib/pricing', () => ({ getSingleMarkupPct: async () => 20 }))
 import { getB2BCatalog } from '../b2b-catalog'
 
 it('only requests active/visible extras and returns sale prices, never internal costs', async () => {
@@ -17,6 +17,6 @@ it('only requests active/visible extras and returns sale prices, never internal 
 })
 it('reuses the existing method/kit record and its images without changing its commercial identity', async () => {
   mocks.extras.mockResolvedValue([])
-  mocks.methods.mockResolvedValue([{ id: 'press', name: 'Prensa', unitPrice: 100, description: null, imageUrl: null, products: [{ name: 'Kit Prensa', description: 'Incluye café', images: ['/kit.jpg'], features: ['Café incluido'] }] }])
+  mocks.methods.mockResolvedValue([{ id: 'press', name: 'Prensa', unitPrice: 20, description: null, imageUrl: null, products: [{ name: 'Kit Prensa', price: 100, description: 'Incluye café', images: ['/kit.jpg'], features: ['Café incluido'] }] }])
   expect((await getB2BCatalog())[0]).toMatchObject({ id: 'press', name: 'Kit Prensa', kind: 'method', unitLabel: 'kit', price: 139.2, images: ['/kit.jpg'] })
 })

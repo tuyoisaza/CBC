@@ -12,7 +12,7 @@ function database() {
     extra: { findMany: vi.fn().mockResolvedValue([extra]) },
     shippingZone: { findFirst: vi.fn().mockResolvedValue({ id: 'zone', name: 'CDMX / Área Metropolitana', active: true, baseFee: 0, feePerUnit: 15 }) },
     volumeDiscount: { findMany: vi.fn().mockResolvedValue([{ minQty: 10, maxQty: null, discountPct: 10 }]) },
-    setting: { findMany: vi.fn().mockResolvedValue([{ key: 'wholesale_markup_pct', value: '20' }]) },
+    setting: { findMany: vi.fn().mockResolvedValue([{ key: 'single_purchase_markup', value: '20' }]) },
   }
 }
 

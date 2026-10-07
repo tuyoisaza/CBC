@@ -8,7 +8,7 @@ const settingRows = [
   { key: 'RUSH_FEE_PCT', value: '40' },
   { key: 'ADVANCE_PCT', value: '50' },
   { key: 'IVA_PCT', value: '16' },
-  { key: 'wholesale_markup_pct', value: '0' },
+  { key: 'single_purchase_markup', value: '20' },
 ]
 
 function dbFor({ zoneName = 'CDMX / Área Metropolitana', extraRows = [] as any[] } = {}) {
@@ -31,6 +31,15 @@ describe('server-side B2B quote rules', () => {
   it.each([[14, 240], [15, 0], [50, 0]])('applies CDMX shipping for %i kits', async (qty, expectedFee) => {
     const calculated = await calculateQuoteForSave(dbFor(), selection(qty))
     expect(calculated.shippingFee).toBe(expectedFee)
+  })
+
+  it('uses the linked box retail base price instead of the method cost', async () => {
+    const db = dbFor()
+    db.method.findMany.mockResolvedValue([{ id: 'method', name: 'Prensa', unitPrice: 225, active: true, products: [{ name: 'Box Prensa Francesa', price: 799 }] }])
+    await expect(calculateQuoteForSave(db, selection(10))).resolves.toMatchObject({
+      subtotal: 9588,
+      items: [expect.objectContaining({ methodName: 'Prensa', unitPrice: 958.8 })],
+    })
   })
 
   it('rejects Interior del país even when the zone is active', async () => {

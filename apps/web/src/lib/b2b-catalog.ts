@@ -1,6 +1,6 @@
 import 'server-only'
 import { db, withDbRetry } from '@/lib/db'
-import { getWholesaleMarkupPct } from '@/lib/pricing'
+import { getSingleMarkupPct } from '@/lib/pricing'
 import { catalogImages, type CatalogEntry } from './extra-catalog'
 
 /** Only public selling prices leave the server; never serialize Extra.unitPrice (cost). */
@@ -11,7 +11,7 @@ export async function getB2BCatalog(): Promise<CatalogEntry[]> {
     } }),
     db.extra.findMany({ where: { active: true, catalogVisible: true }, orderBy: { sortOrder: 'asc' } }),
     db.setting.findMany({ where: { key: { in: ['IVA_PCT', 'MIN_QTY_PER_METHOD'] } } }),
-    getWholesaleMarkupPct(),
+    getSingleMarkupPct(),
   ]))
   const config = Object.fromEntries(settings.map(row => [row.key, row.value]))
   const iva = Number(config.IVA_PCT ?? 16)
@@ -25,7 +25,7 @@ export async function getB2BCatalog(): Promise<CatalogEntry[]> {
         shortDescription: kit?.subtitle ?? method.description?.slice(0, 200) ?? '',
         description: method.description || kit?.description || '',
         images: catalogImages({ images: kit?.images, imageUrl: method.imageUrl }),
-        features: kit?.features ?? [], price: sellingPrice(method.unitPrice),
+        features: kit?.features ?? [], price: sellingPrice(kit?.price ?? method.unitPrice),
         unitLabel: kit ? 'kit' : 'unidad', unitsPerPack: 1, minQty: minimum,
         sellableStandalone: true, allowedForRush: true,
       }

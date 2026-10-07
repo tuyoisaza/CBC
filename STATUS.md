@@ -6,7 +6,7 @@ PHDK standards: pre-versioned PHDK kit (no vendored standards) → v2.31.1
 Upstream: https://github.com/tuyoisaza/PHDK
 Upstream commit: a5f45b5d727c40eb2897f0eaf4fbe6fc310417e9
 Date: 2026-10-04
-Product version metadata: v1.6.64.
+Product version metadata: v1.6.65.
 
 Synchronized the 23 manifest mappings and the applicable native PHDK rules. The active
 rules now require interactive work on the current request, with no autopilot, delegation,
@@ -21,9 +21,10 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.64
+v1.6.65
 
 ## Completed Slices
+- B2B Box prices now use the linked retail product price, matching the home page; volume discounts are calculated and displayed separately in the quote (v1.6.65).
 - Simplify the B2B catalog hero description by removing the purchase-mode callout (v1.6.64).
 - The public footer no longer exposes the internal Admin Portal link; the `/login` route remains available for authorized staff (v1.6.63).
 - Public footer now links to Spanish and English privacy-policy and terms-and-conditions pages. The Spanish pages describe quote/order, payment, personalization and data-handling practices (v1.6.62).
