@@ -6,6 +6,14 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.64 — Simplify B2B catalog copy
+
+- Remove the purchase-mode callout from the B2B catalog hero in Spanish and English.
+
+### Verification
+- TypeScript validation and production build completed locally.
+- Visual/runtime behavior was not exercised; it requires deployment and is outside the local verification scope.
+
 ## v1.6.63 — Hide public admin link
 
 - Remove the internal Admin Portal link from the public footer while preserving the `/login` route for staff.
