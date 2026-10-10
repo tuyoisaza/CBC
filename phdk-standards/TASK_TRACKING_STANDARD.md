@@ -10,77 +10,169 @@ GitHub remains the code remote, not the task system. Do not create Issues, Proje
 
 Only the current explicit user request activates work. A backlog checkbox, old mission, failed check, alert, installed skill, or a file marked active cannot start a session or authorize an edit, commit, push, merge, or deployment.
 
-One assistant handles the current request. Do not delegate tasks, create subagents, coordinate agent teams, or distribute a task queue, including inside the current session.
+A current request to implement, fix, or update repository code or documentation includes normal delivery to verified remote `main` under `MAIN_DELIVERY_STANDARD.md`, unless the user specifies local-only, branch-only, or PR-only work or the user/repository specifies another target. Read/audit requests and bare `PHDK upgrade` retain their limited scope in `EXECUTION_SCOPE.md`. Task files record the request and observed progress; they neither create nor revoke authorization.
 
-Stop when the deliverable is complete or blocked, the user pauses it, or the conversation ends. Proposed follow-ups remain inactive until a later explicit user request.
+The current grant survives same-conversation turns, status/link requests, context compaction, and assistant-written task/status changes. A stale task marked paused, complete, or PR-only does not outrank the live request or observed GitHub state. Explicit user stop/pause instructions remain binding. A new conversation does not automatically resume old tasks.
+
+Record owner approval and its task/PR scope separately from assistant source review and any actual required formal review. Under `MAIN_DELIVERY_STANDARD.md`, a well-defined current request or "push to main", "merge", or "aprobado" for the identified change can supply owner approval in the conversation. Do not invent a requirement to open every diff line or create a GitHub review event. Preserve actual named, independent, or formal review requirements; never label conversation approval as verified human source inspection.
+
+Normally one assistant handles the current request. Do not delegate tasks, create subagents, coordinate agent teams, or distribute a task queue unless the owner explicitly activates `PHDK PMO`. Under PMO, only the PMO orchestrator may delegate owner-confirmed workstreams to supported in-session workers under `PHDK_PMO.md`; workers cannot delegate or continue after the conversation.
+
+Stop when the whole deliverable is complete, the user pauses it, the conversation ends, or a real blocker leaves no permitted progress after independent authorized work is complete. A blocked component does not make the whole task inactive. Proposed follow-ups remain inactive until a later explicit user request.
+
+### PHDK Auto tracks one complete lifecycle goal
+
+An explicit `PHDK auto` follows `PHDK_AUTO.md`: record the entire current goal and applicable lifecycle stages (Capture, Plan, PMO/workstreams, integration, UAT/Fix, Check/remediation, delivery), final verification coverage, and delivery target. Keep that goal in progress across slices, candidate releases, status questions, and context compaction; do not replace it with the first stage or move its remaining authorized work into inactive follow-ups. Progress records never require an OK to continue.
+
+Complete implementation before comprehensive final checks and normal branch/PR delivery. Required risk-based tests belong to this final coverage; only implementation-blocker diagnosis and actual mandatory controls require earlier execution. Auto replaces Developer Mode for this goal only through explicit activation. Record scope and evidence as dated facts, never `auto=true`, active-mode state, or reusable authority; exit and conversation lifetime remain governed by `PHDK_AUTO.md`.
+
+### Developer Mode is not task state
+
+`PHDK_DEVELOPER_MODE.md` defines the explicit conversation-only commands `PHDK modo developer` / `PHDK Developer Mode` and exit command `PHDK salir de developer mode`. Mentions, quotations, documentation, and historical Finetuning records do not activate it. Never store activation/status or an authorizing flag in task/status files, repository configuration, memory, or environment flags; never restore it automatically. Conversation end ends the mode.
+
+The live activation authorizes the defined version/check/version-prefixed-commit/fast-forward-push steps for eligible small, low-risk tasks requested while active, without duplicate consent. It does not activate an existing task or authorize selecting backlog work. Authentication/authorization, secrets, data/migrations, payments, infrastructure, and permission/agent-policy changes stay in normal review. Existing hooks, protections, and owner controls remain binding.
+
+Record the requested outcome, changed files, checks, resulting version/SHA, and actual delivery as facts. Do not record a reusable grant to push `main`. A failed applicable check, rejected push, non-fast-forward update after `main` advanced, or unmet control stops the direct flow; record the blocker and explain instead of retrying automatically, rebasing, force-pushing, changing settings/hooks/credentials, changing API/CLI to bypass it, or automatically falling back to the normal branch/PR flow.
+
+### PHDK unlock is a current request
+
+Follow `PHDK_UNLOCK.md` for the command or an explicit request to reconcile/remove local PHDK exceptions. Record the documentary blockers, current owner instruction, bounded repairs, and observed delivery state as dated facts. The owner can replace earlier documentary exceptions within the new request; bare synchronization preserves unknown/unrelated restrictions. Do not store an unlock flag or reusable permission, weaken actual hooks/checks/protections/access controls, or resume an unidentified old product task.
 
 ## Files
 
-- `TASK.md`: the current request, scope, owner controls, completion criteria, git authorization, and necessary implementation steps.
+- `TASK.md`: the whole current request, scope, delivery target, owner controls, completion criteria, final verification coverage, observed git/review evidence, and necessary delivery steps; never mode activation/state.
 - `STATUS.md`: durable completed/current/proposed/blocked context, versions, evidence, gaps, and open decisions.
 - `docs/completed-slices/`: archived completed task/slice records when an archive is useful for the current change.
 - `docs/intents/`: immutable intent records when required by `INTENT_CAPTURE_STANDARD.md`.
 
-Do not add infrastructure, a locking service, or a standing worker to consume these files.
+Do not add infrastructure, a locking service, or a standing worker to consume these files. Keep transient task state, pending steps, branch/PR identifiers, and current delivery status out of permanent instruction headers such as `AGENTS.md` and native rules blocks; those files hold stable rules and pointers.
 
 ## TASK.md template
 
 ```md
 # TASK — <current user-requested deliverable>
 
-## Authorization and scope
+## Request and scope (recorded context)
 Current request: <the user's request in this conversation>
 Status: <in progress in this conversation / complete / paused / blocked>
-Execution mode: interactive-only, single assistant, no delegation
+Execution boundary: interactive-only; single assistant unless explicit PMO enables bounded in-session workers; no stored mode state
 Goal: ...
 Done when:
 - [ ] <objective completion criterion>
+- [ ] <result and version verified on remote main, or explicit narrower target satisfied>
 In scope: ...
 Out of scope: ...
 Owner stop/pause controls: ...
-Git actions authorized now: <none / commit / push / create PR / merge>
-Branch: <authorized feature/fix branch, or not applicable>
+Delivery target: <remote main by default for implementation/fix/update, or user's explicit limit>
+Delivery instructions: <current user instructions as context, not a permission token>
+Approval evidence: <current scoped owner decision; assistant review and any required formal review recorded separately>
+Branch: <branch actually used, or not applicable; never an enabling flag>
+Delivery evidence: <actual commit, push, PR, required review, merge, remote version/result; pending where unknown>
+Final verification coverage: <applicable commands and behavior checks for the whole goal; actual mandatory controls keep their operation timing>
 
 ## Necessary steps for this request
 - [ ] <step>
   - Files: <relevant paths>
-  - Acceptance: <source review and allowed local checks>
+  - Coverage: <source review and allowed local checks; in Auto, collect at the completed candidate rather than as stage acceptance>
   - Blocked by: <decision/dependency, or none>
 
 ## Inactive follow-up context
 <proposals or unfinished work; NOT authorized for execution>
 ```
 
-A recorded authorization summarizes the current conversation; copying it into a later session does not renew permission. A current request to implement and merge includes the necessary branch/commit/push/PR steps. An audit request remains read-only.
+A recorded task-specific request summarizes history; copying it into a later session does not renew permission, and editing its summary does not revoke the live current request. It must not store Developer Mode or Auto activation or authorize restoration. Normal implementation/fix/update requests include delivery under `MAIN_DELIVERY_STANDARD.md` without a separate merge request. An audit request remains read-only; a command definition in the record activates no mode.
 
 ## Before each mutation
 
-Re-read the current task and owner pause/stop instructions before editing, committing, pushing, or merging. Honor the narrowest restriction. A specific current owner instruction may authorize a limited intervention in a paused project; it does not restart old work or remove the pause generally.
+Read the current user instructions before relying on task context and recorded owner pause/stop instructions when editing, committing, pushing, or merging. Honor the user's current scope and applicable repository controls. A specific current owner instruction can replace an older documentary exception or authorize a limited intervention in a paused project; it does not restart unrelated old work or remove the pause beyond its stated scope.
 
-If task files disagree with the current request, resolve only the ambiguity needed for that request. Never treat stale metadata as permission to expand the task.
+If task files disagree with the current request or observed GitHub state, correct the stale record within the current scope. An assistant-written pause, completion marker, or delivery limit is not an owner stop instruction and cannot block already-authorized work. Ask only when a real owner instruction or material decision remains ambiguous; never treat stale metadata as permission to expand the task.
 
 ## Closing work
 
-1. Record the completed outcome and actual verification evidence.
-2. Archive a coherent completed slice when appropriate and link it from `STATUS.md`.
-3. Mark the request complete, paused, or blocked.
-4. Keep unfinished and proposed follow-ups inactive.
-5. Perform git actions only when currently authorized; a slice boundary does not require a commit or push.
-6. Report and stop when the requested deliverable is complete.
+1. Complete the whole requested outcome and its included delivery steps, following `MAIN_DELIVERY_STANDARD.md` or the separately eligible Developer Mode flow. In Auto, final integrated verification follows all implementation under `PHDK_AUTO.md`; a slice boundary requires neither a commit/push nor another approval.
+2. Verify the result and version on remote `main`, or verify the user's explicitly narrower target. Record the actual checks, review, and delivery state; a branch push or open PR is intermediate progress for a `main` target.
+3. Mark the request complete only when that target is satisfied. Otherwise record the exact blocker and unfinished stage, or the user's pause; do not label incomplete delivery done.
+4. Archive a coherent completed slice when appropriate and link it from `STATUS.md`. Keep unrelated proposed follow-ups inactive.
+5. Report whole-goal completion or, after independent work is complete, the genuine blocker and unfinished scope, then stop. If final merge evidence arrived after the last source commit, include it in the report; another commit solely to restate that evidence is not required.
 
 Multiple necessary steps of the same current request may be completed without repeated approval. This does not authorize selecting a new goal from the backlog.
 
+An eligible Developer Mode push may trigger the existing hosting-provider GitHub connection. Record deployment evidence only when available; never create or run Actions, deploy through Railway/provider CLI/API/dashboard, or change external configuration.
+
+A current request such as "verifica Railway" permits [Bounded read-only provider diagnostics](EXECUTION_SCOPE.md#bounded-read-only-provider-diagnostics): finite service/deployment status, source/branch and non-secret configuration/watch-pattern metadata, and needed existing logs through existing authorized API/CLI/connector access. A prior code task's exclusion cannot cancel the newer scoped read; update its recorded scope without deleting history. Redact sensitive content; no secret-value retrieval, browser tests, live application probes, streams/watchers, settings writes, or provider deployments. This permission requires neither Developer Mode nor unlock and does not authorize git delivery.
+
+Track code delivery and provider deployment as separate observed facts. Existing GitHub-connected autodeploy is allowed; do not disable it or install dummy never-matching watch filters as PHDK enforcement. A generic development request does not authorize provider-settings writes. An observed disabled connection or filter excluding changes that need deployment may block deployment after code/version verification on remote `main`; do not mark code delivery absent or invent deployment success. Preserve valid service-specific filters and distinguish intended skips for unaffected services.
+
 ## Concurrent edits
 
-Do not create or use a multiple-agent queue. If another human or independently active session changes overlapping files, preserve their work and stop on material conflicts. Do not decide that an old claim marker is safe to reclaim or force-push over another change. Use current branch and commit identifiers when preparing authorized git writes.
+Do not create or use a multiple-agent queue. If another human or independently active session changes overlapping files, preserve their work. In the normal branch/PR flow, refresh remote `main`, resolve routine integration conflicts within the current scope, reconcile the branch version, and review/check the changed result. Isolate genuinely unresolved material conflicts or unmet controls and continue independent work. Do not decide that an old claim marker permits taking over someone else's work, overwrite their changes, rewrite history, or force-push. Use observed branch and commit identifiers for git writes; Developer Mode's separate immediate stops apply unless explicitly replaced by Auto for the identified goal, without bypassing the control.
 
 ## Verification
 
 - [ ] Current user authorization and owner restrictions are accurately recorded.
+- [ ] Current owner approval, assistant source review, and any actual required formal review are distinguished; no redundant review ritual or fabricated inspection was introduced.
+- [ ] Same-conversation authorization was retained; stale task state and assistant-written edits did not override the live request or observed GitHub state.
 - [ ] Only necessary steps of the requested deliverable were executed.
-- [ ] No subagents, agent team, delegated work, scheduler, recurring task, or background watcher was started.
+- [ ] No subagents/agent team/delegated work was started outside explicit PMO; any PMO workers were bounded to confirmed workstreams with no recursive delegation. No scheduler, recurring task, or background watcher was started.
 - [ ] No GitHub Actions/hosted CI job was created, enabled, dispatched, rerun, or scheduled.
 - [ ] Local checks are synchronous and relevant; UI/live runtime limitations are stated.
 - [ ] Commit/push/PR/merge actions match the current user's authorization.
+- [ ] A `main` target is complete only with remote result/version evidence; otherwise the exact blocker and remaining delivery stage are recorded.
+- [ ] Permanent instruction headers contain stable rules and pointers, with no transient task state.
+- [ ] Developer Mode and Auto were not stored or restored from task/status/configuration/memory; only actual task outcomes and delivery evidence were recorded.
+- [ ] Any direct-flow check failure, rejection, non-fast-forward update, or unmet control stopped that flow and was reported without automatic retry or bypass.
 - [ ] Proposed or unfinished follow-ups are inactive.
+- [ ] Auto's remaining authorized stages stayed within the current goal; none was turned into an inactive proposal or a separate human-acceptance gate.
 - [ ] Completion does not automatically start another task.
+
+
+## UAT evidence
+
+When `PHDK uat` runs, `UAT_CASES.md` and `UAT_REPORT.md` are the authoritative acceptance artifacts. Task/status files may record the candidate revision/version and summary counts but should not duplicate every UAT step.
+
+UAT evidence does not create or revoke authorization. PASS starts no new task. FAIL/BLOCKED/MANUAL does not make the current task inactive. Under active `PHDK auto`, an in-scope UAT failure remains part of the same whole goal until repaired or concretely blocked.
+
+
+## PHDK Check evidence
+
+`PHDK check` uses `PHDK_CHECK_REPORT.md` as the authoritative compliance artifact for the audited revision. TASK/STATUS may record the report revision, summary counts, and whether remediation was approved, but they must not convert audit findings into standing authorization.
+
+The initial check is read-only. A later explicit yes to the presented report authorizes only the enumerated AUTO-FIXABLE and FIXABLE WITH VALIDATION gap IDs in that report revision. Record the approved IDs and resulting delivery evidence. DECISION REQUIRED, EXTERNAL / MANUAL, UNKNOWN, and newly discovered material gaps remain outside that approval until separately resolved.
+
+
+## Capture requirements baseline
+
+`PHDK capture` produces the project-level requirements baseline in `PROJECT_INTENT.md`, `PROJECT_BRIEF.md`, `PRD.md`, `FEATURES.md`, and `REQUIREMENTS_TRACEABILITY.md`. TASK/STATUS may reference these artifacts but must not replace them or treat incomplete task notes as the project's canonical intent.
+
+Capture may span multiple turns while resolving Blocking/Material requirements gaps. This is an explicit interactive requirements task, not a persistent mode or background job. Capture completion does not authorize implementation unless the current request separately includes development.
+
+
+## UAT repair evidence
+
+`PHDK uat fix` authorizes repair of the current UAT FAIL backlog represented by `UAT_REPORT.md` / `UAT_CASES.md`, limited to clearly in-scope fixes that do not require a new material decision or excluded external/manual operation. Record defect IDs, repair evidence, retest results, and residual blockers. Do not treat BLOCKED/MANUAL items as implicitly authorized product changes.
+
+
+## PHDK PMO coordination records
+
+`PHDK PMO` uses `PMO.md`, `PMO_WORKSTREAMS.md`, `PMO_DEPENDENCIES.md`, and `PMO_STATUS.md` as its coordination artifacts.
+
+They record:
+- owner-confirmed workstream portfolio;
+- workstream IDs/outcomes/intent and requirement links;
+- worker/branch/worktree when applicable;
+- file/component ownership;
+- dependencies and shared surfaces;
+- risk/blocker state;
+- integration readiness/evidence.
+
+These files are context/evidence, not reusable authorization. Never store a persistent `pmo=true` flag. Conversation end ends PMO activation.
+
+Worker TASK/STATUS records, when used, remain subordinate to the PMO workstream contract. A worker completion does not mark the overall PMO portfolio complete. PMO owns central integration and downstream UAT/Check handoff.
+
+
+## PHDK Plan artifacts
+
+`PHDK plan` produces the architecture/planning baseline in `SOLUTION_ARCHITECTURE.md`, `REPOSITORY_ARCHITECTURE.md`, `UX_ARCHITECTURE.md`, `IMPLEMENTATION_PLAN.md`, architecture decisions, and TASK integration.
+
+For brownfield repositories, TASK must reflect the incremental convergence path from current architecture to target architecture rather than assuming a clean rebuild. Plan IDs/dependencies/workstream recommendations may be referenced from PMO artifacts, but TASK remains current execution context rather than the permanent architecture source.

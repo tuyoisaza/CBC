@@ -1,4 +1,39 @@
+## 2026-10-10 — PHDK force recheck
+
+PHDK standards remain v2.43.0 at upstream commit 4b4b3f29bf7d278a0a44d407f781e90d9665e3fc. Rechecked all 33 manifest destinations against a fresh clone; all match byte-for-byte.
+
+The repeated `PHDK upgrade force` found the root `AGENTS.md` managed block differed from canonical `PHDK_NATIVE_RULES.md`; replaced only that marked block. The only previously dirty PHDK-owned content overwritten in this run was that block. Owner instructions outside the markers were preserved byte-for-byte.
+
+Verification: canonical managed block exact; all 33 manifest files exact; `git diff --check` passed. No product files or other non-PHDK files were changed by the force replacement. No files removed. No commit, push, merge, tag, or deployment.
+
+## 2026-10-10 — PHDK standards release v1.6.67
+
+Canonical PHDK v2.43.0 is synchronized from upstream commit 4b4b3f29bf7d278a0a44d407f781e90d9665e3fc across all 33 manifest files, including the root AGENTS.md managed block. Product version metadata is v1.6.67; v1.6.66 was already used by an existing commit and was not reused.
+
+This release contains standards and version metadata only; application source is unchanged. Verification: all 33 vendored files match upstream, the native managed block matches PHDK_NATIVE_RULES.md, and git diff --check passes.
+
 # STATUS — Coffee Bunn Café Platform
+
+## 2026-10-10 — PHDK standards upgrade
+
+PHDK standards: v2.31.1 → v2.43.0
+Upstream: https://github.com/tuyoisaza/PHDK
+Upstream commit: 4b4b3f29bf7d278a0a44d407f781e90d9665e3fc
+Date: 2026-10-10
+Manifest: 33 mapped files; 10 added destinations and no removed prior destinations.
+Product version metadata: v1.6.65 (unchanged; this sync did not authorize a commit).
+
+Force-synchronized every manifest mapping and refreshed the marked PHDK block in root
+`AGENTS.md`. The owner instructions outside the managed block remain intact, including
+the prohibition on delegation and the requirement for current-request Git authorization.
+The newer managed block describes a PHDK PMO delegation exception; the stricter owner
+rule outside that block continues to govern this repository. No product source changed.
+
+Verification: every mapped destination matches its fresh upstream source byte-for-byte;
+the root managed block was later found to differ from canonical PHDK_NATIVE_RULES.md and corrected in the force recheck above; owner text outside its markers is preserved;
+the working tree was clean before synchronization. No files were removed, and no commit,
+push, merge, tag, deployment, browser session, live probe, or external setting change was
+made. The sync is available for review on `chore/phdk-upgrade-v2.43.0`.
 
 ## 2026-10-04 — PHDK standards maintenance
 
@@ -21,9 +56,11 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.66
+v1.6.68
 
 ## Completed Slices
+- Consent-based Google Analytics 4 and Microsoft Clarity, with superadmin-managed IDs, privacy controls, and audit logging (v1.6.68).
+- Synchronize PHDK standards v2.43.0 and refresh the managed agent block (v1.6.67).
 - B2B Box prices now use the linked retail product price, matching the home page; volume discounts are calculated and displayed separately in the quote (v1.6.65).
 - Simplify the B2B catalog hero description by removing the purchase-mode callout (v1.6.64).
 - The public footer no longer exposes the internal Admin Portal link; the `/login` route remains available for authorized staff (v1.6.63).
@@ -61,7 +98,7 @@ Opt-in website analytics: Google Analytics 4 and Microsoft Clarity load only aft
 
 Superadmins configure, update, or clear the GA4 Measurement ID and Clarity Project ID at `/admin/configuration`. The values are public IDs stored in the existing settings table; the protected write validates and audits changes, and a no-cache public endpoint projects only these two IDs. No environment variables or schema migration are needed. The supplied IDs (`G-WWLTLPBZ8Q` and `yvn1wwnadb`) have not been entered; they remain to be saved by a superadmin after the UI is available.
 
-Provider activation still requires entering the IDs after code delivery, disabling Enhanced Measurement in the GA4 web stream (to prevent duplicate or unsanitized automatic events), and turning off Clarity's default cookie setting in Settings → Setup so it waits for consent. No provider or deployment settings were operated. Product version metadata is v1.6.66. The current request authorizes a versioned commit, branch push, pull request, and merge if existing repository protections permit it; no release tag is authorized and production deployment is not verified.
+Provider activation still requires entering the IDs after code delivery, disabling Enhanced Measurement in the GA4 web stream (to prevent duplicate or unsanitized automatic events), and turning off Clarity's default cookie setting in Settings → Setup so it waits for consent. No provider or deployment settings were operated. Product version metadata is v1.6.68. The current request authorizes a versioned commit, branch push, pull request, and merge if existing repository protections permit it; no release tag is authorized and production deployment is not verified.
 
 Verification: `pnpm --filter @cbc/web typecheck` passed; targeted superadmin configuration tests passed (8/8); i18n tests passed (6/6); `git diff --check` passed. `pnpm --filter @cbc/web lint` reached Next.js's first-run ESLint configuration prompt and exited without creating configuration. Prettier is not installed, so its check could not run. A Next.js build was not run because server pages query the database and this scope prohibits database connections. No browser, live endpoint, database, provider dashboard, or deployment was used.
 

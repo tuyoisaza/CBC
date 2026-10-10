@@ -39,7 +39,7 @@ export default function ContactPageEn() {
           <p className="text-gray-400">{tr('contact.subtitle')}</p>
         </div>
         <div className="bg-[#1a1a1a] rounded-xl p-8 border border-gray-800 shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-6" data-clarity-mask="true">
+          <form onSubmit={handleSubmit} className="space-y-6" data-clarity-mask="True">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">{tr('contact.company')}</label>

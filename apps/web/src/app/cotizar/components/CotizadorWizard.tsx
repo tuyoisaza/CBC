@@ -604,7 +604,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
             </div>
 
             {/* Contact form */}
-            <div className="rounded-xl border border-gray-700 bg-cbc-black p-5" data-clarity-mask="true">
+            <div className="rounded-xl border border-gray-700 bg-cbc-black p-5" data-clarity-mask="True">
               <h3 className="text-sm font-semibold text-cbc-cream mb-3">Tus datos</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
