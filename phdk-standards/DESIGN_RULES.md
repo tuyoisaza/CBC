@@ -8,6 +8,8 @@ Every agent doing frontend, UI, UX, or design-system work must read this file be
 
 These are product-code requirements under `EXECUTION_SCOPE.md`. Review UI source, styles, semantics, and applicable local checks; do not open a browser, capture screenshots, or run browser/device tests. Code evidence does not establish actual rendering or usability, and optional human visual feedback is not a PHDK completion gate.
 
+In explicit `PHDK auto`, use `PHDK_AUTO.md` for continuous development and final integrated verification. Apply existing design tokens and product decisions without a per-screen or per-stage approval; choose a conforming reversible implementation rather than inventing an exception that needs approval. Optional visual feedback never interrupts the whole authorized goal.
+
 ---
 
 # Brand Requirements
@@ -262,6 +264,15 @@ Minimum baseline for every page:
 - [ ] Escape and close actions work where expected.
 
 ---
+
+# Conditional AI Admin Design
+
+When the project uses AI under `AI_ADMIN_STANDARD.md`, the super-admin navigation includes **Prompts**. Its page uses a two-column admin layout on desktop/tablet:
+
+- left column: prompt/agent list with visible selected state;
+- center/main column: editable Name field, Personality prompt textarea, Execution prompt textarea, and Output JSON schema code/JSON field, in that order.
+
+The form must expose loading, empty, validation, save-in-progress, success, permission-denied, and error states. Long prompt names must not break the left rail. On narrow screens the two-column layout may stack while preserving list selection and editor semantics.
 
 # Admin Design Rules
 
