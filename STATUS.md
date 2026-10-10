@@ -41,7 +41,7 @@ PHDK standards: pre-versioned PHDK kit (no vendored standards) → v2.31.1
 Upstream: https://github.com/tuyoisaza/PHDK
 Upstream commit: a5f45b5d727c40eb2897f0eaf4fbe6fc310417e9
 Date: 2026-10-04
-Product version metadata: v1.6.65.
+Product version metadata at synchronization: v1.6.65.
 
 Synchronized the 23 manifest mappings and the applicable native PHDK rules. The active
 rules now require interactive work on the current request, with no autopilot, delegation,
@@ -56,9 +56,10 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.67
+v1.6.68
 
 ## Completed Slices
+- Consent-based Google Analytics 4 and Microsoft Clarity, with superadmin-managed IDs, privacy controls, and audit logging (v1.6.68).
 - Synchronize PHDK standards v2.43.0 and refresh the managed agent block (v1.6.67).
 - B2B Box prices now use the linked retail product price, matching the home page; volume discounts are calculated and displayed separately in the quote (v1.6.65).
 - Simplify the B2B catalog hero description by removing the purchase-mode callout (v1.6.64).
@@ -93,6 +94,15 @@ v1.6.67
 - All-in pricing (shared lib/pricing.ts + single-checkout final-price + descriptive errors)
 
 ## Current Slice
+Opt-in website analytics: Google Analytics 4 and Microsoft Clarity load only after visitor consent. The persistent preference control allows visitors to accept, reject, or change their choice. Admin, sign-in, health, API, and order-tracking paths are excluded. Google page views omit query parameters; contact and quote form content is marked for Clarity masking.
+
+Superadmins configure, update, or clear the GA4 Measurement ID and Clarity Project ID at `/admin/configuration`. The values are public IDs stored in the existing settings table; the protected write validates and audits changes, and a no-cache public endpoint projects only these two IDs. No environment variables or schema migration are needed. The supplied IDs (`G-WWLTLPBZ8Q` and `yvn1wwnadb`) have not been entered; they remain to be saved by a superadmin after the UI is available.
+
+Provider activation still requires entering the IDs after code delivery, disabling Enhanced Measurement in the GA4 web stream (to prevent duplicate or unsanitized automatic events), and turning off Clarity's default cookie setting in Settings → Setup so it waits for consent. No provider or deployment settings were operated. Product version metadata is v1.6.68. The current request authorizes a versioned commit, branch push, pull request, and merge if existing repository protections permit it; no release tag is authorized and production deployment is not verified.
+
+Verification: `pnpm --filter @cbc/web typecheck` passed; targeted superadmin configuration tests passed (8/8); i18n tests passed (6/6); `git diff --check` passed. `pnpm --filter @cbc/web lint` reached Next.js's first-run ESLint configuration prompt and exited without creating configuration. Prettier is not installed, so its check could not run. A Next.js build was not run because server pages query the database and this scope prohibits database connections. No browser, live endpoint, database, provider dashboard, or deployment was used.
+
+## Inactive Context — Previously Current Slice
 Secure provider configuration: `/admin/configuration` for explicit superadmins, including nine providers, AES-256-GCM database storage, write-only secret management, server-side environment import, transactional audit, fresh authorization, and dynamic integration clients. Activation guide: `docs/deploy/integration-configuration.md`.
 
 Mercado Pago integration: retail checkout and B2B deposits/balances implemented locally, with signed Webhooks, payment verification, retry handling, and admin payment actions. See `docs/deploy/mercadopago.md`.

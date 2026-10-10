@@ -6,6 +6,19 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.68 — Consent-based website analytics
+
+- Add Google Analytics 4 and Microsoft Clarity with a persistent visitor consent choice; scripts load only after consent.
+- Add superadmin configuration for the GA4 Measurement ID and Clarity Project ID, with protected validation and audit logging.
+- Exclude private/admin paths, remove query parameters from Google page views, mask contact and quote form content using Clarity's element masking attribute, and update privacy notices and Content Security Policy.
+- Keep provider IDs out of environment variables and source. The supplied IDs must be entered by a superadmin after the UI is available.
+
+### Verification
+- `pnpm --filter @cbc/web typecheck` passed.
+- Superadmin analytics route tests passed (8/8); i18n tests passed (6/6).
+- `git diff --check` passed. Lint stopped at Next.js's first-run configuration prompt; no ESLint configuration was created. Prettier is not installed, so its check could not run.
+- A production build was not run because build-time database access is prohibited in this task. No browser, database, live endpoint, provider dashboard, or deployment was used.
+
 ## v1.6.67 — PHDK standards v2.43.0
 
 - Synchronize the vendored PHDK standards and managed agent rules with canonical upstream v2.43.0.

@@ -3,6 +3,7 @@ import { Raleway } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { DebugCaptureInit } from '@/components/DebugCaptureInit'
 import { VersionBadge } from '@/components/public/VersionBadge'
+import { AnalyticsConsent } from '@/components/public/AnalyticsConsent'
 import '@/lib/env'
 import './globals.css'
 
@@ -34,6 +35,7 @@ export default function RootLayout({
         >
           <DebugCaptureInit />
           {children}
+          <AnalyticsConsent />
           <VersionBadge version={process.env.NEXT_PUBLIC_APP_VERSION || ''} />
         </ThemeProvider>
       </body>
