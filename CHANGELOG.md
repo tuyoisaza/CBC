@@ -6,6 +6,15 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.69 — Group site measurement with integrations
+
+- Add “Medición del sitio” to the same superadmin integration selector as Mercado Pago and Stripe.
+- Show the configured count for the GA4 and Clarity IDs, refreshed after loading or saving.
+
+### Verification
+- TypeScript validation and git diff check passed.
+- No browser session, live endpoint, provider dashboard, or deployment was used.
+
 ## v1.6.68 — Consent-based website analytics
 
 - Add Google Analytics 4 and Microsoft Clarity with a persistent visitor consent choice; scripts load only after consent.

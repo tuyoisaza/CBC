@@ -1,3 +1,10 @@
+## 2026-10-10 — Medición del sitio dentro de integraciones (v1.6.69)
+
+- Colocar “Medición del sitio” como opción del mismo selector que Mercado Pago, Stripe y las demás integraciones.
+- Mostrar cuántos de los dos IDs, GA4 y Clarity, están configurados.
+- Mantener el editor y el guardado superadmin existentes.
+- Validación local: generación de Prisma Client desde el esquema y typecheck de web pasaron; git diff check pasó.
+
 ## 2026-10-10 — PHDK force recheck
 
 PHDK standards remain v2.43.0 at upstream commit 4b4b3f29bf7d278a0a44d407f781e90d9665e3fc. Rechecked all 33 manifest destinations against a fresh clone; all match byte-for-byte.

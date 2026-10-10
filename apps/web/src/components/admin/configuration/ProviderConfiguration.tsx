@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { AnalyticsConfiguration } from './AnalyticsConfiguration'
 
 type ConfigurationField = {
   key: string
@@ -16,6 +17,7 @@ type ConfigurationField = {
 type Provider = { id: string; label: string; description: string; fields: ConfigurationField[] }
 type Configuration = { encryptionReady: boolean; providers: Provider[] }
 type Changes = { values: Record<string, string>; disable?: string[] }
+const SITE_MEASUREMENT_ID = 'site-measurement'
 
 const SOURCE_LABELS = {
   database: 'Guardado en CBC', environment: 'Desde el servidor', disabled: 'Desactivado', missing: 'Sin configurar',
@@ -26,6 +28,7 @@ const buttonClass = 'rounded-lg border border-border px-3 py-2 text-sm font-medi
 export function ProviderConfiguration() {
   const [configuration, setConfiguration] = useState<Configuration | null>(null)
   const [selectedId, setSelectedId] = useState('')
+  const [analyticsConfiguredCount, setAnalyticsConfiguredCount] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -68,7 +71,7 @@ export function ProviderConfiguration() {
         Falta configurar el cifrado del servidor. Por ahora sólo puedes consultar el estado de las integraciones.
       </p>}
       <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
-        <nav aria-label="Proveedores de integración" className="grid gap-2 self-start sm:grid-cols-2 xl:grid-cols-1">
+        <nav aria-label="Integraciones" className="grid gap-2 self-start sm:grid-cols-2 xl:grid-cols-1">
           {configuration.providers.map(provider => (
             <button key={provider.id} type="button" aria-pressed={selectedId === provider.id}
               onClick={() => setSelectedId(provider.id)}
@@ -79,8 +82,20 @@ export function ProviderConfiguration() {
               </span>
             </button>
           ))}
+          <button type="button" aria-pressed={selectedId === SITE_MEASUREMENT_ID}
+            onClick={() => setSelectedId(SITE_MEASUREMENT_ID)}
+            className={selectedId === SITE_MEASUREMENT_ID
+              ? 'rounded-xl border border-primary bg-primary/10 p-4 text-left transition-colors'
+              : 'rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted'}>
+            <span className="block text-sm font-semibold text-foreground">Medición del sitio</span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              {analyticsConfiguredCount === null ? '2 campos disponibles' : analyticsConfiguredCount + ' de 2 campos configurados'}
+            </span>
+          </button>
         </nav>
-        {selected && <ProviderForm key={selected.id} provider={selected} encryptionReady={configuration.encryptionReady} reload={load} />}
+        {selectedId === SITE_MEASUREMENT_ID
+          ? <AnalyticsConfiguration onConfiguredCountChange={setAnalyticsConfiguredCount} />
+          : selected && <ProviderForm key={selected.id} provider={selected} encryptionReady={configuration.encryptionReady} reload={load} />}
       </div>
     </div>
   )

@@ -7,9 +7,10 @@ type Values = { googleMeasurementId: string; clarityProjectId: string }
 const EMPTY_VALUES: Values = { googleMeasurementId: '', clarityProjectId: '' }
 const inputClass = 'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground disabled:opacity-50'
 const buttonClass = 'rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50'
+const configuredCount = (values: Values) => Object.values(values).filter(value => value.trim() !== '').length
 const translate = (key: string) => t('es', `admin.analyticsSettings.${key}`)
 
-export function AnalyticsConfiguration() {
+export function AnalyticsConfiguration({ onConfiguredCountChange }: { onConfiguredCountChange?: (count: number) => void }) {
   const [saved, setSaved] = useState<Values | null>(null)
   const [values, setValues] = useState<Values>(EMPTY_VALUES)
   const [busy, setBusy] = useState(false)
@@ -26,7 +27,8 @@ export function AnalyticsConfiguration() {
     }
     setSaved(safe)
     setValues(safe)
-  }, [])
+    onConfiguredCountChange?.(configuredCount(safe))
+  }, [onConfiguredCountChange])
 
   useEffect(() => {
     let active = true
@@ -50,6 +52,7 @@ export function AnalyticsConfiguration() {
       })
       if (!response.ok) throw new Error('save-failed')
       setSaved(values)
+      onConfiguredCountChange?.(configuredCount(values))
       setMessage(translate('saved'))
     } catch {
       setError(translate('saveError'))
