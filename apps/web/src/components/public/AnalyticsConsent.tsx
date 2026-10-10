@@ -15,7 +15,7 @@ type AnalyticsWindow = Window & {
   __cbcGoogleConfigured?: boolean
 }
 
-const CONSENT_STORAGE_KEY = 'cbc-analytics-consent-v1'
+const CONSENT_STORAGE_KEY = 'cbc-analytics-consent-v2'
 const EXCLUDED_PATHS = ['/admin', '/login', '/api', '/health', '/tracking', '/en/tracking']
 let lastTrackedPath: string | null = null
 
@@ -44,20 +44,29 @@ function clearAnalyticsCookies() {
   }
 }
 
-function updateProviderConsent(value: ConsentValue) {
+function updateGoogleConsent(value: ConsentValue) {
   const analyticsWindow = window as AnalyticsWindow
   const granted = value === 'granted'
-
   analyticsWindow.gtag?.('consent', 'update', {
     analytics_storage: granted ? 'granted' : 'denied',
     ad_storage: 'denied',
     ad_user_data: 'denied',
     ad_personalization: 'denied',
   })
+}
+
+function updateClarityConsent(value: ConsentValue) {
+  const analyticsWindow = window as AnalyticsWindow
+  const granted = value === 'granted'
   analyticsWindow.clarity?.('consentv2', {
     ad_Storage: 'denied',
     analytics_Storage: granted ? 'granted' : 'denied',
   })
+}
+
+function updateProviderConsent(value: ConsentValue) {
+  updateGoogleConsent(value)
+  updateClarityConsent(value)
 }
 
 function loadGoogleAnalytics(measurementId: string) {
@@ -164,41 +173,40 @@ export function AnalyticsConsent() {
   useEffect(() => {
     if (!initialized || !hasAnalytics) return
 
-    const canTrack = consent === 'granted' && !excludedPath
-    if (!canTrack) {
-      updateProviderConsent('denied')
-      lastTrackedPath = null
-      return
-    }
+    const canLoadClarity = consent === 'granted' && !excludedPath
 
-    if (googleMeasurementId) {
+    // Advanced Consent Mode sends sanitized page views while analytics storage is denied.
+    if (googleMeasurementId && !excludedPath) {
       loadGoogleAnalytics(googleMeasurementId)
-      updateProviderConsent('granted')
+      updateGoogleConsent(consent === 'granted' ? 'granted' : 'denied')
       const analyticsWindow = window as AnalyticsWindow
       if (analyticsWindow.gtag && lastTrackedPath !== pathname) {
         const pageReferrer = lastTrackedPath
-          ? `${window.location.origin}${lastTrackedPath}`
+          ? window.location.origin + lastTrackedPath
           : getSafeReferrer()
         analyticsWindow.gtag('event', 'page_view', {
           page_title: document.title,
-          page_location: `${window.location.origin}${pathname}`,
+          page_location: window.location.origin + pathname,
           ...(pageReferrer ? { page_referrer: pageReferrer } : {}),
         })
       }
+    } else {
+      updateGoogleConsent('denied')
     }
 
-    if (clarityProjectId) {
+    if (clarityProjectId && canLoadClarity) {
       loadClarity(clarityProjectId)
-      updateProviderConsent('granted')
+      updateClarityConsent('granted')
+    } else {
+      updateClarityConsent('denied')
     }
 
-    lastTrackedPath = pathname
+    lastTrackedPath = excludedPath ? null : pathname
   }, [clarityProjectId, consent, googleMeasurementId, hasAnalytics, initialized, pathname, excludedPath])
 
   function saveConsent(value: ConsentValue) {
     setConsent(value)
     setPreferencesOpen(false)
-    lastTrackedPath = null
     try {
       window.localStorage.setItem(CONSENT_STORAGE_KEY, value)
     } catch {
@@ -213,14 +221,7 @@ export function AnalyticsConsent() {
 
   if (!initialized || !analyticsSettings || !hasAnalytics || excludedPath) return null
 
-  const providerList = [
-    googleMeasurementId ? 'Google Analytics 4' : null,
-    clarityProjectId ? 'Microsoft Clarity' : null,
-  ].filter(Boolean)
-  const providers = providerList.length === 2
-    ? (lang === 'es' ? `${providerList[0]} y ${providerList[1]}` : `${providerList[0]} and ${providerList[1]}`)
-    : providerList[0]
-  const descriptionKey = providerList.length === 2
+  const descriptionKey = googleMeasurementId && clarityProjectId
     ? 'public.analyticsConsent.descriptionBoth'
     : googleMeasurementId
       ? 'public.analyticsConsent.descriptionGoogle'
@@ -250,7 +251,7 @@ export function AnalyticsConsent() {
                 {t(lang, 'public.analyticsConsent.title')}
               </h2>
               <p className="mt-2 text-sm leading-6 text-gray-300">
-                {t(lang, descriptionKey).replace('{providers}', providers ?? '')}
+                {t(lang, descriptionKey)}
                 {' '}
                 <a
                   href={lang === 'es' ? '/politica-de-privacidad' : '/en/privacy-policy'}
@@ -276,7 +277,7 @@ export function AnalyticsConsent() {
               onClick={() => saveConsent('denied')}
               className="min-h-11 rounded-md border border-gray-600 px-5 py-2 text-sm font-semibold text-cbc-cream transition-colors hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cbc-yellow"
             >
-              {t(lang, 'public.analyticsConsent.reject')}
+              {t(lang, googleMeasurementId ? 'public.analyticsConsent.rejectGoogle' : 'public.analyticsConsent.reject')}
             </button>
             <button
               type="button"

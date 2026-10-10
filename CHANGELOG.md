@@ -6,6 +6,15 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.70 — Advanced consent mode for GA4
+
+- Load GA4 on public pages with analytics storage denied and send query-free page views as limited cookieless signals before visitor choice.
+- Enable analytics storage only after acceptance and keep Microsoft Clarity behind consent.
+- Re-prompt visitors using the former consent key and clarify the behavior in the Spanish/English consent banner, admin help, and privacy policies.
+
+### Verification
+- `pnpm --filter @cbc/db build` (Prisma Client generation), `pnpm --filter @cbc/web typecheck`, and `git diff --check` passed. No automated tests, lint, production build, browser-based code test, or live-site probe were run.
+
 ## v1.6.69 — Group site measurement with integrations
 
 - Add “Medición del sitio” to the same superadmin integration selector as Mercado Pago and Stripe.
