@@ -2,54 +2,54 @@
 
 ## Purpose
 
-This file defines code quality gates for task completion, merging, and GitHub delivery. `EXECUTION_SCOPE.md` is authoritative: PHDK agents work on repository code and existing GitHub delivery only.
+This file defines code quality gates for task completion, merging, and GitHub delivery. `EXECUTION_SCOPE.md` controls execution; `MAIN_DELIVERY_STANDARD.md` defines normal delivery through verified remote `main` integration and explicit narrower scopes.
 
-Choose the smallest relevant QA scope. Review applicable requirements in the changed area, record source references and actual command results, and mark unrelated items `N/A` with a reason. Documentation-only work requires source/diff consistency and applicable formatting checks, not application builds or test scaffolding.
+Choose the QA scope for the whole requested outcome. With explicit `PHDK auto`, `PHDK_AUTO.md` makes the sections below coverage for final integrated verification after all development, not intermediate stage tests, releases, or human-approval gates. Record source references and actual results; mark unrelated items `N/A` with a reason. Documentation-only work needs source/diff consistency and applicable formatting checks, not an app build.
 
 ## Evidence Boundary
 
-The product requirements below are checked through source/diff review, static checks, local builds, and risk-triggered local unit/in-process integration tests with deterministic doubles. A checked UI, auth, database, or diagnostics item confirms its implementation evidence only; it does not claim the real user flow or deployed system was exercised.
+The product requirements below are checked through source/diff review, static checks, local builds, and risk-triggered local unit/in-process integration tests with deterministic doubles. A checked UI, auth, database, or diagnostics item confirms implementation evidence, not an exercised user flow. Requested status, non-secret configuration metadata, and existing logs follow **Bounded read-only provider diagnostics** in `EXECUTION_SCOPE.md`, independently of Developer Mode or unlock; they are separate diagnostic evidence, never an executed product test.
 
 Do not launch a browser, preview server, or service; collect screenshots; use headed/headless E2E, Playwright, Puppeteer, Cypress, Selenium, chrome-devtools, browser MCP, or a browser-mode runner; call application HTTP endpoints, including localhost; connect to databases; use customer accounts; or call OAuth/metered providers. Tools, plugins, and delegated agents must follow the same boundary.
 
-Record `visual/runtime unverified` for UI appearance and deployed behavior. A human may independently inspect the product; that inspection is not a PHDK gate and must not be assigned to the user merely to close a checklist. An existing GitHub pipeline status is delivery evidence only.
+Record `visual/runtime unverified` for UI appearance and product execution, and report requested provider findings separately. A human may independently inspect the product; that inspection is not a PHDK gate and must not be assigned to the user merely to close a checklist. An existing GitHub pipeline status is delivery evidence only.
 
 # QA Scope Levels
 
 ## Task QA
 
-- Source/diff review against the approved slice and acceptance criteria.
-- Affected static/build checks where applicable.
-- Small local tests only when `TESTING_STANDARD.md` identifies a risk trigger.
+- Source/diff review against the entire requested scope and acceptance criteria; slices remain implementation steps within an Auto goal.
+- Applicable static/build checks at the delivery boundary; Auto uses the completed integrated candidate.
+- Write risk-triggered tests with the code under `TESTING_STANDARD.md`; in Auto, execute them at final integrated verification unless a real blocker or mandatory control requires an earlier check.
 - Source review of security/RBAC, i18n, routes, and migration files when touched.
-- `STATUS.md` update and a final report of code evidence, failures, and limits.
+- `STATUS.md` update and a final report of code evidence, delivery state, failures, and limits.
 
 ## Merge QA
 
 - Applicable checklist sections and repository static/build gate.
 - Risk-triggered local tests, with no browser or external runtime access.
-- Actual diff review under the project's existing merge policy.
+- Actual diff review under `MAIN_DELIVERY_STANDARD.md` and the project's existing merge policy; re-review and affected checks after integration changes.
 - Unresolved code blockers are reported; excluded runtime checks are not invented as merge prerequisites.
 
-## Human Diff Review
+## Diff Review
 
-Code verification and human review of the actual diff are distinct. PHDK requires human diff review before merging to `main`, even when GitHub does not enforce approvals. Existing repository rules may add restrictions; the explicitly activated Finetuning exception for direct pushes is defined in `DEVELOPMENT_RULES.md`. Browser or live-service use is not part of diff review.
+Review the complete actual diff as the assistant. Current authorization, including explicit Auto for a defined goal, covers the behavior it describes under `MAIN_DELIVERY_STANDARD.md`; do not ask for a PHDK-only OK per feature, stage, risk label, or merge. Actual required reviews, checks, hooks, and access controls remain effective. Developer Mode retains its own hard stops while active; explicit Auto replaces that mode for the identified goal under `PHDK_AUTO.md`.
 
-Before merging a completed mission to `main`:
+For auth/authz, secrets, sensitive data, migrations, payments, infrastructure/deployment configuration, agent execution/permission-policy changes, and other material risks, classify the actual behavior and the decision needing approval. Before normal integration:
 
-- [ ] A human opened the actual diff (`git diff`, the GitHub PR diff, or equivalent), not only the AI summary.
-- [ ] The human confirmed it matches the approved task and contains no unrelated scope.
-- [ ] Judgment calls, workarounds, and security-sensitive changes were specifically reviewed.
-- [ ] Approval is a recorded action under the project's merge policy.
+- [ ] The assistant reviewed the complete outgoing diff, integration result, scope, and security-sensitive behavior.
+- [ ] Risk classification follows the changed behavior; a packaging fix restoring login does not itself change authentication policy.
+- [ ] The owner's approval covers the sensitive decision; the current request or an identified-task/PR "push to main", "merge", or "aprobado" can supply it without a second ritual.
+- [ ] Any named, independent, or formal GitHub review required by an actual applicable owner/repository control is satisfied; conversation approval does not replace that control.
 
-Do not infer human review from a green verification report or a conversational acknowledgment that did not examine the diff. Continue authorized independent code work while any required merge review remains pending.
+Record owner approval, assistant source review, any actual required review, and check/delivery evidence separately. Never claim human diff inspection from approval or passing checks; a missing GitHub review event alone does not prove owner approval is absent. A requested `PHDK unlock` reconciles documentary blockers under `PHDK_UNLOCK.md`, preserving controls and current scope. Finish permitted work before asking only for a genuinely missing decision.
 
 ## Release QA
 
 - Applicable code checks, release metadata, and changelog.
 - Code/migration compatibility and documented rollback approach when relevant.
-- Delivery through the project's existing GitHub-connected pipeline only.
-- Exact GitHub commit/status evidence when available, with live behavior explicitly unverified.
+- Deployment through the project's existing GitHub-connected pipeline only; repository integration has its own completion evidence.
+- Fresh remote target commit/version evidence and existing pipeline status when available, with live behavior explicitly unverified.
 - Missing external prerequisites are reported without provisioning them.
 
 # QA Execution Rules
@@ -57,7 +57,7 @@ Do not infer human review from a green verification report or a conversational a
 - Run permitted commands from the repository root unless the task specifies a narrower package.
 - Inspect install/build/test/hook scripts before running them; reject browser, service, database, infrastructure, or deployment side effects.
 - Use an existing offline/test configuration when available; never weaken production behavior to make a check pass.
-- Validate the task scope and any global breakage it causes.
+- In Auto, validate the whole goal and cross-feature regressions at the end; intermediate checks require a real implementation blocker or mandatory control, and required hooks still run before their governed operation.
 - Report actual source evidence, exact commands, failures, skipped checks, and their reasons.
 - Never claim a command passed unless it ran. Do not hide gaps or substitute source review for runtime proof.
 - Do not add tests, recurring agents, CI workflows, dependency bots, monitoring, or backup jobs to satisfy a checklist.
@@ -80,11 +80,14 @@ Commands run:
 Local tests:
 - risk trigger + command/result, or not required + reason
 
-Visual/runtime:
-- visual/runtime unverified — outside PHDK execution scope
+Provider diagnostics, only if requested:
+- service/deployment, source and query bounds / non-secret metadata or redacted logs / limits; diagnostic evidence only
 
-GitHub delivery, if requested:
-- existing pipeline / commit / status / reference, or delivery limitation
+Visual/runtime:
+- visual/runtime unverified — no browser or live product test/probe executed
+
+GitHub delivery:
+- target / PR / integrated SHA / freshly verified remote version / review evidence, or explicit narrower scope/blocker; existing pipeline status separately
 
 Failures / gaps:
 - severity — description — next code step or external dependency
@@ -109,7 +112,7 @@ N/A     — not applicable with reason
 ## Merge Rules
 
 - Blockers cannot be merged.
-- Major issues cannot be released without explicit written approval in `STATUS.md`.
+- Major issues require the project's applicable approval; record existing conversation approval truthfully in `STATUS.md` without inventing a second approval step.
 - Minor issues may be deferred only if logged in `STATUS.md` with owner and next step.
 - N/A items require a real reason, not “not needed”.
 
@@ -386,6 +389,7 @@ The debug/admin tooling implements a full force cache dump action for authorized
 - [ ] OpenTelemetry is used only if explicitly tasked/configured.
 - [ ] Important admin actions are audited.
 - [ ] Failed auth and authorization attempts are logged safely.
+- [ ] If provider diagnostics were requested, retrieval followed **Bounded read-only provider diagnostics** in `EXECUTION_SCOPE.md`; source, bounds, non-secret metadata, redacted logs, and limits are reported separately from test results.
 
 # Feature Flags
 
@@ -439,7 +443,7 @@ Review components, styles, markup, and handlers in source. Do not launch a brows
 - [ ] CORS is an explicit origin allowlist — never a wildcard on a credentialed route (`DEVSECOPS.md` HTTP Security Headers).
 - [ ] CSP, HSTS (production), and the standard security header set are configured on `apps/api`.
 - [ ] Rate limiting is active globally and enforced more strictly on auth endpoints (`DEVSECOPS.md` Rate Limiting) — not merely "considered."
-- [ ] Any exposed secret is removed/redacted from the code deliverable and reported as requiring owner-managed rotation; the agent does not access the provider or claim rotation occurred.
+- [ ] Any exposed secret is removed/redacted from the code deliverable and reported as requiring owner-managed rotation; the agent does not rotate provider credentials or claim rotation occurred.
 - [ ] Sessions and cookies use secure settings where applicable.
 - [ ] Admin actions are protected server-side.
 - [ ] Sensitive API endpoints reject unauthorized access.
@@ -461,6 +465,21 @@ Review components, styles, markup, and handlers in source. Do not launch a brows
 - [ ] No metered integration relies solely on the provider's own rate limit as its cost safety net.
 
 # AI / LLM Configuration QA
+
+Apply this section only when repository evidence establishes actual AI/LLM use under `AI_ADMIN_STANDARD.md`. Provider API-key/config variable names, provider/model configuration, `packages/ai`, provider SDK references, or implemented AI workflows are applicability evidence; never read secret values for QA. If only an unused key placeholder exists and no AI workflow can be established, mark applicability UNKNOWN rather than scaffolding features.
+
+- [ ] `AI_ADMIN_STANDARD.md` applicability was evaluated from source/configuration and product intent.
+- [ ] Super-admin navigation contains a clear **Prompts** item when AI applies.
+- [ ] The Prompts route is protected server-side for `super_admin` (or an explicitly documented equivalent admin role).
+- [ ] Prompts UI has a left prompt/agent list with stable IDs, visible selected state, and loading/empty/error/permission states.
+- [ ] Selected prompt/agent editor exposes editable **Name**, **Personality prompt**, **Execution prompt**, and **Output JSON schema** fields in that order.
+- [ ] Display-name edits do not silently change the stable prompt/agent ID.
+- [ ] Personality/system instructions, execution/task instructions, and user/domain input remain structurally separate.
+- [ ] Output JSON schema parses/validates before save and runtime model output is validated against it before application use.
+- [ ] Prompt/agent definitions are persistent/admin-manageable rather than hardcoded runtime prompt strings.
+- [ ] Prompt changes create revision/audit evidence with actor, timestamp, prompt ID, revision, and safe diff.
+- [ ] AI usage/consumption records attribute calls to prompt/agent ID and revision where applicable.
+- [ ] Super-admin AI consumption capability exposes the token/cost/model/provider evidence required by the AI observability standard.
 
 - [ ] `/admin/ai` exists and is protected when the project uses any LLM-powered feature.
 - [ ] Prompt template is visible and editable by an authorized admin without a code deploy.
@@ -527,12 +546,12 @@ Review components, styles, markup, and handlers in source. Do not launch a brows
 # Monorepo and GitHub Deployment
 
 - [ ] Applicable root/package builds cover changed `apps/web`, `apps/api`, and shared packages.
-- [ ] Existing repository deployment configuration is reviewed for the requested code change; provider settings are not modified.
-- [ ] Delivery uses only an authorized push/merge to the branch consumed by an existing GitHub-connected deployment pipeline.
+- [ ] Existing repository deployment configuration is reviewed; valid GitHub autodeploy/watch paths are preserved, with no dummy never-matching filters or provider-setting changes.
+- [ ] Deployment uses only the authorized push/merge path consumed by an existing GitHub connection; remote target integration is verified separately.
 - [ ] No provider CLI/API/dashboard deployment or local build upload is performed.
 - [ ] No GitHub Actions, preview deployment, new trigger/schedule, dependency bot, or maintenance workflow is scaffolded as a PHDK prerequisite.
 - [ ] `.env.example` documents required names with safe placeholders; real `.env` files are ignored.
-- [ ] Missing hosting/OAuth/database/secrets prerequisites are reported without creating or configuring them.
+- [ ] Missing hosting/OAuth/database/secrets prerequisites and an observed disabled autodeploy connection or filter excluding changes that need deployment are reported as separate blockers without reconfiguration; valid service-specific filters and intended unaffected-service skips are not failures.
 - [ ] GitHub deployment status is recorded when available; no live `/health` or browser check is used to certify delivery.
 - [ ] `apps/mobile` remains untouched unless explicitly tasked.
 
@@ -549,13 +568,14 @@ Review components, styles, markup, and handlers in source. Do not launch a brows
 
 # Release
 
-- [ ] Version updated if the merge changes deployable behavior.
-- [ ] Every commit message begins with the version it produces (`vX.Y.Z`).
-- [ ] Every commit bumped the version by at least a patch, with `package.json` updated in the same commit.
+- [ ] Source-changing commits update the actual version source and derived metadata per `VERSIONING.md`; Auto reconciles one complete delivery, not a bump/release per internal stage.
+- [ ] Source-changing commit messages begin with the resulting version (`vX.Y.Z`); integration commit handling follows `VERSIONING.md`.
+- [ ] Pure merge/squash integration of already versioned changes adds no extra bump, post-merge version-only commit, or second push.
+- [ ] The requested change is integrated into remote `main` or the explicit target, with fresh commit/ancestry and version-source evidence; a branch push/open PR is incomplete unless the user expressly narrowed delivery.
 - [ ] Health/version code and build metadata are wired to identify the released commit; actual deployed responses are unverified.
 - [ ] Checkpoint branch created if this is a major update.
 - [ ] `STATUS.md` updated with current state.
-- [ ] `TASK.md` updated for next session if work continues.
+- [ ] `TASK.md` records remaining steps of the still-current request; later follow-ups stay inactive and snapshots do not pause authorized delivery.
 - [ ] All gap notes from this session are logged in `STATUS.md`.
 - [ ] High-risk delivery has a documented code rollback/revert approach compatible with the existing GitHub pipeline; no provider operation is performed.
 - [ ] Migration rollback notes exist if schema changed.
@@ -565,15 +585,15 @@ Review components, styles, markup, and handlers in source. Do not launch a brows
 # Working Slice and Diagnostics QA
 
 - [ ] The approved scope and intended outcome are clear before coding.
-- [ ] Required task context was read; the agent stayed within `EXECUTION_SCOPE.md` and the approved files.
+- [ ] Required task context was read; the agent stayed within `EXECUTION_SCOPE.md` and the current authorized goal, without demanding an OK per file.
 - [ ] Code verification evidence, changed files, and known gaps are reported without hiding failures.
-- [ ] `TASK.md` and `STATUS.md` reflect completion or the next active slice; no unnecessary approval pause is added between authorized slices.
+- [ ] `TASK.md` and `STATUS.md` reflect the whole current goal and remaining steps; Auto continues between authorized slices without an approval, release, or final-report pause.
 - [ ] For debug diagnostics, source review covers the full contract in `DEBUG_DIAGNOSTICS_STANDARD.md`: version badges, paired copy/cache controls, safe reports, auth/metered metadata, and authorized visibility.
 - [ ] Cache and clipboard handlers are wired in source; any local test uses fake browser adapters, never a browser session.
 - [ ] Source defaults debug mode ON in non-production and OFF in production; risky default-selection logic is locally covered when needed.
 - [ ] Diagnostic buffers, registry/UI mapping, sanitized examples, correlation IDs, status/latency, and safe probe guards are reviewed in code.
 - [ ] No live report, health request, endpoint probe, browser interaction, or external settings confirmation is required to mark diagnostics code complete.
-- [ ] UI and operational behavior remain explicitly `visual/runtime unverified`.
+- [ ] Product execution remains explicitly `visual/runtime unverified`; requested bounded provider findings are separate diagnostic evidence.
 
 # Enforcement QA
 
@@ -585,10 +605,10 @@ Review local enforcement when foundation work or the current change touches it. 
 - [ ] No workflow, dependency bot, scheduled job, or repository-settings change is added merely to satisfy PHDK.
 - [ ] Existing repository merge/review constraints are respected; missing external prerequisites are reported without provisioning them.
 - [ ] The current tool's native rule block matches canonical `PHDK_NATIVE_RULES.md` and includes the `EXECUTION_SCOPE.md` boundary.
-- [ ] No hook is bypassed without the applicable authorization and a recorded explanation under `VERSIONING.md`.
+- [ ] No hook, check, required review, or access control was bypassed, disabled, or weakened to complete delivery.
 
 # Final QA Rule
 
-Unresolved code blockers prevent claiming code completion; major release issues require the project's recorded approval before release. Permitted checks that fail remain visible in the report. Browser and external runtime checks are excluded scope, not invented completion gates.
+Unresolved actual required checks, reviews, or access blockers prevent claiming delivery completion. In Auto, complete all independent work, repair in-scope final-verification failures, and satisfy applicable gates before publishing the whole candidate to `main`; no additional PHDK-only human sign-off is required. A genuinely new material decision follows `PHDK_AUTO.md`. Developer Mode hard stops apply only while that mode remains active. Browser/live tests stay excluded; requested provider diagnostics remain separate evidence.
 
-The final response states what source was reviewed, what commands passed or failed, what could not run, and what remains `visual/runtime unverified`.
+The final response states what source was reviewed, actual check results, remote target/version evidence or the precise delivery blocker/narrower scope, and what remains `visual/runtime unverified`.

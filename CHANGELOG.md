@@ -6,6 +6,15 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.67 — PHDK standards v2.43.0
+
+- Synchronize the vendored PHDK standards and managed agent rules with canonical upstream v2.43.0.
+- Keep the product version metadata aligned with the standards release.
+
+### Verification
+- All 33 vendored files match canonical upstream; the root managed block matches `PHDK_NATIVE_RULES.md`.
+- `git diff --check` passed. Application source is unchanged.
+
 ## v1.6.65 — Align B2B box pricing
 
 - Use each linked Box product's retail base price in the B2B catalog and quote calculation instead of the method cost.
