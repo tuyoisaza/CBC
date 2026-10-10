@@ -1,3 +1,10 @@
+## 2026-10-10 — Consentimiento avanzado para GA4 (v1.6.70)
+
+- Cargar GA4 en páginas públicas con `analytics_storage: denied` y enviar vistas de ruta sin parámetros antes de la elección o si se rechazan cookies.
+- Habilitar el almacenamiento analítico sólo después de aceptar; mantener Microsoft Clarity detrás de la aceptación.
+- Renovar la clave de consentimiento guardado y explicar el comportamiento en los avisos español/inglés y la configuración superadmin.
+- Comprobación de Analytics: el Measurement ID coincide; Google indica que no recibió datos en 48 horas y la URL del flujo está registrada como `http://coffeebunncafe.com`.
+- `pnpm --filter @cbc/db build` (generación de Prisma Client), `pnpm --filter @cbc/web typecheck` y `git diff --check` pasaron. Sin cambios en configuración del proveedor ni prueba de medición en producción.
 ## 2026-10-10 — Medición del sitio dentro de integraciones (v1.6.69)
 
 - Colocar “Medición del sitio” como opción del mismo selector que Mercado Pago, Stripe y las demás integraciones.
@@ -63,9 +70,10 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.68
+v1.6.70
 
 ## Completed Slices
+- Advanced consent mode for GA4 with cookieless public page views while analytics storage is denied; Microsoft Clarity remains opt-in (v1.6.70).
 - Consent-based Google Analytics 4 and Microsoft Clarity, with superadmin-managed IDs, privacy controls, and audit logging (v1.6.68).
 - Synchronize PHDK standards v2.43.0 and refresh the managed agent block (v1.6.67).
 - B2B Box prices now use the linked retail product price, matching the home page; volume discounts are calculated and displayed separately in the quote (v1.6.65).
@@ -101,13 +109,13 @@ v1.6.68
 - All-in pricing (shared lib/pricing.ts + single-checkout final-price + descriptive errors)
 
 ## Current Slice
-Opt-in website analytics: Google Analytics 4 and Microsoft Clarity load only after visitor consent. The persistent preference control allows visitors to accept, reject, or change their choice. Admin, sign-in, health, API, and order-tracking paths are excluded. Google page views omit query parameters; contact and quote form content is marked for Clarity masking.
+GA4 advanced consent mode: on public paths, load the configured tag with analytics storage denied and send pathname-only `page_view` events without URL parameters. Change analytics storage to granted only after acceptance. Clarity remains unloaded unless the visitor accepts. A new consent key makes visitors who chose under the previous banner see the updated choice again.
 
-Superadmins configure, update, or clear the GA4 Measurement ID and Clarity Project ID at `/admin/configuration`. The values are public IDs stored in the existing settings table; the protected write validates and audits changes, and a no-cache public endpoint projects only these two IDs. No environment variables or schema migration are needed. The supplied IDs (`G-WWLTLPBZ8Q` and `yvn1wwnadb`) have not been entered; they remain to be saved by a superadmin after the UI is available.
+Superadmins continue to configure the GA4 Measurement ID and Clarity Project ID at `/admin/configuration`; IDs remain database-managed and absent from source and environment variables. Admin, sign-in, health, API, and order-tracking paths remain excluded, and contact/quote fields remain masked in Clarity.
 
-Provider activation still requires entering the IDs after code delivery, disabling Enhanced Measurement in the GA4 web stream (to prevent duplicate or unsanitized automatic events), and turning off Clarity's default cookie setting in Settings → Setup so it waits for consent. No provider or deployment settings were operated. Product version metadata is v1.6.68. The current request authorizes a versioned commit, branch push, pull request, and merge if existing repository protections permit it; no release tag is authorized and production deployment is not verified.
+Read-only Google Analytics inspection confirmed that the web stream Measurement ID matches `G-WWLTLPBZ8Q`. Analytics reported no received data in the last 48 hours. Its stream URL is recorded as `http://coffeebunncafe.com`, while the public domain uses HTTPS; correct the stream URL in Google Analytics separately. No provider settings were changed.
 
-Verification: `pnpm --filter @cbc/web typecheck` passed; targeted superadmin configuration tests passed (8/8); i18n tests passed (6/6); `git diff --check` passed. `pnpm --filter @cbc/web lint` reached Next.js's first-run ESLint configuration prompt and exited without creating configuration. Prettier is not installed, so its check could not run. A Next.js build was not run because server pages query the database and this scope prohibits database connections. No browser, live endpoint, database, provider dashboard, or deployment was used.
+Verification: Prisma Client generation, web typecheck, and `git diff --check` passed. No automated tests, lint, production build, browser-based code test, or live-site probe were run. Production behavior and deployment remain unverified.
 
 ## Inactive Context — Previously Current Slice
 Secure provider configuration: `/admin/configuration` for explicit superadmins, including nine providers, AES-256-GCM database storage, write-only secret management, server-side environment import, transactional audit, fresh authorization, and dynamic integration clients. Activation guide: `docs/deploy/integration-configuration.md`.

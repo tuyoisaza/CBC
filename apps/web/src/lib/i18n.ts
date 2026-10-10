@@ -34,7 +34,7 @@ export const translations = {
   admin: {
     analyticsSettings: {
       title: { es: 'Medición del sitio', en: 'Website measurement' },
-      description: { es: 'Conecta GA4 y Microsoft Clarity. Los IDs se guardan en la base de datos y sólo se publican para que los navegadores puedan cargar las etiquetas después del consentimiento.', en: 'Connect GA4 and Microsoft Clarity. IDs are stored in the database and exposed only so browsers can load the tags after consent.' },
+      description: { es: 'Conecta GA4 y Microsoft Clarity. GA4 envía señales limitadas sin cookies mientras el almacenamiento analítico está denegado; al aceptar se habilita ese almacenamiento y se carga Clarity.', en: 'Connect GA4 and Microsoft Clarity. GA4 sends limited cookieless signals while analytics storage is denied; accepting enables analytics storage and loads Clarity.' },
       howTo: { es: 'Dónde encontrar los IDs', en: 'Where to find the IDs' },
       googleSteps: { es: 'Google Analytics: Administrar → Flujos de datos → abre el flujo web y copia el ID de medición (G-...).', en: 'Google Analytics: Admin → Data streams → open the web stream and copy the Measurement ID (G-...).' },
       claritySteps: { es: 'Microsoft Clarity: abre el proyecto → Settings → Overview y copia el Project ID.', en: 'Microsoft Clarity: open the project → Settings → Overview and copy the Project ID.' },
@@ -83,21 +83,22 @@ export const translations = {
     privacyPolicy: { es: 'Política de privacidad', en: 'Privacy Policy' },
     termsConditions: { es: 'Términos y condiciones', en: 'Terms and Conditions' },
     analyticsConsent: {
-      title: { es: 'Medición opcional del sitio', en: 'Optional website analytics' },
+      title: { es: 'Preferencias de medición del sitio', en: 'Website measurement preferences' },
       descriptionBoth: {
-        es: 'Si aceptas, usaremos {providers} para medir visitas e interacciones y mejorar el sitio. Los campos de contacto y cotización se enmascaran en las grabaciones de Clarity.',
-        en: 'If you accept, we will use {providers} to measure visits and interactions and improve the site. Contact and quote fields are masked in Clarity recordings.',
+        es: 'Google Analytics 4 envía señales limitadas sin cookies antes de que elijas. Si aceptas, habilitamos cookies analíticas de GA4 y cargamos Microsoft Clarity. Si eliges GA4 sin cookies, Clarity no se carga. Los campos de contacto y cotización se enmascaran en Clarity.',
+        en: 'Google Analytics 4 sends limited cookieless signals before you choose. If you accept, GA4 analytics cookies are enabled and Microsoft Clarity is loaded. If you choose cookieless GA4, Clarity is not loaded. Contact and quote fields are masked in Clarity recordings.',
       },
       descriptionGoogle: {
-        es: 'Si aceptas, usaremos {providers} para medir visitas y mejorar el sitio. No enviaremos parámetros de URL a Analytics.',
-        en: 'If you accept, we will use {providers} to measure visits and improve the site. URL parameters are not sent to Analytics.',
+        es: 'Google Analytics 4 envía señales limitadas sin cookies antes de que elijas. Si aceptas, puede usar cookies analíticas; si eliges GA4 sin cookies, el almacenamiento sigue denegado. No enviaremos parámetros de URL a Analytics.',
+        en: 'Google Analytics 4 sends limited cookieless signals before you choose. If you accept, it may use analytics cookies; if you choose cookieless GA4, storage remains denied. URL parameters are not sent to Analytics.',
       },
       descriptionClarity: {
-        es: 'Si aceptas, usaremos {providers} para medir interacciones y mejorar el sitio. Los campos de contacto y cotización se enmascaran en las grabaciones.',
-        en: 'If you accept, we will use {providers} to measure interactions and improve the site. Contact and quote fields are masked in recordings.',
+        es: 'Microsoft Clarity sólo se carga si aceptas medir interacciones. Los campos de contacto y cotización se enmascaran en las grabaciones. Si rechazas, Clarity no se carga.',
+        en: 'Microsoft Clarity loads only if you accept interaction measurement. Contact and quote fields are masked in recordings. If you reject, Clarity is not loaded.',
       },
       accept: { es: 'Aceptar analítica', en: 'Accept analytics' },
       reject: { es: 'Rechazar analítica', en: 'Reject analytics' },
+      rejectGoogle: { es: 'Sólo GA4 sin cookies', en: 'Cookieless GA4 only' },
       preferences: { es: 'Preferencias de cookies', en: 'Cookie preferences' },
       close: { es: 'Cerrar', en: 'Close' },
       privacy: { es: 'Política de privacidad', en: 'Privacy policy' },
