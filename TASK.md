@@ -1,65 +1,32 @@
-# TASK — PHDK Adoption: Process Standardization
+# TASK — Configure opt-in website analytics
 
-## Slice
-User-visible outcome: CBC project has PHDK tracking files, architecture decisions documented, and health endpoints conforming to PHDK format
-In scope: ARCHITECTURE_DECISIONS.md, TASK.md, STATUS.md, CHANGELOG.md, health endpoint fixes, version display, .env.example cleanup
-Out of scope: Debug mode system, i18n implementation, feature structure reorganization, shared packages creation, deploy workflow removal
-Depends on: None
+## Authorization and scope
+Current request: Add Google Analytics 4 and Microsoft Clarity to the CBC public site, then let superadmins enter their IDs in the admin panel instead of build environment variables.
+Status: Source implementation and local verification complete; commit, push, pull request, and merge are authorized for this change; provider activation remains pending.
+Execution mode: interactive-only, single assistant, no delegation.
+Goal: Measure public-site visits and interactions after visitor consent, with admin-managed provider IDs.
+Done when:
+- [x] Google Analytics 4 and Clarity load only after visitor consent and support reject/change choices.
+- [x] Admin, sign-in, health, API, and order-tracking paths are excluded; Google page views omit query parameters.
+- [x] Contact and quote form content is marked for Clarity masking; privacy notices and CSP are updated.
+- [x] Superadmins can enter, update, and clear the two IDs in `/admin/configuration`; no environment IDs are required.
+- [x] Applicable local checks and risk-triggered tests are complete, with unavailable checks documented accurately.
+In scope: opt-in browser measurement, superadmin configuration UI and protected API, the public two-ID projection, validation/audit, privacy/CSP/code tracking updates.
+Out of scope: Creating or configuring provider accounts, changing provider dashboards or deployment settings, directly operating production, or creating/pushing a release tag. A commit, branch push, pull request, and merge for this analytics change are authorized by the current request only.
+Owner stop/pause controls: No additional pause instruction applies to this analytics request; repository work remains interactive-only.
+Git actions authorized now: create `feature/website-analytics`, commit with required version metadata, push the branch, create a pull request, and merge that pull request if existing repository protections permit it.
+Branch: `feature/website-analytics`.
 
-## Tasks
-- [x] Create ARCHITECTURE_DECISIONS.md documenting all stack deviations
-  - ID: phdk-001
-  - Files: ARCHITECTURE_DECISIONS.md
-  - Acceptance: File exists with all deviations documented
-  - Blocked by: none
-- [x] Create TASK.md for current slice
-  - ID: phdk-002
-  - Files: TASK.md
-  - Acceptance: File exists with proper PHDK TASK.md format
-  - Blocked by: none
-- [x] Create STATUS.md with project status
-  - ID: phdk-003
-  - Files: STATUS.md
-  - Acceptance: File exists with completed/current/next slices
-  - Blocked by: none
-- [x] Create CHANGELOG.md starting from current version
-  - ID: phdk-004
-  - Files: CHANGELOG.md
-  - Acceptance: File exists with proper PHDK changelog format
-  - Blocked by: none
-- [x] Remove residual marketing code from /health endpoint
-  - ID: phdk-005
-  - Files: apps/web/src/app/health/route.ts
-  - Acceptance: No 'engine' or 'linkedin' entries in ENV_GROUPS
-  - Blocked by: none
-  - Verified: ENV_GROUPS has no engine/linkedin entries
-- [x] Update /api/health to PHDK format
-  - ID: phdk-006
-  - Files: apps/web/src/app/api/health/route.ts
-  - Acceptance: Returns {status, service, version, environment}
-  - Blocked by: none
-  - Verified: returns status/service/version/environment
-- [x] Add version display to app shell
-  - ID: phdk-007
-  - Files: apps/web/src/app/layout.tsx, apps/web/src/components/public/VersionBadge.tsx
-  - Acceptance: Version badge visible near logo
-  - Blocked by: none
-  - Verified: VersionBadge renders NEXT_PUBLIC_APP_VERSION (with copy-debug on click)
-- [x] Add version display to login page
-  - ID: phdk-008
-  - Files: apps/web/src/app/login/page.tsx
-  - Acceptance: Version shown in footer area
-  - Blocked by: none
-  - Verified: login footer shows NEXT_PUBLIC_APP_VERSION
-- [x] Add version display to admin panel
-  - ID: phdk-009
-  - Files: apps/web/src/app/admin/(protected)/layout.tsx, apps/web/src/components/admin/AdminNav.tsx
-  - Acceptance: Version shown in admin shell
-  - Blocked by: none
-  - Verified: AdminNav shows version next to logo (with copy/download)
-- [x] Clean up .env.example
-  - ID: phdk-010
-  - Files: .env.example
-  - Acceptance: No sk_live_/pk_live_ prefixes
-  - Blocked by: none
-  - Verified: placeholders use bare var names, no live/test key prefixes
+## Implementation and verification
+- Consent UI and route/privacy safeguards: implemented; provider scripts load only after consent and the public page-view data omits query parameters.
+- Superadmin ID entry, strict server validation, transactional audit, and limited public projection: implemented without a database schema migration or environment IDs.
+- Verification: `pnpm --filter @cbc/web typecheck` passed; targeted superadmin route tests passed (8/8); i18n tests passed (6/6); `git diff --check` passed. `pnpm --filter @cbc/web lint` could not run because `next lint` opened its first-run ESLint setup prompt; no ESLint configuration was created. The Prettier check could not run because Prettier is not installed. A Next.js build was not run because server pages query the database and this scope prohibits database connections. No browser, live service, database, provider dashboard, or deployment operation was used.
+- Git hook inspection found only Git's sample hooks in `.git/hooks`; no active `commit-msg`, `pre-commit`, or `pre-push` hook was installed in this checkout.
+
+## Current delivery
+- The two IDs supplied for this feature are `G-WWLTLPBZ8Q` (GA4) and `yvn1wwnadb` (Clarity). They are intentionally not stored in source or environment variables; a superadmin must enter them after the configuration UI is available.
+- No release tag is authorized. Publication is limited to the requested branch/PR/merge flow, and an actual production deployment must not be claimed without evidence.
+- The user's request to publish every future change does not override this repository's requirement for authorization in each current request.
+
+## Inactive follow-up context
+After this code is deployed through the owner's separately authorized release process, a superadmin can enter the GA4 Measurement ID and Clarity Project ID in `/admin/configuration`. Separately, disable Enhanced Measurement in the GA4 web stream and turn off Clarity's default cookie setting in Settings → Setup. No provider or deployment settings are operated by this task.

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalDocument lang="es" eyebrow="Información legal" title="Política de privacidad" updatedAt="Última actualización: 6 de octubre de 2026">
+    <LegalDocument lang="es" eyebrow="Información legal" title="Política de privacidad" updatedAt="Última actualización: 10 de octubre de 2026">
       <p>En Coffee Bunn Café respetamos tu privacidad. Este aviso explica cómo tratamos los datos personales que compartes al solicitar una cotización, realizar un pedido, comunicarte con nosotros o navegar en nuestro sitio.</p>
 
       <LegalSection title="Responsable y contacto">
@@ -38,7 +38,9 @@ export default function PrivacyPolicyPage() {
       </LegalSection>
 
       <LegalSection title="Cookies y seguridad">
-        <p>El sitio puede usar tecnologías necesarias para su funcionamiento y herramientas que ayudan a entender su uso. Puedes controlar ciertas cookies desde tu navegador. Aplicamos medidas administrativas y técnicas razonables para proteger los datos; sin embargo, ningún sistema de internet es completamente invulnerable.</p>
+        <p>Si aceptas la medición opcional en el aviso de cookies, usamos Google Analytics 4 para medir visitas y Microsoft Clarity para analizar interacciones, mapas de calor y grabaciones de sesión. Google Analytics recibe la ruta consultada sin parámetros de URL. No medimos páginas de administración, inicio de sesión ni seguimiento de pedidos. Los campos de los formularios de contacto y cotización se enmascaran en Clarity; además, Clarity enmascara los campos de entrada por defecto.</p>
+        <p>Estos proveedores reciben información técnica y de uso del navegador conforme a sus propios avisos: <a className="text-cbc-yellow hover:underline" href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Privacidad de Google</a> y <a className="text-cbc-yellow hover:underline" href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noreferrer">Privacidad de Microsoft</a>. Los scripts de analítica no se cargan antes de que aceptes. Guardamos tu elección en el almacenamiento local de tu navegador; puedes rechazar o cambiarla en cualquier momento desde “Preferencias de cookies”. Si retiras tu consentimiento, actualizamos la señal para ambos proveedores y eliminamos las cookies de analítica que el navegador permita borrar. Google Analytics y Clarity pueden procesar señales limitadas sin cookies mientras esa página permanezca abierta, según sus modos de consentimiento; al volver a cargar la página respetamos tu elección y no cargamos los scripts.</p>
+        <p>Aplicamos medidas administrativas y técnicas razonables para proteger los datos; sin embargo, ningún sistema de internet es completamente invulnerable.</p>
       </LegalSection>
 
       <LegalSection title="Cambios a este aviso">

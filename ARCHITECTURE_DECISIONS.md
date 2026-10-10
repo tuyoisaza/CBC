@@ -80,6 +80,15 @@ These integrations were added because CBC's business requires them. They are doc
 - **Added:** Pre-PHDK
 - **Risk:** Low — analytics only, no financial operations
 
+### Google Analytics 4 and Microsoft Clarity
+
+- **Purpose:** Measure public-site visits and understand user interactions through page views, heatmaps, and session recordings.
+- **Decision:** Load the native Google tag and Clarity script only after the visitor accepts optional analytics. Store the choice in browser local storage and provide a persistent preference control to change it. Pass Google Consent Mode and Clarity Consent V2 signals; advertising storage and personalization remain denied.
+- **Privacy controls:** Do not measure admin, sign-in, health, API, or order-tracking paths. Send Google Analytics the page path and safe referrer without query parameters. Mark contact and quote form content for Clarity masking. The visitor can reject or revoke consent; provider cookies are cleared where the browser permits. Both providers may process limited cookieless signals while a previously consented page remains open after consent is revoked.
+- **Configuration:** A superadmin saves the GA4 Measurement ID (`G-...`) and Clarity Project ID in `/admin/configuration`; no environment variables or schema migration are needed. The IDs are public identifiers, not secrets, so they are stored as ordinary settings. A narrowly scoped public endpoint returns only these two validated IDs for the consent-gated browser tags. Writes require fresh superadmin authorization and are audited without recording the IDs. Disable Enhanced Measurement in the GA4 web stream because the app sends its own sanitized page views. In Clarity Settings → Setup, turn off default cookie setting so the project waits for the consent signal before storing cookies.
+- **PHDK Standard:** Keep third-party analytics opt-in and document collection in the privacy policy.
+- **Risk:** Behavioral and browser-usage data is sent to Google and Microsoft after consent; provider IDs and Clarity's consent-mode setting must be configured by a superadmin and in the external provider settings.
+
 ### Sentry Error Tracking
 
 - **Purpose:** Frontend and backend error monitoring
