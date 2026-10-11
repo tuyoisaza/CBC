@@ -6,6 +6,16 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.73 — Simplify the B2B homepage image teaser
+
+- Replace the titled catalog carousel with a subtle, automatically scrolling strip of 88 × 66 px images in Spanish and English.
+- Remove visible item names, per-item buttons, navigation arrows, and the full-catalog button; each image still opens the full catalog.
+- Pause the animation on hover and keyboard focus, and provide manual scrolling for visitors who prefer reduced motion.
+
+### Verification
+- Prisma Client generation, `pnpm --filter @cbc/web typecheck`, `pnpm --filter @cbc/web build`, and `git diff --check` passed.
+- No browser or live-site check was run.
+
 ## v1.6.72 — Add a homepage preview of the B2B catalog
 
 - Add a horizontal, touch-scrollable carousel below the Spanish homepage sales/catalog buttons, with a matching English homepage teaser.

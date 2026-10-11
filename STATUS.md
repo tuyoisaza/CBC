@@ -1,9 +1,9 @@
-## 2026-10-11 — Carrusel de vista previa del catálogo B2B (v1.6.72)
+## 2026-10-11 — Carrusel sutil de imágenes B2B (v1.6.73)
 
-- Añadir a las portadas en español e inglés un carrusel horizontal con imágenes de kits, métodos y accesorios activos y visibles en el catálogo B2B.
-- Hacer que cada tarjeta y el enlace final lleven al catálogo completo; incluir desplazamiento táctil y controles de navegación en escritorio.
-- Mantener los datos del carrusel limitados a nombres e imágenes públicas, sin precios ni costos.
-- Verificación: TypeScript y build de Next.js completados; `git diff --check` pasa. El build terminó con código 0, aunque mostró errores de inicialización no fatales por falta del Query Engine de Prisma en este worktree aislado; las rutas dinámicas se compilaron.
+- Reducir la vista previa a imágenes de 88 × 66 px en un carrusel automático, sin nombres, encabezados ni botones visibles.
+- Mantener cada imagen enlazada al catálogo completo; pausar el movimiento al enfocar y respetar la preferencia de movimiento reducido.
+- Aplicar el cambio en las portadas en español e inglés.
+- Verificación: generación de Prisma Client, typecheck de web, build de Next.js y `git diff --check` completados.
 
 ## 2026-10-10 — Google tag disponible desde el HTML inicial (v1.6.71)
 
@@ -83,9 +83,10 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.72
+v1.6.73
 
 ## Completed Slices
+- Carrusel sutil de imágenes B2B: miniaturas automáticas de 88 × 66 px, sin textos ni botones, con soporte de movimiento reducido (v1.6.73).
 - Carrusel deslizable de imágenes del catálogo B2B con enlaces al catálogo completo, en portadas ES/EN (v1.6.72).
 - Renderizar el bootstrap de GA4 desde la configuración superadmin en el HTML inicial; iniciar consentimiento antes de hidratación y excluir rutas privadas (v1.6.71).
 - Advanced consent mode for GA4 with cookieless public page views while analytics storage is denied; Microsoft Clarity remains opt-in (v1.6.70).
@@ -124,13 +125,10 @@ v1.6.72
 - All-in pricing (shared lib/pricing.ts + single-checkout final-price + descriptive errors)
 
 ## Current Slice
-Homepage teaser carousel for active, catalog-visible B2B items. The Spanish and English homepage cards and full-catalog link navigate to the corresponding complete B2B catalog.
+Spanish and English homepage teasers show only small B2B catalog images in an automatic, seamless carousel. Every image opens the matching full catalog. The carousel pauses on hover or keyboard focus and becomes manually scrollable when reduced motion is enabled.
 
-Superadmins continue to configure the GA4 Measurement ID and Clarity Project ID at `/admin/configuration`; IDs remain database-managed and absent from source and environment variables. Admin, sign-in, health, API, and order-tracking paths remain excluded, and contact/quote fields remain masked in Clarity.
+Verification: Prisma Client generation, `pnpm --filter @cbc/web typecheck`, `pnpm --filter @cbc/web build`, and `git diff --check` passed. No browser or live-site check was run.
 
-Read-only Google Analytics inspection confirmed that the web stream Measurement ID matches `G-WWLTLPBZ8Q`. Analytics reported no received data in the last 48 hours. Its stream URL is recorded as `http://coffeebunncafe.com`, while the public domain uses HTTPS; correct the stream URL in Google Analytics separately. No provider settings were changed.
-
-Verification: Prisma Client generation, web typecheck, and `git diff --check` passed. No automated tests, lint, production build, browser-based code test, or live-site probe were run. Production behavior and deployment remain unverified.
 
 ## Inactive Context — Previously Current Slice
 Secure provider configuration: `/admin/configuration` for explicit superadmins, including nine providers, AES-256-GCM database storage, write-only secret management, server-side environment import, transactional audit, fresh authorization, and dynamic integration clients. Activation guide: `docs/deploy/integration-configuration.md`.

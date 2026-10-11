@@ -107,3 +107,47 @@
            transition-colors;
   }
 }
+
+@keyframes b2b-teaser-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.b2b-teaser-viewport {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+
+.b2b-teaser-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.b2b-teaser-track {
+  animation-name: b2b-teaser-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+.b2b-teaser-viewport:hover .b2b-teaser-track,
+.b2b-teaser-viewport:focus-within .b2b-teaser-track,
+.b2b-teaser-viewport:active .b2b-teaser-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .b2b-teaser-viewport {
+    overflow-x: auto;
+  }
+
+  .b2b-teaser-track {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .b2b-teaser-group[aria-hidden='true'] {
+    display: none;
+  }
+}
