@@ -1,11 +1,14 @@
 import { CatalogNav } from '@/components/catalog/CatalogNav'
+import { B2BCatalogTeaser } from '@/components/public/B2BCatalogTeaser'
 import { PublicFooter } from '@/components/public/PublicFooter'
+import { getB2BCatalogTeaser } from '@/lib/b2b-catalog'
 import { t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
-export default function HomePageEn() {
+export default async function HomePageEn() {
   const tr = (path: string) => t('en', path)
+  const teaserItems = await getB2BCatalogTeaser()
 
   return (
     <>
@@ -34,6 +37,12 @@ export default function HomePageEn() {
                 </a>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="bg-cbc-black px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl">
+            <B2BCatalogTeaser items={teaserItems} lang="en" />
           </div>
         </section>
 
