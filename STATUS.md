@@ -1,3 +1,10 @@
+## 2026-10-11 — Carrusel de vista previa del catálogo B2B (v1.6.72)
+
+- Añadir a las portadas en español e inglés un carrusel horizontal con imágenes de kits, métodos y accesorios activos y visibles en el catálogo B2B.
+- Hacer que cada tarjeta y el enlace final lleven al catálogo completo; incluir desplazamiento táctil y controles de navegación en escritorio.
+- Mantener los datos del carrusel limitados a nombres e imágenes públicas, sin precios ni costos.
+- Verificación: TypeScript y build de Next.js completados; `git diff --check` pasa. El build terminó con código 0, aunque mostró errores de inicialización no fatales por falta del Query Engine de Prisma en este worktree aislado; las rutas dinámicas se compilaron.
+
 ## 2026-10-10 — Google tag disponible desde el HTML inicial (v1.6.71)
 
 - Leer los IDs de GA4 y Clarity guardados por superadmin durante el render del servidor; conservar la base de datos como fuente y no usar variables de entorno.
@@ -76,9 +83,10 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.71
+v1.6.72
 
 ## Completed Slices
+- Carrusel deslizable de imágenes del catálogo B2B con enlaces al catálogo completo, en portadas ES/EN (v1.6.72).
 - Renderizar el bootstrap de GA4 desde la configuración superadmin en el HTML inicial; iniciar consentimiento antes de hidratación y excluir rutas privadas (v1.6.71).
 - Advanced consent mode for GA4 with cookieless public page views while analytics storage is denied; Microsoft Clarity remains opt-in (v1.6.70).
 - Consent-based Google Analytics 4 and Microsoft Clarity, with superadmin-managed IDs, privacy controls, and audit logging (v1.6.68).
@@ -116,7 +124,7 @@ v1.6.71
 - All-in pricing (shared lib/pricing.ts + single-checkout final-price + descriptive errors)
 
 ## Current Slice
-GA4 advanced consent mode: on public paths, load the configured tag with analytics storage denied and send pathname-only `page_view` events without URL parameters. Change analytics storage to granted only after acceptance. Clarity remains unloaded unless the visitor accepts. A new consent key makes visitors who chose under the previous banner see the updated choice again.
+Homepage teaser carousel for active, catalog-visible B2B items. The Spanish and English homepage cards and full-catalog link navigate to the corresponding complete B2B catalog.
 
 Superadmins continue to configure the GA4 Measurement ID and Clarity Project ID at `/admin/configuration`; IDs remain database-managed and absent from source and environment variables. Admin, sign-in, health, API, and order-tracking paths remain excluded, and contact/quote fields remain masked in Clarity.
 

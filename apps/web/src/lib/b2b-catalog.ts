@@ -3,6 +3,53 @@ import { db, withDbRetry } from '@/lib/db'
 import { getSingleMarkupPct } from '@/lib/pricing'
 import { catalogImages, type CatalogEntry } from './extra-catalog'
 
+export type B2BCatalogTeaserItem = { id: string; name: string; image: string }
+
+/** Minimal public image/name data for the homepage teaser. */
+export async function getB2BCatalogTeaser(): Promise<B2BCatalogTeaserItem[]> {
+  try {
+    const [methods, extras] = await withDbRetry(() => Promise.all([
+      db.method.findMany({
+        where: { active: true },
+        orderBy: { sortOrder: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          imageUrl: true,
+          products: {
+            where: { active: true },
+            orderBy: { sortOrder: 'asc' },
+            select: { name: true, images: true },
+          },
+        },
+      }),
+      db.extra.findMany({
+        where: { active: true, catalogVisible: true },
+        orderBy: { sortOrder: 'asc' },
+        select: { id: true, name: true, images: true, imageUrl: true },
+      }),
+    ]))
+
+    const methodItems = methods.map((method) => {
+      const kit = method.products[0]
+      return {
+        id: `method-${method.id}`,
+        name: kit?.name ?? method.name,
+        image: catalogImages({ images: kit?.images, imageUrl: method.imageUrl })[0] ?? '',
+      }
+    })
+    const extraItems = extras.map((extra) => ({
+      id: `extra-${extra.id}`,
+      name: extra.name,
+      image: catalogImages(extra)[0] ?? '',
+    }))
+
+    return [...methodItems, ...extraItems].filter((item) => item.image)
+  } catch {
+    return []
+  }
+}
+
 /** Only public selling prices leave the server; never serialize Extra.unitPrice (cost). */
 export async function getB2BCatalog(): Promise<CatalogEntry[]> {
   const [methods, extras, settings, markup] = await withDbRetry(() => Promise.all([

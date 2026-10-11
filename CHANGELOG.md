@@ -6,6 +6,15 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.72 — Add a homepage preview of the B2B catalog
+
+- Add a horizontal, touch-scrollable carousel below the Spanish homepage sales/catalog buttons, with a matching English homepage teaser.
+- Show images and names only for active B2B methods and catalog-visible extras; every card links to the full catalog.
+- Add desktop previous/next controls and a full-catalog call to action.
+
+### Verification
+- The `apps/web` TypeScript check and Next.js production build completed; `git diff --check` passes. The build exited 0 and emitted non-fatal Prisma Query Engine initialization errors in this isolated worktree while collecting dynamic page data. No browser or live-site test was run.
+
 ## v1.6.71 — Publish the Google tag in the initial HTML
 
 - Read the GA4 and Clarity IDs saved by superadmins during server rendering, keeping the database as the source of truth.

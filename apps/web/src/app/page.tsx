@@ -4,8 +4,10 @@ import { db, withDbRetry } from '@/lib/db'
 import { PublicFooter } from '@/components/public/PublicFooter'
 import { CustomerServiceForm } from '@/components/public/CustomerServiceForm'
 import { CustomerServiceWidget } from '@/components/public/CustomerServiceWidget'
+import { B2BCatalogTeaser } from '@/components/public/B2BCatalogTeaser'
 import { t } from '@/lib/i18n'
 import { getSingleMarkupPct, priceWithTax } from '@/lib/pricing'
+import { getB2BCatalogTeaser } from '@/lib/b2b-catalog'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,10 +43,11 @@ async function getSiteSettings() {
 }
 
 export default async function HomePage() {
-  const [products, { logoUrl, logoSize, logoAlignment, logoLink }, markupPct] = await Promise.all([
+  const [products, { logoUrl, logoSize, logoAlignment, logoLink }, markupPct, teaserItems] = await Promise.all([
     getActiveProducts(),
     getSiteSettings(),
     withDbRetry(() => getSingleMarkupPct()),
+    getB2BCatalogTeaser(),
   ])
   const logoAlignClass = logoAlignment === 'center' ? 'text-center' : logoAlignment === 'right' ? 'text-right' : 'text-left'
   const logoSizeClass = logoSize === 'small' ? 'h-12 sm:h-16' : logoSize === 'large' ? 'h-20 sm:h-24' : 'h-16 sm:h-20'
@@ -185,6 +188,7 @@ export default async function HomePage() {
                   {tr('home.viewCatalog')}
                 </a>
               </div>
+              <B2BCatalogTeaser items={teaserItems} />
             </div>
           </section>
         )}
