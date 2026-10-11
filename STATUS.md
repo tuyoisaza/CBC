@@ -1,3 +1,9 @@
+## 2026-10-10 — Google tag disponible desde el HTML inicial (v1.6.71)
+
+- Leer los IDs de GA4 y Clarity guardados por superadmin durante el render del servidor; conservar la base de datos como fuente y no usar variables de entorno.
+- Inicializar Google Consent Mode avanzado antes de hidratar React y cargar gtag en rutas públicas; mantener excluidas administración, login, seguimiento, salud y APIs.
+- Verificación: TypeScript (`apps/web`, `tsc --noEmit`), build de Next.js y `git diff --check` pasaron. El build mostró avisos no fatales porque este worktree no tiene el Query Engine local de Prisma; no se consultó la base de datos ni se verificó el runtime en producción.
+
 ## 2026-10-10 — Consentimiento avanzado para GA4 (v1.6.70)
 
 - Cargar GA4 en páginas públicas con `analytics_storage: denied` y enviar vistas de ruta sin parámetros antes de la elección o si se rechazan cookies.
@@ -70,9 +76,10 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.70
+v1.6.71
 
 ## Completed Slices
+- Renderizar el bootstrap de GA4 desde la configuración superadmin en el HTML inicial; iniciar consentimiento antes de hidratación y excluir rutas privadas (v1.6.71).
 - Advanced consent mode for GA4 with cookieless public page views while analytics storage is denied; Microsoft Clarity remains opt-in (v1.6.70).
 - Consent-based Google Analytics 4 and Microsoft Clarity, with superadmin-managed IDs, privacy controls, and audit logging (v1.6.68).
 - Synchronize PHDK standards v2.43.0 and refresh the managed agent block (v1.6.67).

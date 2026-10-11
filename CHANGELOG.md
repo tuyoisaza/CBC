@@ -6,6 +6,16 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.71 — Publish the Google tag in the initial HTML
+
+- Read the GA4 and Clarity IDs saved by superadmins during server rendering, keeping the database as the source of truth.
+- Initialize advanced Google Consent Mode before React hydration and expose the Google tag in the initial public-page HTML.
+- Keep admin, login, tracking, health, and API paths excluded; preserve Clarity behind consent.
+
+### Verification
+- `apps/web` TypeScript check (`tsc --noEmit`), the Next.js production build, and `git diff --check` passed. The build emitted non-fatal Prisma Query Engine warnings because the worktree lacks the generated local engine.
+- No automated tests, browser-based check, live-site probe, database access, or provider write was run.
+
 ## v1.6.70 — Advanced consent mode for GA4
 
 - Load GA4 on public pages with analytics storage denied and send query-free page views as limited cookieless signals before visitor choice.

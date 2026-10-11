@@ -1,9 +1,12 @@
 import type { Metadata } from 'next'
+import { unstable_noStore as noStore } from 'next/cache'
 import { Raleway } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { DebugCaptureInit } from '@/components/DebugCaptureInit'
 import { VersionBadge } from '@/components/public/VersionBadge'
 import { AnalyticsConsent } from '@/components/public/AnalyticsConsent'
+import { GoogleAnalyticsBootstrap } from '@/components/public/GoogleAnalyticsBootstrap'
+import { getAnalyticsSettings } from '@/lib/analytics-settings'
 import '@/lib/env'
 import './globals.css'
 
@@ -20,14 +23,23 @@ export const metadata: Metadata = {
   other: { 'app-version': process.env.NEXT_PUBLIC_APP_VERSION || '?' },
 }
 
-export default function RootLayout({
+const EMPTY_ANALYTICS_SETTINGS = { googleMeasurementId: '', clarityProjectId: '' }
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  noStore()
+  const analyticsSettingsResult = await getAnalyticsSettings()
+    .then(settings => ({ settings, available: true }))
+    .catch(() => ({ settings: EMPTY_ANALYTICS_SETTINGS, available: false }))
+  const analyticsSettings = analyticsSettingsResult.settings
+
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${raleway.variable} font-sans antialiased`}>
+        <GoogleAnalyticsBootstrap measurementId={analyticsSettings.googleMeasurementId} />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -35,7 +47,11 @@ export default function RootLayout({
         >
           <DebugCaptureInit />
           {children}
-          <AnalyticsConsent />
+          <AnalyticsConsent
+            googleMeasurementId={analyticsSettings.googleMeasurementId}
+            clarityProjectId={analyticsSettings.clarityProjectId}
+            settingsAvailable={analyticsSettingsResult.available}
+          />
           <VersionBadge version={process.env.NEXT_PUBLIC_APP_VERSION || ''} />
         </ThemeProvider>
       </body>
