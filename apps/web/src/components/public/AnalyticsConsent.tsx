@@ -3,25 +3,30 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { t } from '@/lib/i18n'
+import { isAnalyticsExcludedPath } from '@/lib/analytics-paths'
 
 type Consent = 'granted' | 'denied' | null
 type ConsentValue = 'granted' | 'denied'
-type GtagCall = [command: string, ...parameters: unknown[]]
 
 type AnalyticsWindow = Window & {
-  dataLayer?: GtagCall[]
-  gtag?: (...args: GtagCall) => void
+  dataLayer?: Array<[command: string, ...parameters: unknown[]]>
+  gtag?: (...args: [command: string, ...parameters: unknown[]]) => void
   clarity?: ((...args: unknown[]) => void) & { q?: unknown[][] }
-  __cbcGoogleConfigured?: boolean
+}
+
+type AnalyticsConsentProps = {
+  googleMeasurementId: string
+  clarityProjectId: string
+  settingsAvailable: boolean
+}
+
+type AnalyticsSettings = {
+  googleMeasurementId: string
+  clarityProjectId: string
 }
 
 const CONSENT_STORAGE_KEY = 'cbc-analytics-consent-v2'
-const EXCLUDED_PATHS = ['/admin', '/login', '/api', '/health', '/tracking', '/en/tracking']
 let lastTrackedPath: string | null = null
-
-function isExcludedPath(path: string) {
-  return EXCLUDED_PATHS.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
-}
 
 function clearAnalyticsCookies() {
   const cookieNames = document.cookie
@@ -71,20 +76,19 @@ function updateProviderConsent(value: ConsentValue) {
 
 function loadGoogleAnalytics(measurementId: string) {
   const analyticsWindow = window as AnalyticsWindow
-  analyticsWindow.dataLayer ??= []
-  analyticsWindow.gtag ??= (...args: GtagCall) => analyticsWindow.dataLayer?.push(args)
+  if (analyticsWindow.gtag) return
 
-  if (!analyticsWindow.__cbcGoogleConfigured) {
-    analyticsWindow.gtag('consent', 'default', {
-      analytics_storage: 'denied',
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-    })
-    analyticsWindow.gtag('js', new Date())
-    analyticsWindow.gtag('config', measurementId, { send_page_view: false })
-    analyticsWindow.__cbcGoogleConfigured = true
-  }
+  analyticsWindow.dataLayer ??= []
+  analyticsWindow.gtag = (...args) => analyticsWindow.dataLayer?.push(args)
+  analyticsWindow.gtag('consent', 'default', {
+    analytics_storage: 'denied',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    wait_for_update: 500,
+  })
+  analyticsWindow.gtag('js', new Date())
+  analyticsWindow.gtag('config', measurementId, { send_page_view: false })
 
   if (!document.getElementById('cbc-google-analytics-script')) {
     const script = document.createElement('script')
@@ -127,38 +131,38 @@ function getSafeReferrer() {
   }
 }
 
-export function AnalyticsConsent() {
+export function AnalyticsConsent({ googleMeasurementId, clarityProjectId, settingsAvailable }: AnalyticsConsentProps) {
   const pathname = usePathname() || '/'
   const [consent, setConsent] = useState<Consent>(null)
   const [initialized, setInitialized] = useState(false)
-  const [analyticsSettings, setAnalyticsSettings] = useState<{ googleMeasurementId: string; clarityProjectId: string } | null>(null)
   const [preferencesOpen, setPreferencesOpen] = useState(false)
+  const [fallbackSettings, setFallbackSettings] = useState<AnalyticsSettings | null>(null)
   const lang = pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'es'
-  const googleMeasurementId = analyticsSettings?.googleMeasurementId || ''
-  const clarityProjectId = analyticsSettings?.clarityProjectId || ''
-  const hasAnalytics = Boolean(googleMeasurementId || clarityProjectId)
-  const excludedPath = isExcludedPath(pathname)
+  const effectiveGoogleMeasurementId = googleMeasurementId || fallbackSettings?.googleMeasurementId || ''
+  const effectiveClarityProjectId = clarityProjectId || fallbackSettings?.clarityProjectId || ''
+  const hasAnalytics = Boolean(effectiveGoogleMeasurementId || effectiveClarityProjectId)
+  const excludedPath = isAnalyticsExcludedPath(pathname)
 
   useEffect(() => {
-    if (excludedPath || analyticsSettings) return
+    if (settingsAvailable || excludedPath || fallbackSettings) return
     let active = true
     fetch('/api/settings/analytics', { cache: 'no-store' })
       .then((response) => {
         if (!response.ok) throw new Error('analytics-settings-unavailable')
         return response.json()
       })
-      .then((settings: { googleMeasurementId?: unknown; clarityProjectId?: unknown }) => {
+      .then((settings: Partial<AnalyticsSettings>) => {
         if (!active) return
-        setAnalyticsSettings({
+        setFallbackSettings({
           googleMeasurementId: typeof settings.googleMeasurementId === 'string' ? settings.googleMeasurementId : '',
           clarityProjectId: typeof settings.clarityProjectId === 'string' ? settings.clarityProjectId : '',
         })
       })
       .catch(() => {
-        if (active) setAnalyticsSettings({ googleMeasurementId: '', clarityProjectId: '' })
+        if (active) setFallbackSettings({ googleMeasurementId: '', clarityProjectId: '' })
       })
     return () => { active = false }
-  }, [analyticsSettings, excludedPath])
+  }, [excludedPath, fallbackSettings, settingsAvailable])
 
   useEffect(() => {
     try {
@@ -176,8 +180,8 @@ export function AnalyticsConsent() {
     const canLoadClarity = consent === 'granted' && !excludedPath
 
     // Advanced Consent Mode sends sanitized page views while analytics storage is denied.
-    if (googleMeasurementId && !excludedPath) {
-      loadGoogleAnalytics(googleMeasurementId)
+    if (effectiveGoogleMeasurementId && !excludedPath) {
+      loadGoogleAnalytics(effectiveGoogleMeasurementId)
       updateGoogleConsent(consent === 'granted' ? 'granted' : 'denied')
       const analyticsWindow = window as AnalyticsWindow
       if (analyticsWindow.gtag && lastTrackedPath !== pathname) {
@@ -194,15 +198,15 @@ export function AnalyticsConsent() {
       updateGoogleConsent('denied')
     }
 
-    if (clarityProjectId && canLoadClarity) {
-      loadClarity(clarityProjectId)
+    if (effectiveClarityProjectId && canLoadClarity) {
+      loadClarity(effectiveClarityProjectId)
       updateClarityConsent('granted')
     } else {
       updateClarityConsent('denied')
     }
 
     lastTrackedPath = excludedPath ? null : pathname
-  }, [clarityProjectId, consent, googleMeasurementId, hasAnalytics, initialized, pathname, excludedPath])
+  }, [effectiveClarityProjectId, consent, effectiveGoogleMeasurementId, hasAnalytics, initialized, pathname, excludedPath])
 
   function saveConsent(value: ConsentValue) {
     setConsent(value)
@@ -219,11 +223,11 @@ export function AnalyticsConsent() {
     }
   }
 
-  if (!initialized || !analyticsSettings || !hasAnalytics || excludedPath) return null
+  if (!initialized || !hasAnalytics || excludedPath) return null
 
-  const descriptionKey = googleMeasurementId && clarityProjectId
+  const descriptionKey = effectiveGoogleMeasurementId && effectiveClarityProjectId
     ? 'public.analyticsConsent.descriptionBoth'
-    : googleMeasurementId
+    : effectiveGoogleMeasurementId
       ? 'public.analyticsConsent.descriptionGoogle'
       : 'public.analyticsConsent.descriptionClarity'
 
@@ -277,7 +281,7 @@ export function AnalyticsConsent() {
               onClick={() => saveConsent('denied')}
               className="min-h-11 rounded-md border border-gray-600 px-5 py-2 text-sm font-semibold text-cbc-cream transition-colors hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cbc-yellow"
             >
-              {t(lang, googleMeasurementId ? 'public.analyticsConsent.rejectGoogle' : 'public.analyticsConsent.reject')}
+              {t(lang, effectiveGoogleMeasurementId ? 'public.analyticsConsent.rejectGoogle' : 'public.analyticsConsent.reject')}
             </button>
             <button
               type="button"
