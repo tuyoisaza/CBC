@@ -10,6 +10,8 @@ import { getAnalyticsSettings } from '@/lib/analytics-settings'
 import '@/lib/env'
 import './globals.css'
 
+const GOOGLE_TAG_MANAGER_ID = 'GTM-W4WKJLT'
+
 const raleway = Raleway({
   subsets: ['latin'],
   variable: '--font-raleway',
@@ -50,6 +52,7 @@ export default async function RootLayout({
           <AnalyticsConsent
             googleMeasurementId={analyticsSettings.googleMeasurementId}
             clarityProjectId={analyticsSettings.clarityProjectId}
+            googleTagManagerId={GOOGLE_TAG_MANAGER_ID}
             settingsAvailable={analyticsSettingsResult.available}
           />
           <VersionBadge version={process.env.NEXT_PUBLIC_APP_VERSION || ''} />

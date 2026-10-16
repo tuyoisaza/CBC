@@ -41,6 +41,14 @@ This release contains standards and version metadata only; application source is
 
 # STATUS — Coffee Bunn Café Platform
 
+## 2026-10-16 — Medición de cotizaciones con GTM (v1.6.74)
+
+- Emitir el evento `cbc_quote_submitted` sólo tras confirmar la cotización y aceptar analítica; medirlo en GA4 y en Google Ads mediante GTM, sin datos personales.
+- GTM versión 5 está publicada y la acción de conversión de Google Ads está creada.
+- La campaña de prueba quedó configurada con presupuesto total de MXN 200 por tres días; Google Ads bloquea su publicación porque la cuenta está cancelada. No se reactivó la cuenta ni se generó gasto.
+- Typecheck de web, build de producción y `git diff --check` pasaron; no se ejecutaron pruebas automatizadas ni verificación en el sitio en vivo.
+- Entrega del cambio web por la rama y PR habitual pendiente.
+
 ## 2026-10-10 — PHDK standards upgrade
 
 PHDK standards: v2.31.1 → v2.43.0

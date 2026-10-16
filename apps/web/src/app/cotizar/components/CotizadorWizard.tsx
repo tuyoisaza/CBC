@@ -57,6 +57,18 @@ interface QuoteExtra {
 
 const fmt = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
+const ANALYTICS_CONSENT_STORAGE_KEY = 'cbc-analytics-consent-v2'
+
+function trackQuoteSubmission() {
+  try {
+    if (window.localStorage.getItem(ANALYTICS_CONSENT_STORAGE_KEY) !== 'granted') return
+    const analyticsWindow = window as Window & { dataLayer?: Array<Record<string, unknown>> }
+    analyticsWindow.dataLayer?.push({ event: 'cbc_quote_submitted' })
+  } catch {
+    // Analytics must never interrupt a successfully submitted quote.
+  }
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const isValidEmail = (v: string) => EMAIL_RE.test(v.trim())
 // Accepts an optional leading + plus 10–15 digits (spaces/dashes/parens stripped).
@@ -273,6 +285,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
       })
       setResult(res)
       setStep(4)
+      trackQuoteSubmission()
     } catch (err: any) {
       setSubmitError(err.message || 'Error al enviar cotización')
     } finally {
