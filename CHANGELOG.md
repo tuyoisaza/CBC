@@ -6,6 +6,17 @@ The format is based on [PHDK VERSIONING.md](https://github.com/tuyoisaza/PHDK/bl
 
 ---
 
+## v1.6.74 — Measure B2B quote submissions through GTM
+
+- Load the existing GTM container after optional analytics consent on public pages, and emit a PII-free event after a quote is successfully created.
+- Map quote submissions to GA4 `generate_lead` and the Google Ads conversion action `CBC - Cotización enviada`.
+- Document the consent-gated data flow and privacy controls in the Spanish and English privacy policies.
+
+### Verification
+- `pnpm --filter @cbc/web typecheck`, `pnpm --filter @cbc/web build`, and `git diff --check` passed.
+- No automated or browser-based code tests, live-site probe, or deployment verification was run.
+- GTM version 5 is live; Google Ads campaign publication is blocked because the account is cancelled. No ad spend was made.
+
 ## v1.6.73 — Simplify the B2B homepage image teaser
 
 - Replace the titled catalog carousel with a subtle, automatically scrolling strip of 88 × 66 px images in Spanish and English.

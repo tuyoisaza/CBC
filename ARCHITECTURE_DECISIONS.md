@@ -89,6 +89,13 @@ These integrations were added because CBC's business requires them. They are doc
 - **PHDK Standard:** Keep third-party analytics opt-in and document collection in the privacy policy.
 - **Risk:** Behavioral and browser-usage data is sent to Google and Microsoft after consent; provider IDs and Clarity's consent-mode setting must be configured by a superadmin and in the external provider settings.
 
+### Google Tag Manager for quote measurement
+
+- **Purpose:** Measure completed B2B quote submissions through the linked CoffeeBunnCafe GA4 property and make the conversion available to Google Ads.
+- **Decision:** Load the existing `GTM-W4WKJLT` container only after optional analytics consent on public, non-excluded paths. Emit the PII-free `cbc_quote_submitted` dataLayer event only after the server confirms quote creation and the visitor has accepted analytics. Map it in GTM to GA4's recommended `generate_lead` event and the Google Ads conversion action `CBC - Cotización enviada`.
+- **Privacy controls:** Do not include names, company, email, phone, product selection, amounts, or quote identifiers in the event. Keep ad storage, ad user data, and ad personalization denied. Share GA4 web metrics with Google Ads to measure campaigns, but do not import remarketing audiences, create enhanced-conversion tags, or enable ad personalization.
+- **Risk:** After optional analytics consent, Google receives the quote-completion event through GA4 and the dedicated Google Ads conversion tag; the linked Ads account can also use GA4 web metrics for campaign measurement.
+
 ### Sentry Error Tracking
 
 - **Purpose:** Frontend and backend error monitoring

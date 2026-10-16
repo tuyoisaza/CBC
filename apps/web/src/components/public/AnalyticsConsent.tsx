@@ -7,9 +7,10 @@ import { isAnalyticsExcludedPath } from '@/lib/analytics-paths'
 
 type Consent = 'granted' | 'denied' | null
 type ConsentValue = 'granted' | 'denied'
+type DataLayerEntry = [command: string, ...parameters: unknown[]] | Record<string, unknown>
 
 type AnalyticsWindow = Window & {
-  dataLayer?: Array<[command: string, ...parameters: unknown[]]>
+  dataLayer?: DataLayerEntry[]
   gtag?: (...args: [command: string, ...parameters: unknown[]]) => void
   clarity?: ((...args: unknown[]) => void) & { q?: unknown[][] }
 }
@@ -17,6 +18,7 @@ type AnalyticsWindow = Window & {
 type AnalyticsConsentProps = {
   googleMeasurementId: string
   clarityProjectId: string
+  googleTagManagerId: string
   settingsAvailable: boolean
 }
 
@@ -99,6 +101,23 @@ function loadGoogleAnalytics(measurementId: string) {
   }
 }
 
+function loadGoogleTagManager(containerId: string) {
+  if (!/^GTM-[A-Z0-9]+$/.test(containerId)) return
+
+  const scriptId = `cbc-google-tag-manager-${containerId}`
+  if (document.getElementById(scriptId)) return
+
+  const analyticsWindow = window as AnalyticsWindow
+  analyticsWindow.dataLayer ??= []
+  analyticsWindow.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' })
+
+  const script = document.createElement('script')
+  script.id = scriptId
+  script.async = true
+  script.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(containerId)}`
+  document.head.appendChild(script)
+}
+
 function loadClarity(projectId: string) {
   const analyticsWindow = window as AnalyticsWindow
   if (!analyticsWindow.clarity) {
@@ -131,7 +150,7 @@ function getSafeReferrer() {
   }
 }
 
-export function AnalyticsConsent({ googleMeasurementId, clarityProjectId, settingsAvailable }: AnalyticsConsentProps) {
+export function AnalyticsConsent({ googleMeasurementId, clarityProjectId, googleTagManagerId, settingsAvailable }: AnalyticsConsentProps) {
   const pathname = usePathname() || '/'
   const [consent, setConsent] = useState<Consent>(null)
   const [initialized, setInitialized] = useState(false)
@@ -183,6 +202,7 @@ export function AnalyticsConsent({ googleMeasurementId, clarityProjectId, settin
     if (effectiveGoogleMeasurementId && !excludedPath) {
       loadGoogleAnalytics(effectiveGoogleMeasurementId)
       updateGoogleConsent(consent === 'granted' ? 'granted' : 'denied')
+      if (consent === 'granted') loadGoogleTagManager(googleTagManagerId)
       const analyticsWindow = window as AnalyticsWindow
       if (analyticsWindow.gtag && lastTrackedPath !== pathname) {
         const pageReferrer = lastTrackedPath
