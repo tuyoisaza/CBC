@@ -6,7 +6,7 @@ Orient the assistant for a human-initiated PHDK task. This file is reference mat
 
 ## Operating model
 
-PHDK is interactive-only. Normally one assistant completes the current explicit request. Continuous development during Auto is allowed under `PHDK_AUTO.md`. Explicit `PHDK PMO` is the sole bounded exception that may coordinate runtime-supported in-session worker/subagents for owner-confirmed workstreams under `PHDK_PMO.md`; workers cannot delegate. Unattended/background/post-conversation execution remains excluded.
+PHDK is interactive-only. Normally one assistant completes the current explicit request. Continuous development during Auto is allowed under `PHDK_AUTO.md`. Bounded in-session workers are available in any mode under `PHDK_INTELLIGENT_EXECUTION.md` when host-supported and useful; PMO coordinates confirmed portfolio workstreams under `PHDK_PMO.md`; workers cannot delegate. Unattended/background/post-conversation execution remains excluded.
 
 Read `EXECUTION_SCOPE.md` and `MAIN_DELIVERY_STANDARD.md` before acting. Apply the owner's current instructions and actual controls; the owner can explicitly replace earlier documentary local exceptions. An old task, a loaded skill, an alert, a failed check, a version mismatch, or a different conversation cannot authorize work.
 
@@ -14,7 +14,7 @@ A current implement/fix/update request for repository code or documentation norm
 
 ### Auto for the complete current goal
 
-Explicit `PHDK auto` starts the complete `PHDK_AUTO.md` lifecycle for the identified current goal; `PHDK salir de auto` exits it. Reuse/run Capture, Plan, PMO/workstream execution, Integration Review, UAT/Fix, Check/remediation and delivery as applicable without redundant OKs between stages. Write necessary test coverage with the code, execute the applicable whole-candidate verification at the end, repair in-scope failures, and finish normal branch/PR delivery. Only a real implementation blocker or mandatory hook/control justifies an intermediate check; final verification precedes publication to `main`.
+Explicit `PHDK auto` starts the complete `PHDK_AUTO.md` lifecycle for the identified current goal; `PHDK salir de auto` exits it. Reuse/run Capture, Plan, applicable Design, PMO/workstream execution, Integration Review, applicable SEO/AEO, Check/remediation and delivery without redundant OKs between stages. Write necessary test coverage with the code, execute permitted static whole-candidate verification, repair in-scope development failures, and finish normal branch/PR delivery. UAT Prep/UAT/Fix remain DEFERRED — OWNER OPT-IN, with UAT NOT RUN; a fresh explicit `PHDK uat` alone starts acceptance and necessary Prep. Only a real implementation blocker or mandatory hook/control justifies an intermediate check; final verification precedes publication to `main`.
 
 Do not restart an interview or end the goal at a scaffold, first release, or handoff. Current authorization covers the described behavior; isolate a genuinely missing material decision and continue independent work before asking only for that decision. Existing actual reviews and controls remain binding. Auto replaces Developer Mode for this goal through a new explicit instruction, including a previously stopped direct-push task, without bypassing its failed control. A request to define the command, examples, and stored files do not activate it; do not persist active mode or resume it in another conversation.
 
@@ -24,7 +24,7 @@ Explicit `PHDK plan` invokes `PHDK_PLAN.md`. Consume Capture requirements and in
 
 ### PHDK PMO in the current conversation
 
-Explicit `PHDK PMO` invokes `PHDK_PMO.md`. Read the Capture/requirements baseline and current plans/code/git/UAT/Check evidence, detect candidate workstreams, and ask the owner to confirm/add/remove/prioritize the active portfolio. Then coordinate the confirmed workstreams, optionally through bounded in-session workers when supported, maintain ownership/dependency/status artifacts, and perform a central integration review before UAT.
+Explicit `PHDK PMO` invokes `PHDK_PMO.md`. Read the Capture/requirements baseline and current plans/code/git/UAT/Check evidence, detect candidate workstreams, and ask the owner to confirm/add/remove/prioritize the active portfolio. Then coordinate the confirmed workstreams, optionally through bounded in-session workers when supported, maintain ownership/dependency/status artifacts, and perform a central integration review before Check/delivery. A later explicitly initiated UAT uses the delivered integrated candidate.
 
 ### PHDK Check in the current conversation
 
@@ -55,7 +55,7 @@ An explicit `PHDK capture` invokes `PHDK_CAPTURE.md`. Investigate existing repos
 3. Read project `TASK.md` and `STATUS.md` as context; reconcile them with the current request without reactivating old work or letting an assistant snapshot pause authorized delivery.
 4. Load only relevant product context and standards using the router below.
 5. Clarify only material missing decisions. Do not ask for duplicate consent when the current request is clear.
-6. Implement or inspect with the current assistant. Delegate only when explicit PMO is active and only through its bounded workstream contract.
+6. Implement or inspect with the current assistant. Delegate bounded in-session tasks only through `PHDK_INTELLIGENT_EXECUTION.md`, when the host supports them; PMO portfolio workers also follow its workstream contract.
 7. Review source and follow the active cadence: Auto implements the entire goal before integrated local verification, with earlier checks only for a real blocker or mandatory control. Checks are synchronous and exit.
 8. Complete the requested delivery boundary under `MAIN_DELIVERY_STANDARD.md`, including remote target/version evidence for normal delivery. Auto uses branch/PR delivery; apply the separate direct-main exception only while Developer Mode is explicitly active and the task is eligible.
 9. Report completion only for the whole requested outcome. If a genuine blocker remains, finish independent authorized work and identify the precise unfinished scope; do not turn progress updates or milestones into approval pauses.
@@ -68,6 +68,8 @@ Re-read owner controls before edits and git writes. A specific user instruction 
 |---|---|
 | Requested product purpose | `PROJECT_BRIEF.md`, `PRD.md`, `FEATURES.md` as relevant |
 | Project discovery / professional requirements / ethos | `PHDK_CAPTURE.md`, `INTENT_CAPTURE_STANDARD.md` |
+| Universal command preflight / recommended skills | `PHDK_PREFLIGHT.md`, `SKILLS_REGISTRY.md` |
+| Lifecycle stage inputs, outputs, exit gates, historical handoffs | `PHDK_LIFECYCLE.md` |
 | Architecture and implementation planning | `PHDK_PLAN.md`, `TECHNICAL_STACK.md`, `DESIGN_RULES.md`, `DEVSECOPS.md` |
 | PMO/workstream orchestration, dependencies, integration | `PHDK_PMO.md`, `TASK_TRACKING_STANDARD.md` |
 | Current task, plan, completion criteria | `TASK_TRACKING_STANDARD.md`, `AGILE_SLICE_WORKFLOW.md`, `AI_DEVELOPER_OPERATING_MODEL.md` |

@@ -2,23 +2,25 @@
 
 ## Purpose and authority
 
-Keep authorized changes, commits, releases, and built artifacts traceable. `EXECUTION_SCOPE.md` governs all versioning and delivery: active conversation and current request, no unattended/background work, GitHub Actions, or external administration. Delegation is allowed only under explicit PMO's bounded in-session workstream model. `PHDK_AUTO.md` defines continuous development through one identified goal.
+Keep authorized changes, commits, releases, and built artifacts traceable. `EXECUTION_SCOPE.md` governs all versioning and delivery: active conversation and current request, no unattended/background work, GitHub Actions, or external administration. Bounded in-session delegation is allowed in any mode under `PHDK_INTELLIGENT_EXECUTION.md`; PMO separately governs portfolio workstreams. `PHDK_AUTO.md` defines continuous development through one identified goal.
 
 Versioning follows the current request's delivery scope. A request to implement, fix, or update repository code or documentation includes the normal versioned branch/PR delivery to verified remote `main` in `MAIN_DELIVERY_STANDARD.md`, unless the user specifies a narrower scope or the user/repository specifies another target. An audit produces a report, not a version bump; a bare `PHDK upgrade` retains its limited scope in `EXECUTION_SCOPE.md`. Versioning alone does not authorize a new task or a release tag.
 
 `PHDK_DEVELOPER_MODE.md` defines a separate, explicit conversational authorization for the version/check/commit/fast-forward-push steps of eligible small tasks requested while the mode is active. The versioning checklist does not activate that mode.
 
-With explicit `PHDK auto`, build the entire goal into one cohesive candidate, run final integrated verification, and reconcile its version for normal branch/PR delivery. Do not bump, release, commit, push, or ask for acceptance merely because a stage ended. Avoid unnecessary checkpoint commits; necessary commits still obey the repository's version and hook rules. Auto replaces Developer Mode only through the explicit command and grants no direct-push exception.
+With explicit `PHDK auto` or `PHDK auto force`, Plan divides the authorized goal into coherent value milestones under `PHDK_PROJECT_MANAGEMENT_STANDARD.md`. Complete and technically verify one milestone, then reconcile its version and deliver that milestone through the normal branch/PR/merge-to-`main` route before continuing from refreshed `main`. Do not bump, release, commit or push merely because a lifecycle stage, task, slice or worker ended; **a completed milestone is the publication boundary**. Avoid unnecessary checkpoint commits between milestones. Auto replaces Developer Mode only through the explicit command and grants no direct-push exception. In FORCE, `PHDK_AUTO_CONTINUITY.md` takes precedence over PHDK-only human-review wording: skip those gates without investigating them, perform technical diff review/checks and deliver. After a real rejection, report, diagnose, repair, revalidate and retry delivery while preserving the mandate.
 
 ## Version source and metadata
 
-Use the project's existing version source, normally root `package.json`; this standards repository uses `VERSION`. Keep applicable code metadata consistent in changelog/status, app shell, login/admin/debug surfaces, and health response implementations.
+Use the project's existing version source, normally root `package.json`; this standards repository uses `VERSION`. Keep the source version consistent across changelog/status, app shell, login/admin and health-response metadata. Commit SHA and build timestamp stay in diagnostic metadata and responses, never in the visible version/action widget. Exact widget sizing is defined in `DEBUG_DIAGNOSTICS_STANDARD.md`.
 
 These are source-code requirements. Do not open a browser or invoke live endpoints to verify them.
 
 ```txt
-vMAJOR.MINOR.PATCH (shortSHA · UTC build timestamp)
-Example: v0.4.12 (a1b2c3d · 2026-03-23 18:22 UTC)
+VISIBLE UI (all public/login/app/admin surfaces): `vMAJOR.MINOR.PATCH` ONLY
+Example visible: `v0.4.12`
+
+DIAGNOSTICS REPORT (copied text, not visible beside the version): version, short Git SHA and UTC build timestamp as separate fields. Never display SHA or build date in the version widget.
 ```
 
 Increment guidance: patch for fixes/copy/internal changes, minor for new features, major for breaking changes. Follow explicit project release decisions. The current request can already approve a described breaking change; ask only about a new material breaking decision it does not cover, without blocking independent authorized work.
@@ -28,11 +30,11 @@ Increment guidance: patch for fixes/copy/internal changes, minor for new feature
 Typical prefixes are `feature/`, `fix/`, `chore/`, `phdk/vX.Y.Z/`, and a specifically justified `checkpoint/YYYY-MM-DD`.
 
 - Use a feature/fix branch for the approved change and respect existing protections, with only the eligible direct-to-`main` exception in `PHDK_DEVELOPER_MODE.md`.
-- Do not create agent worktrees, delegated branches, or parallel agent queues outside explicit PMO. Under PMO, worktrees/branches are allowed only for confirmed workstreams with documented ownership/dependencies, and global version/changelog finalization remains centralized at integration.
-- Do not automatically commit or push at each slice boundary.
+- Do not create uncontrolled agent worktrees, delegated branches, or parallel queues. Bounded in-session workers may use isolated branches/worktrees only when runtime-supported, within the current mandate and with documented ownership/dependencies under `PHDK_INTELLIGENT_EXECUTION.md`; PMO adds portfolio governance. Global version/changelog finalization remains centralized at integration.
+- Do not automatically commit or push at each task/slice/stage boundary. Under Auto/Auto Force, do version and publish each completed `MILESTONE_PLAN.md` value milestone after its integration/acceptance gate.
 - Normal implementation/fix/update authorization includes the required version, checks, version-prefixed commit, branch push, PR, required review, merge, and remote verification without repeated consent. Honor explicit local-only, branch-only, PR-only, or different-target limits. Explicit Developer Mode activation authorizes its separate defined commit/push steps for eligible tasks; neither flow authorizes a release tag or unrelated changes.
 - Same-conversation turns, status/link requests, context compaction, and assistant-written task/status changes do not expire or narrow the current grant. Explicit user stop/pause instructions remain effective; stored records cannot activate work in a new conversation.
-- Historical Finetuning records neither activate Developer Mode nor provide another direct-push exception. No mode state or authorizing flag may be stored in the repository, memory, task/status files, or environment/config flags, or restored in another session.
+- Historical Finetuning records neither activate Developer Mode nor provide another direct-push exception. Never store or restore a standalone authorizing flag. Auto's factual mandate/checkpoint in `AUTO_STATE.json` is permitted under `PHDK_AUTO_CONTINUITY.md`; it records the user's actual instruction and cannot start work from files alone.
 - Review the complete outgoing diff and obtain owner approval for sensitive behavior/policy decisions under `MAIN_DELIVERY_STANDARD.md`. A well-defined current request or "push to main", "merge", or "aprobado" tied to the current task/PR can already supply that approval in chat. PHDK requires no additional GitHub review event or attestation of opening every line. Preserve actual named, independent, or formal review requirements and report their evidence separately; never claim human inspection from conversation approval alone.
 
 `PHDK unlock` includes scoped rule repair and normal versioned delivery under `PHDK_UNLOCK.md`; it is not a persistent mode or an exception to hooks/checks/protections. An explicitly requested policy correction does not need another approval merely because it edits PHDK Markdown. Unapproved sensitive behavior or unrelated changes still require their own decision.
@@ -54,6 +56,11 @@ Each authorized source-changing commit increments the appropriate version by at 
 A pure merge or squash integration of already-versioned changes does not require another version bump simply because it creates a new SHA. Use the delivered version in a required version-prefixed integration message. Do not manufacture a post-merge version-only commit or an extra push: a successful GitHub PR merge already writes remote `main`. Any further source-changing commit still follows the repository's versioning rule.
 
 Spent version numbers are not reused or renumbered to fill gaps. Changelog entries describe meaningful shipped changes, not every internal checkpoint.
+
+
+### Auto milestone version resolution
+
+Plan records only the expected SemVer class for each milestone; it must not pre-reserve exact version numbers. At milestone completion, refresh remote `main`, determine the next unused version from the actual current version and the milestone behavior, update the project version/changelog consistently, and deliver that milestone. Multiple workstreams that form one milestone share one integrated milestone version. A pure lifecycle handoff, final UAT pass or final completion report does not create another version unless source changed after the last delivered milestone.
 
 Local commit-message/outgoing-commit checks may validate these rules as part of an authorized git command. They may not create commits/pushes, launch agents, dispatch hosted CI, or schedule retries.
 

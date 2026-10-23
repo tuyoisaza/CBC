@@ -1,0 +1,332 @@
+# PHDK Preflight Standard
+
+## Centralized updater
+
+At authorized PHDK command entry, after installation detection, invoke the vendored `scripts/phdk_update.py --trigger preflight <project>` once to refresh manifest-owned standards from canonical main when safe. Re-read updated instructions before continuing. When a new canonical version is actually adopted, complete the [Stack Security Review](PHDK_SECURE.md#stack-security-review) once for that adoption. The helper reports pending review, not completed security evidence; native-block verification remains an assistant responsibility. Report connectivity, version or local edit conflicts without force-overwriting. This foreground action does not run on dormant repositories or activate old work.
+
+
+Before invoking the copier, inspect installed source provenance and committed customization/owner-rule differences under PHDK_UPGRADE.md. A clean worktree is not proof that committed owner overrides are absent. The helper detects uncommitted conflicts but cannot establish ownership or preserve unknown committed exceptions by itself; resolve those differences conservatively or report the exact conflict before copying. Do not silently force replacement.
+
+## Purpose
+
+Every PHDK command must begin with a fast, bounded preflight before doing substantive work.
+
+Preflight verifies that:
+
+1. PHDK is installed coherently for the current repository/tool.
+2. The installed PHDK version is current enough to run the requested command.
+3. The manifest-controlled standards are present.
+4. The current tool's managed PHDK instruction block is present and recognizable.
+5. Relevant recommended skills/capabilities for the requested command are available.
+6. The user has not explicitly disabled use of recommended skills.
+7. The current tool-native managed block resolves the vendored PHDK communication personality and autonomous PR delivery policy; report absent/stale entrypoints and do not claim to have refreshed other sessions.
+8. For Auto/AUTO FORCE, the active mandate and command policy resolve through `PHDK_AUTO_CONTINUITY.md`; any continuity record reflects the current user's actual request.
+
+Preflight is not a separate user command requirement. It is an automatic first step of PHDK commands. Run universal Preflight ONCE per command entry. Internal Auto/PMO stages validate handoffs and newly relevant capabilities; repeat universal Preflight only for a detected installation/version/manifest/managed-rule change or integrity failure. See `PHDK_COHERENCE_STANDARD.md`.
+
+## Designer-specific preflight
+
+`PHDK designer mode` must also run the detailed compatibility/readiness gate in `PHDK_DESIGN_SYSTEM.md` and produce `DESIGN_SYSTEM_READINESS.md` before recommendations or visual modifications. Universal preflight is not a substitute for checking the actual UI implementation.
+
+## Commands covered
+
+Run Preflight before:
+
+- `PHDK capture`
+- `PHDK designer mode`
+- `PHDK plan`
+- `PHDK PMO`
+- PMO Integration Review / any explicit integration stage
+- `PHDK auto`
+- `PHDK auto force`
+- `PHDK uat`
+- `PHDK uat fix`
+- `PHDK check`
+- `PHDK unlock`
+- Developer Mode tasks
+- other future PHDK lifecycle commands
+
+`PHDK upgrade` and `PHDK upgrade force` run installation/version checks and the Stack Security Review under their own contract, even when the installed version is already current. Use the updater's `--trigger upgrade` flag if invoking that helper; do not run the same adoption review twice.
+
+## User override
+
+If the user explicitly says not to use skills, plugins, connectors, MCPs, external references, or a named capability, honor that instruction for the current request.
+
+Examples:
+
+- "PHDK plan, no uses skills externos"
+- "PHDK auto without plugins"
+- "No uses frontend-design"
+
+In that case:
+
+- still verify the PHDK installation/version itself;
+- skip the disabled skill/capability checks;
+- do not repeatedly recommend what the user declined;
+- use core PHDK standards and available built-in capabilities.
+
+A generic request for a PHDK command is otherwise permission to use already-installed, relevant, read/execute-safe skills within existing PHDK execution boundaries.
+
+## Auto mandate and Force entry
+
+For explicit `PHDK auto` or `PHDK auto force`, read `PHDK_AUTO_CONTINUITY.md` and record/recover the current user mandate in `docs/phdk/lifecycle/<run-id>/AUTO_STATE.json`. Keep the source of authorization, scope, target, restrictions and next action; reconcile against the current user instructions after compaction. A missing or malformed record is repaired internally from available conversation evidence. Neither its absence nor its schema is a new human-approval gate, and the record never activates work in another conversation.
+
+AUTO FORCE sets PHDK-only human reviews/sign-offs to `NON_BLOCKING_BY_MODE` immediately. Preflight must not query reviews, reviewer availability or branch/ruleset protection configuration to discover whether those human gates block. Proceed with the assistant's diff review, applicable scoped checks and the normal authorized delivery attempt; real current owner/host restrictions still apply. Missing optional review skills are non-blocking.
+
+Mandatory hooks remain binding, but execution is limited to permitted static checks under PHDK_PRODUCTION_VERIFICATION.md. Inspect nested scripts; a hook demanding local behavioral tests is a concrete conflict to reconcile under PHDK_HOOK_COMPATIBILITY.md or report BLOCKED, never permission to execute the tests or bypass the hook. A real tool/hook/GitHub rejection is reported, diagnosed, repaired in scope, revalidated and retried under the continuity contract. Only then investigate the concrete rejected action as needed; do not stop merely because a first attempt failed. Keep independent work moving without changing controls, transports or credentials to evade rejection.
+
+## Step 1 — Verify PHDK installation
+
+Identify the active PHDK installation.
+
+Common evidence:
+
+- `phdk-standards/VERSION`
+- `phdk-standards/PHDK_MANIFEST.txt`
+- the tool-local PHDK skill clone
+- a native `PHDK-MANAGED` instruction block
+- repository instructions pointing to vendored PHDK standards
+
+Do not infer installation solely from a README mention or historical task file.
+
+Report:
+
+- installed PHDK version;
+- installation location/type;
+- managed block state;
+- manifest presence.
+
+## Step 2 — Verify canonical version
+
+When canonical GitHub access is available, read current PHDK `main` and `VERSION`.
+
+Compare canonical vs installed version.
+
+### Current
+
+If versions match, continue using current evidence. Ordinary Preflight does not repeat a full stack review solely because it compared versions; explicit Upgrade still refreshes the review, and material stack/advisory changes invalidate affected evidence.
+
+### Installed version is older
+
+When the current PHDK-owned surface is clean and synchronization is available, automatically perform conservative PHDK standards synchronization as an internal preflight step, then re-read the updated command/standards before continuing.
+
+Do not require the user to separately type `PHDK upgrade` just because the requested command needs the current standards.
+
+This automatic preflight synchronization:
+
+- changes only the PHDK-owned synchronization surface defined in `PHDK_UPGRADE.md`;
+- does not authorize product changes by itself;
+- does not push/merge/deploy solely because of the sync;
+- must preserve unrelated repository changes;
+- after actual adoption of a new version, completes the bounded read-only Stack Security Review once, then reuses valid evidence at unchanged stages. First or pre-versioned installation also requires this adoption review; a failed sync or same-version integrity repair alone does not.
+
+If dirty local edits in the PHDK-owned surface would be overwritten, do not discard them. Report the paths and continue only when the installed version remains capable of safely executing the command. If current semantics are required, instruct the owner to use `PHDK upgrade force` or explicitly resolve the PHDK-local changes.
+
+Never silently force-upgrade.
+
+### Installed version is newer
+
+Do not downgrade. Record the state and continue using the installed version unless there is a concrete incompatibility.
+
+### Missing/incomplete installation
+
+If manifest-controlled files or the managed block are materially incomplete:
+
+- repair missing PHDK-owned files from canonical upstream when that can be done conservatively without overwriting unrelated/local owner content;
+- otherwise report the exact installation gap and the next command/action needed.
+
+Do not continue while pretending a materially incomplete standards installation is valid.
+
+## Step 3 — Verify manifest integrity
+
+Read the installed/canonical `PHDK_MANIFEST.txt`.
+
+At minimum verify:
+
+- all mapped PHDK destination files exist;
+- `VERSION` is present;
+- command standards needed for the requested command are present;
+- `SKILLS_REGISTRY.md` and `PHDK_PREFLIGHT.md` are present in current installations;
+- no manifest path escapes `phdk-standards/`.
+
+A complete hash/byte comparison is required during Upgrade; ordinary command Preflight may use a bounded structural check unless drift is suspected.
+
+## Step 4 — Determine recommended skills/capabilities
+
+Read `SKILLS_REGISTRY.md` and select only recommendations relevant to the current command and repository technology.
+
+Do not preload every skill.
+
+Classify each relevant capability:
+
+- **AVAILABLE** — installed/connected and usable now.
+- **BUILT-IN EQUIVALENT** — a native capability satisfies the same purpose.
+- **MISSING OPTIONAL** — useful but the command can proceed safely without it.
+- **MISSING IMPORTANT** — materially lowers quality/evidence for this command.
+- **DISABLED BY USER** — user explicitly said not to use it.
+- **INCOMPATIBLE / OUT OF SCOPE** — conflicts with PHDK execution limits.
+
+## Step 5 — Inspect actual availability
+
+Inspect only the current tool's real skill/plugin/capability inventory.
+
+Examples:
+
+- local skill directories used by the active coding tool;
+- the tool's installed skills index;
+- connected plugin/connector inventory;
+- built-in capabilities already exposed to the assistant.
+
+Do not claim a skill is installed merely because `SKILLS_REGISTRY.md` contains a URL.
+
+Do not install the same skill repeatedly or create duplicate copies.
+
+## Step 6 — Use relevant installed skills
+
+When a recommended skill/capability is AVAILABLE and compatible with PHDK:
+
+- actually read/use it for the relevant stage;
+- apply its useful domain guidance;
+- keep PHDK/owner instructions authoritative;
+- do not import contradictory delegation/background/browser/provider-write behavior.
+
+Examples:
+
+- Plan/UX work should use an available frontend/design skill when relevant.
+- Security-sensitive Plan/Auto/Check work should use an available security-review skill/guidance.
+- Code review/Check should use an available code-review skill.
+- Framework/library work may use an available current documentation capability.
+- Any mode may use supported bounded in-session worker capability under `PHDK_INTELLIGENT_EXECUTION.md`; PMO portfolio workers also follow `PHDK_PMO.md`.
+
+A registry entry that is never checked or used has no operational value.
+
+## Step 7 — Missing recommended skill
+
+A missing skill must not automatically block PHDK when PHDK can safely perform the work itself.
+
+### Optional skill
+
+Proceed using core PHDK/built-in capabilities. Mention the missing optional capability only when it materially affects quality.
+
+### Important skill
+
+When the skill would materially improve the requested task:
+
+- state that it is missing;
+- if installation/connection can be offered through the current product/tool, present that option;
+- installation/connection that requires user action must not be falsely claimed as completed;
+- if the user declines or installation is unavailable, continue with the strongest available PHDK/built-in approach unless the capability is genuinely required.
+
+Do not convert optional ecosystem dependencies into hard project blockers.
+
+## Step 8 — Preflight summary
+
+Keep the summary concise.
+
+Example:
+
+```text
+PHDK Preflight
+- PHDK: v2.44.0 current
+- Installation: complete (35 manifest mappings)
+- Managed rules: current
+- Plan capabilities:
+  - frontend-design: AVAILABLE — will use
+  - security guidance: AVAILABLE — will use
+  - current-docs capability: MISSING OPTIONAL — proceeding with repo/PHDK evidence
+- User skill override: none
+```
+
+Do not make Preflight a noisy ritual when everything is healthy.
+
+## Stage recommendation matrix
+
+Use `SKILLS_REGISTRY.md` for the full current mapping. Typical categories:
+
+### Capture
+Useful:
+- product discovery / requirements-analysis guidance;
+- documentation/research readers;
+- domain-specific references where applicable.
+
+### Plan
+Useful:
+- frontend/UX architecture guidance;
+- security architecture guidance;
+- framework/current-docs capability;
+- architecture/code-quality guidance.
+
+### PMO
+Useful:
+- runtime-supported worker/subagent capability;
+- repository/GitHub readers;
+- dependency/change-review guidance.
+
+### Auto
+Useful:
+- relevant framework/domain skills for implementation;
+- code-quality guidance;
+- security guidance for sensitive changes;
+- current-docs capabilities.
+
+### Integration Review
+Useful:
+- code-review capability;
+- dependency/API/schema review guidance;
+- security review when boundaries changed.
+
+### UAT / UAT Fix
+Useful:
+- testing/QA guidance;
+- accessibility guidance for source-level/manual checklists;
+- domain-specific acceptance guidance.
+
+### Check
+Useful:
+- code-review capability;
+- security review guidance;
+- frontend/design review guidance when UI standards apply;
+- current-docs capability where framework compliance depends on current APIs.
+
+## Relationship to installation
+
+PHDK Preflight validates and uses the current environment; it is not permission to mutate unrelated personal/global tooling.
+
+Repo-local/tool-local skill installation is allowed only when the current user request or product flow authorizes that installation and it can be done safely without changing unrelated projects.
+
+Third-party plugins/connectors that require user consent/connection must follow the host product's explicit installation/connection flow.
+
+Never claim that a plugin, connector, MCP server, or external credential was installed when the user has not completed the required action.
+
+## Relationship to Auto
+
+`PHDK auto` and `PHDK auto force` run Preflight once at the beginning of the lifecycle and recheck capabilities only when a later stage needs a materially different capability. Context recovery reloads the current mandate and continuity contract; it does not repeat an approval interview, preventive review investigation or the whole Preflight.
+
+Do not repeat a full Preflight before every internal Auto stage.
+
+If Auto's internal Plan stage needs a design skill that Capture did not, inspect that capability then.
+
+## Required lifecycle artifact
+
+When Preflight is part of Capture/Plan/PMO/Auto/UAT/UAT Fix/Check or another lifecycle stage, create/update:
+
+```text
+PHDK_PREFLIGHT_REPORT.md
+```
+
+with the installed/canonical version, manifest/managed-rule state, relevant capability inventory, user-disabled capabilities, any conservative sync performed, and unresolved limitations. When review is triggered, include STANDARDS_SYNC, STACK_REVIEW_COVERAGE and STACK_SECURITY_STATUS or link the current shared evidence. These outcomes remain independent; incomplete runtime coverage and source/main versus deployed SHA differences must stay visible. For Auto variants, link the run's `AUTO_STATE.json` and identify the actual mode; the report records authorization provenance without granting permission itself.
+
+When a lifecycle run is active, snapshot it under the run's `00-preflight/` folder and create the Preflight `HANDOFF.md` required by `PHDK_LIFECYCLE.md`.
+
+Before the next stage starts, verify that this report exists for the current run and that no blocking installation defect remains.
+
+## Completion evidence
+
+Final reports should mention capability limitations only when they materially affected the result.
+
+Do not pad every completion report with the full skill inventory.
+
+
+## Mandatory app widget discovery at Auto entry
+
+In addition to installed skills, the preflight for `PHDK auto` must inspect the actual app source to locate the shared version/clipboard/trash widget and capture a bounded **DEBUG_WIDGET_READINESS.md** report before implementation. Record each applicable public/login/app/admin mount, exact position under the brand at top-left, visible semver-only format and compact dimensions, real clipboard handler and diagnostic instrumentation, real cache/cookie/session clearing implementation, and existing test evidence. Do not infer PASS from the presence of an icon, CSS class, button click handler or checkmark animation. Mark evidence-based PASS / FAIL / UNVERIFIED / NOT APPLICABLE. A failure enters the Auto implementation/remediation backlog and cannot be waived by syncing standards. This is an inspection/recording gate, **not permission** for a bare upgrade command to modify product source.

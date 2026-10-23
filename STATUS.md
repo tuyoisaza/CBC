@@ -1,3 +1,10 @@
+## 2026-10-23 — PHDK 2.65.0 standards maintenance (v1.6.75)
+
+- Vendor all 78 canonical manifest resources from `9fc6605c75b42e678bab41feb741dca71fcbabcc` and synchronize exact native managed blocks.
+- Preserve project-specific owner rules and architecture; package changes are required release metadata only.
+- Review stack security on this upgrade and future explicit upgrades. Findings and coverage: [docs/phdk/STACK_SECURITY_REVIEW_2026-10-23.md](docs/phdk/STACK_SECURITY_REVIEW_2026-10-23.md).
+- Static scope/provenance: [docs/phdk/standards/2026-10-23-v2.65.0.md](docs/phdk/standards/2026-10-23-v2.65.0.md). Application security, publication gates and live deployment retain their separately evidenced status.
+
 ## 2026-10-11 — Carrusel sutil de imágenes B2B (v1.6.73)
 
 - Reducir la vista previa a imágenes de 88 × 66 px en un carrusel automático, sin nombres, encabezados ni botones visibles.

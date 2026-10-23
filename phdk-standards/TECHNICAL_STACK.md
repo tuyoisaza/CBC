@@ -2,6 +2,10 @@
 
 For explicit `PHDK auto`, `PHDK_AUTO.md` governs the whole goal's cadence: implement all agreed features and cross-package wiring before final integrated verification and versioned branch/PR delivery. Stack and build contracts below remain applicable; they do not impose a QA/release/approval cycle after each internal stage. Preserve actual mandatory controls and the provider/browser boundaries in `EXECUTION_SCOPE.md`.
 
+## UI implementation baseline
+
+For React/Next.js UI use `PHDK_DESIGN_SYSTEM.md` as the normative component-layer contract: local shadcn-compatible components with explicitly selected Radix primitives for overlays, Tailwind semantic design tokens, Motion where justified, lucide-react icons, centralized shared light/dark/corporate themes, and applicable next-intl `en`/`es`/`pt` catalogs. Check installed versions before adding packages; do not duplicate the design system.
+
 ## Purpose
 
 This file defines the canonical technical stack for all products built on this standard.
@@ -18,9 +22,11 @@ Every agent must treat this file as the source of truth for technology choices. 
 Package manager:    pnpm
 Build system:       Turborepo
 Language:           TypeScript (strict mode)
-Node minimum:       20.x
+Node runtime:       Supported, security-patched LTS (see PHDK_SECURE.md)
 Formatter:          Prettier
 ```
+
+Runtime selection and review follow [PHDK_SECURE.md](PHDK_SECURE.md#stack-security-review): prefer compatible Active LTS for new projects, with a documented supported Maintenance LTS fallback; patch an existing supported major before recommending a major migration. Reconcile runtime/package-manager declarations, lockfiles, build/image pins and observed deployment versions. A range or build log is not proof of the running patch.
 
 Structure:
 
@@ -111,7 +117,7 @@ Database:           PostgreSQL — all environments
 Migration tool:     Drizzle Kit
 ```
 
-PostgreSQL is the application's supported runtime database. Runtime database infrastructure is an external prerequisite; PHDK implements its schema, migrations, queries, and configuration validation in the repository even when the runtime is not yet available. Do not provision a cloud database, start a local database/container, or replace the runtime database with SQLite. Local verification uses isolated test doubles or in-process adapters and never connects to a real database.
+PostgreSQL is the application's supported runtime database. Runtime database infrastructure is an external prerequisite; PHDK implements its schema, migrations, queries, and configuration validation in the repository even when the runtime is not yet available. Do not provision a cloud database, start a local database/container, or replace the runtime database with SQLite. Local verification is static source, SQL, type and safe-build review under PHDK_PRODUCTION_VERIFICATION.md; do not execute test doubles, in-process adapters or database probes locally.
 
 Configuration is environment-driven:
 
@@ -120,12 +126,12 @@ DATABASE_PROVIDER="postgresql"
 DATABASE_URL="..."
 ```
 
-### Database code and isolated verification
+### Database code and static verification
 
 - Runtime connection values belong to the existing deployment environment; PHDK documents variable names in `.env.example` without retrieving or setting real credentials
 - Never run migrations, queries, seeds, or verification probes against a real dev, staging, or production database from the PHDK agent
-- Review migration SQL and compatibility locally; test query and migration-related application logic with explicit test doubles when risk-triggered coverage is needed
-- Test doubles are confined to verification and must never become a silent production fallback
+- Review migration SQL, queries and compatibility statically; retain necessary test source and acceptance criteria for separately authorized deployed UAT without executing local behavioral tests
+- Test doubles must never become a silent production fallback; their presence does not authorize local runtime execution
 - If runtime `DATABASE_URL` is unset or unreachable, application code must fail clearly rather than fall back to SQLite or an in-memory store — see `QA_CHECKLIST.md` Database
 
 Rules:
@@ -269,6 +275,25 @@ GOOGLE_OAUTH_REDIRECT_URI="http://localhost:4000/auth/google/callback"
 GOOGLE_OAUTH_ALLOWED_DOMAIN=""
 AUTH_SESSION_SECRET=""
 ```
+
+### Required Railway Variables handoff
+
+Whenever Google OAuth needs owner-supplied deployment values, explicitly ask the owner to add them in **Railway → the identified project/environment/service → Variables**, with one copy-paste-ready `env` block per consuming service. A generic "configure OAuth credentials" request is insufficient. Use the equivalent variables screen for another existing host.
+
+- Read the application's environment schema, auth handler and routing/proxy configuration. Use the exact variable names the code consumes; include the complete externally reachable callback, including any proxy prefix, and fill known non-secret URL/origin values. State which public URL is still unknown instead of inventing it.
+- Include every required missing key, including a session secret when the application requires one; distinguish optional keys outside the block. Briefly explain where to obtain each unknown value. Do not request values already known to be configured; report uninspected runtime configuration as unverified.
+- Use placeholders for secrets and tell the owner to enter them directly in Railway. Never request secret values in chat or include them in reports/committed source; never put a client secret in a public frontend variable.
+
+Example format, only for applications using these exact keys:
+
+```env
+GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=tu-client-secret
+WEB_ORIGIN=tu-url
+GOOGLE_LOGIN_REDIRECT_URI=tu-url/api/backend/auth/google/callback
+```
+
+Adapt the example to the actual project; keep `GOOGLE_OAUTH_*` names when those are what its code reads. Continue independent implementation/local verification while external values are pending. This handoff does not authorize provider writes or prove a working live login.
 
 ---
 

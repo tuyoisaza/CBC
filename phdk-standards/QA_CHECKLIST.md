@@ -4,9 +4,12 @@
 
 This file defines code quality gates for task completion, merging, and GitHub delivery. `EXECUTION_SCOPE.md` controls execution; `MAIN_DELIVERY_STANDARD.md` defines normal delivery through verified remote `main` integration and explicit narrower scopes.
 
-Choose the QA scope for the whole requested outcome. With explicit `PHDK auto`, `PHDK_AUTO.md` makes the sections below coverage for final integrated verification after all development, not intermediate stage tests, releases, or human-approval gates. Record source references and actual results; mark unrelated items `N/A` with a reason. Documentation-only work needs source/diff consistency and applicable formatting checks, not an app build.
+Choose the QA scope for the whole requested outcome. With explicit `PHDK auto`, `PHDK_AUTO.md` uses focused technical verification at each completed value milestone before its versioned publication, then applies the sections below comprehensively to the final cross-milestone candidate. Lifecycle stages/tasks/slices do not trigger releases or human-approval gates. Record source references and actual results; mark unrelated items `N/A` with a reason. Documentation-only work needs source/diff consistency and applicable formatting checks, not an app build.
 
 ## Evidence Boundary
+
+
+For milestone-driven Auto, verify `MILESTONE_PLAN.md` traceability and actual milestone delivery evidence: acceptance criteria satisfied for the published increment, version/commit/PR/main SHA recorded, and subsequent work based on refreshed `main`. Retain milestone-to-story mapping as documentation during Auto without running acceptance. A later explicitly initiated UAT must include `UAT_MILESTONE_MATRIX.md` when milestones exist and cover every delivered milestone; UAT NOT RUN is not a development-delivery gate.
 
 The product requirements below are checked through source/diff review, static checks, local builds, and risk-triggered local unit/in-process integration tests with deterministic doubles. A checked UI, auth, database, or diagnostics item confirms implementation evidence, not an exercised user flow. Requested status, non-secret configuration metadata, and existing logs follow **Bounded read-only provider diagnostics** in `EXECUTION_SCOPE.md`, independently of Developer Mode or unlock; they are separate diagnostic evidence, never an executed product test.
 
@@ -163,7 +166,7 @@ Review existing local code-intelligence setup when relevant — see `TECHNICAL_S
 
 - [ ] **Project identity:** source places the project name and logo/icon in the top-left app shell.
 - [ ] **Version placement:** source mounts the version in the app shell, login page, and admin panel.
-- [ ] **Version format:** version format is correct: `vMAJOR.MINOR.PATCH (shortSHA · UTC timestamp)`.
+- [ ] **Visible version format:** `vMAJOR.MINOR.PATCH` ONLY. No commit, date, timestamp, ellipsis or parentheses beside the visible version. Preserve SHA/build time as separate copied-diagnostics fields.
 - [ ] **Debug copy:** button, clipboard handler, and safe report formatter are wired in source.
 - [ ] **Debug metadata:** debug report includes all required metadata.
 - [ ] **Redaction:** debug report redacts all sensitive values.
@@ -191,7 +194,7 @@ Review existing local code-intelligence setup when relevant — see `TECHNICAL_S
 - [ ] Login, Google redirect, callback success/failure, logout, and session-refresh handlers are wired in source.
 - [ ] Auth provider is custom Google OAuth 2.0, or an explicitly approved alternative in `ARCHITECTURE_DECISIONS.md`.
 - [ ] Exactly one primary auth provider is implemented unless migration/comparison is explicitly in scope.
-- [ ] Required OAuth variable names and redirect-URI expectations are documented in `.env.example`/setup docs without real credentials.
+- [ ] Required OAuth variable names and redirect-URI expectations are documented in `.env.example`/setup docs without real credentials; when owner-supplied values are needed, the owner receives the required Railway Variables handoff from `TECHNICAL_STACK.md`: one copyable `KEY=value` block per consuming service/environment, exact code-consumed keys and public callback/origin, known non-secret URLs filled, all missing required values explained, optional keys distinguished, and secret placeholders entered directly in the provider.
 - [ ] Redirect construction uses validated configuration; actual provider registration is an external prerequisite, not an agent check.
 - [ ] OAuth state is generated and validated; invalid state and callback failures have safe errors and correlation IDs.
 - [ ] User create/update and session creation logic handles successful callbacks securely.
@@ -612,3 +615,19 @@ Review local enforcement when foundation work or the current change touches it. 
 Unresolved actual required checks, reviews, or access blockers prevent claiming delivery completion. In Auto, complete all independent work, repair in-scope final-verification failures, and satisfy applicable gates before publishing the whole candidate to `main`; no additional PHDK-only human sign-off is required. A genuinely new material decision follows `PHDK_AUTO.md`. Developer Mode hard stops apply only while that mode remains active. Browser/live tests stay excluded; requested provider diagnostics remain separate evidence.
 
 The final response states what source was reviewed, actual check results, remote target/version evidence or the precise delivery blocker/narrower scope, and what remains `visual/runtime unverified`.
+
+## Debug UI contract (app-style products only)
+
+- [ ] Version/actions widget stays visible for anonymous users and debug OFF on public home/login/app/admin, while privileged diagnostics remain protected.
+- [ ] One reused compact component shows exactly `vX.Y.Z` → clipboard → trash in one row and no visible subordinate copy/status/toast; verify 12px text, 28×28px visible buttons, 14×14px glyphs, 4px spacing, no wrap or enlarged tiles.
+- [ ] Both successful actions show a green check icon and revert; failures never show success; accessible nonvisual status exists.
+- [ ] Clipboard copies complete sanitized verbose diagnostics; cache action clears permitted state safely without deleting business data.
+- [ ] Applicable unit/component tests and source mount points verified; browser/runtime evidence is not invented.
+
+## Mandatory functional version/actions QA
+
+- [ ] Widget sits directly below product name at top-left of public home, login, shell, admin.
+- [ ] Visible version only `vX.Y.Z`, no SHA/build time or parentheses; compact paired controls.
+- [ ] Tests inspect actual copied clipboard text containing current version, route history, errors, safe logs and proper redaction; no icon-only fake pass.
+- [ ] Tests verify actual deletion of supported app-scoped cache/storage/cookies, proper session invalidation and failure modes; only post-success green check.
+- [ ] `DEBUG_WIDGET_READINESS.md` exists and linked evidence is current; absent functionality blocks compliance.
