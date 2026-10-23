@@ -34,3 +34,7 @@ Captured **2026-10-23T15:12:15Z** during the initial review. No direct `process.
 ## Remaining verification
 
 Reconcile source, lock resolution, rebuilt image and deployed SHA; check current advisories for direct/transitive/native packages, base image/OS and each database/cache/search service; verify relevant feature/platform exposure and compatibility. Runtime versions, rebuild success and live behavior stay UNVERIFIED. This standards change installs no application dependencies, updates no runtime or framework, runs no application tests/UAT and changes no provider settings. Findings remain open for separately scoped application remediation.
+
+## Standards format follow-up — 2026-10-23
+
+PHDK 2.65.1 source `d4ed10e96f5fd05ebeaa38a664442d7d10d6cf86` replaces 2.65.0 with a mechanically verified Python/document formatting patch. Current project baseline is `3c4764291f2ec7eada1c507437f703955ea2dd76`. Runtime selectors and dependency resolutions remain byte-identical or structurally unchanged except required release-version metadata; the dated stack findings and coverage above remain applicable. STANDARDS_SYNC is verified for the exact candidate; STACK_REVIEW_COVERAGE remains PARTIAL and STACK_SECURITY_STATUS remains GAPS_FOUND. No new runtime/provider evidence or application security clearance is inferred.
