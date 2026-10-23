@@ -1,12 +1,22 @@
 # DEVSECOPS.md
 
+## Multi-tenant risk and cryptography governance
+
+Read `PHDK_TENANT_RISK_STANDARD.md` for every multi-tenant security decision. Mandatory baseline: verified tenant-scoped authorization across all data paths, TLS, appropriate at-rest encryption, protected keys and secrets, audit, backups and denial evidence. Additional per-tenant databases, KMS key boundaries and field-level encryption are consultative recommendations based on exposure, sensitivity and residual risk; document the owner's decision in `TENANT_RISK_ASSESSMENT.md`. Do not incur new costs or mutate providers without authorization. `PHDK_PRODUCTION_VERIFICATION.md` controls permitted runtime verification.
+
+
+## UAT JWT and synthetic identity security boundary
+
+`JWT_STANDARD.md` is normative for authenticated UAT and JWT-consuming apps. During explicitly authorized UAT or Prep, obtain sessions for uniquely run-owned synthetic identities through the existing trusted application/provider flow; do not introduce test issuers, trusted test keys, alternate authentication adapters or bypasses in production. Preserve fixed allowed algorithms, issuer/audience/type/expiry validation and server-side roles and tenant policy. Default to existing OAuth/OIDC/server sessions instead of mandating JWT, keep temporary state and secrets outside source/reports/logs, and verify revocation and exact run-owned cleanup. A synthetic super_admin label is never proof of authority. Exercise wrong-tenant, stale/suspended and unauthenticated/expired/revoked-session cases only within explicitly authorized deployed acceptance; Auto performs source/static review and reports `UAT NOT RUN`. Do not introduce public admin-login test routes.
+
+
 ## Purpose
 
 This file defines the security and operational safety baseline for all PHDK projects.
 
 Its goal is to prevent AI developers from accidentally exposing secrets, weakening authentication, leaking private data, adding unsafe dependencies, or making risky deployment changes.
 
-`EXECUTION_SCOPE.md` is the execution boundary. These standards govern repository code and local verification; they do not authorize the PHDK agent to configure or administer cloud services, real databases, external secrets, dashboards, scheduled jobs, or provider integrations. Its **Bounded read-only provider diagnostics** section separately permits requested existing provider status/non-secret configuration metadata and log reads through authorized access, independently of PHDK Developer Mode or unlock. Deployment uses only the existing GitHub-connected push pipeline. Product security and diagnostics remain code requirements, tested without a browser or real-service calls.
+`EXECUTION_SCOPE.md` is the execution boundary. These standards govern repository code and permitted verification; they do not authorize the PHDK agent to configure or administer cloud services, real databases, external secrets, dashboards, scheduled jobs, or provider integrations. Its **Bounded read-only provider diagnostics** section separately permits requested existing provider status/non-secret configuration metadata and log reads through authorized access, independently of PHDK Developer Mode or unlock. Deployment uses only the existing GitHub-connected push pipeline. Product security and diagnostics remain code requirements reviewed through source/static checks; runtime acceptance requires explicit UAT authorization under `PHDK_PRODUCTION_VERIFICATION.md`.
 
 ---
 
@@ -289,6 +299,8 @@ Required:
 ---
 
 ## Deployment Safety Rules
+
+`PHDK_AUTOMATION_HYGIENE.md` is the required Check/Auto verification gate for leftover GitHub Actions, scheduled bots/agents, production reload loops and Railway repeat-deploy/restart cost. Never infer remote enabled state from a workflow file, never disable intended GitHub-connected Railway autodeploy, and never remove security/ruleset checks in the name of cleanup.
 
 - Deploy only through an authorized GitHub push/merge to the existing connected pipeline and established release branch, per `EXECUTION_SCOPE.md`
 - Do not create services, pipelines, CI/task workflows, scheduled deployments, or preview environments

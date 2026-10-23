@@ -1,5 +1,9 @@
 # DESIGN_RULES.md
 
+## Canonical design-system implementation contract
+
+Use `PHDK_DESIGN_SYSTEM.md` for shadcn-compatible component reuse, Radix dialog/popover/menu primitives, Motion presets, Lucide icon registry, centralized Tailwind semantic styles and matching light/dark/corporate theme structures. Designer Mode must pass source-evidenced readiness before recommending redesigns. Project-approved exceptions are permitted; maintain compatible accessibility and locale support.
+
 ## Purpose
 
 This file defines the design standards, UI rules, and UX expectations for every product built on this stack.
@@ -18,15 +22,15 @@ Every product UI must show:
 
 - project name
 - logo or icon
-- version number
-- copy-debug-report button and clear-cache button, paired, next to the version
+- always-visible version/actions widget for every visitor, including public home, login and debug OFF, per `DEBUG_DIAGNOSTICS_STANDARD.md`
 
 ## Required Locations
 
-Brand and version must appear in:
+Brand and the always-visible version/actions widget must appear in:
 
 - top-left corner of the primary app shell
 - login page
+- public home/landing page
 - admin panel
 
 The project name and logo must be visually consistent across public, authenticated, and admin areas.
@@ -39,7 +43,7 @@ Required app shell structure:
 
 ```txt
 Top-left:     logo + project name
-Near logo:    version number, then copy-debug-report button + clear-cache button (paired, side by side)
+Near logo:    always show `vX.Y.Z` → clipboard → trash (12px text, 28×28px visible buttons, 14px icons, 4px spacing; no SHA/date/parentheses, no captions). The 44px accessibility hit area, when feasible, must not enlarge the visible controls.
 Main nav:     route-based feature navigation
 Main area:    page content
 Footer:       optional, project-specific
@@ -463,7 +467,7 @@ The interface must always communicate which state it is in.
 Before marking UI code complete, verify the implementation in source and applicable local code checks. This checklist does not authorize rendered UI, browser, or device testing:
 
 - [ ] Project name/logo placement is respected.
-- [ ] Version, copy-debug-report button, and clear-cache button are present where required.
+- [ ] Exactly one compact reusable `vX.Y.Z` → clipboard → trash widget with fixed 28px buttons and 14px icons (never enlarged or truncated) is visible on public home/login/app/admin, including anonymous users and debug OFF; icon success feedback is green check then automatic revert, without visible captions/toasts.
 - [ ] Route-based navigation is used for primary features.
 - [ ] Responsive code covers mobile widths from 320px.
 - [ ] Responsive code covers tablet widths from 768px.
