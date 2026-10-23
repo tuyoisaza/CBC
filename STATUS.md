@@ -1,3 +1,9 @@
+## 2026-10-23 — PHDK 2.65.1 compatibility maintenance (v1.6.76)
+
+- Adopt the published canonical mechanical formatting patch `d4ed10e96f5fd05ebeaa38a664442d7d10d6cf86` with all 78 manifest mappings verified.
+- Preserve the installed Stack Security Review contract and all project controls; no runtime, framework or dependency resolution changes.
+- Source and verification: [docs/phdk/standards/2026-10-23-v2.65.1.md](docs/phdk/standards/2026-10-23-v2.65.1.md). The preceding 2.65.0 rollout and product history remain preserved below.
+
 ## 2026-10-23 — PHDK 2.65.0 standards maintenance (v1.6.75)
 
 - Vendor all 78 canonical manifest resources from `9fc6605c75b42e678bab41feb741dca71fcbabcc` and synchronize exact native managed blocks.
