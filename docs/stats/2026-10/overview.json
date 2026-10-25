@@ -1,0 +1,33 @@
+{
+  "captured_on": "2026-10-25",
+  "period_start": "2026-09-27",
+  "period_end": "2026-10-24",
+  "source": "Meta Business Suite overview, manual transcription",
+  "Facebook": {
+    "views": 709,
+    "viewers": 170,
+    "interactions": 41,
+    "profile_or_page_visits": 21,
+    "follows": 0,
+    "unfollows": 0,
+    "conversations_started": 0,
+    "orders_in_meta": 0,
+    "followers_snapshot": 495
+  },
+  "Instagram": {
+    "views_display": "2.4K",
+    "views_rounded": 2400,
+    "viewers": 307,
+    "interactions": 132,
+    "profile_or_page_visits": 19,
+    "follows": 1,
+    "unfollows": 3,
+    "conversations_started": 0,
+    "orders_in_meta": 0,
+    "followers_snapshot": 719
+  },
+  "YouTube": {
+    "status": "no_channel_access",
+    "channel_id": "UCHCBxJMXNCiUbUX3XLvSO6A"
+  }
+}
