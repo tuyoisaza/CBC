@@ -1,3 +1,11 @@
+## 2026-10-25 — Base de redes y experimento de noviembre (v1.6.77)
+
+- Registrar resultados de Meta del 27 de septiembre al 24 de octubre, fuentes CSV y límites del análisis.
+- Definir 60 piezas para Facebook e Instagram: 30 a las 11:00, 15 a las 16:00 y 15 a las 19:00 por red, hora de CDMX.
+- Conservar el estado efectivo de programación y la plantilla del próximo corte en [docs/stats](docs/stats/README.md).
+- Meta: 44 piezas verificadas como programadas en ambas redes (88 destinos); 16 guardadas como borradores compartidos. Los 32 destinos del 23 al 30 esperan la ventana de 29 días; activación posible desde el 2 de noviembre, sin seguimiento automático.
+- Verificación documental y de consistencia de los datos; sin cambios de lógica de aplicación ni pruebas de runtime.
+
 ## 2026-10-23 — PHDK 2.65.1 compatibility maintenance (v1.6.76)
 
 - Adopt the published canonical mechanical formatting patch `d4ed10e96f5fd05ebeaa38a664442d7d10d6cf86` with all 78 manifest mappings verified.

@@ -1,3 +1,8 @@
+## v1.6.77 — 2026-10-25
+
+- Agregar docs/stats con la base de rendimiento de Facebook e Instagram, CSV originales y metodología reproducible.
+- Registrar el experimento de horarios de noviembre y una plantilla por pieza/red para decidir próximos ajustes de estilo y frecuencia.
+
 ## 2026-10-23 — PHDK 2.65.1 compatibility maintenance (v1.6.76)
 
 - Adopt the published canonical mechanical formatting patch `d4ed10e96f5fd05ebeaa38a664442d7d10d6cf86` with all 78 manifest mappings verified.
