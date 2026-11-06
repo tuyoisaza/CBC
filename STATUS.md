@@ -1,3 +1,10 @@
+## 2026-11-05 — Ayuda de configuración de Sistema (v1.6.80)
+
+- Cada una de las 12 opciones incluye propósito, cuándo se necesita, origen y lugar de guardado. Las guías oficiales están enlazadas cuando corresponde.
+- El estado distingue presencia de validación real; Brevo/Resend se describen como alternativas y Sentry requiere integración técnica además del DSN.
+- La cuenta vinculada y la consulta a Mercado Pago se retiran sólo de Sistema; Pagos conserva la información de proveedores.
+- Verificación: TypeScript, ESLint con next/core-web-vitals y build de producción con Node desde apps/web, sin DATABASE_URL, pasaron; git diff --check pasó. Los intentos iniciales encontraron un error transitorio de Google Fonts y una invocación desde el directorio incorrecto; el build final pasó sin modificar fuentes ni configuración. Entrega por PR; evidencia remota posterior al merge en PHDK_DELIVERY_EVIDENCE.json. UAT NOT RUN.
+
 Verificación v1.6.79: typecheck, ESLint de archivos modificados (sin errores ni advertencias), build de producción sin DATABASE_URL y git diff --check pasaron. No se ejecutó UAT ni se convirtieron mensajes reales.
 
 ## 2026-11-05 — Mensajes en navegación (v1.6.79)
@@ -126,7 +133,7 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.79
+v1.6.80
 
 ## Completed Slices
 - Carrusel sutil de imágenes B2B: miniaturas automáticas de 88 × 66 px, sin textos ni botones, con soporte de movimiento reducido (v1.6.73).

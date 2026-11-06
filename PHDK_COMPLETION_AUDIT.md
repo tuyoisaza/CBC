@@ -1,3 +1,11 @@
+# Completion audit — v1.6.80
+
+Source review covers all three requested explanations for all 12 options, preserved secret handling and configuration authorization, text status independent of icons/color, wrapping variable names and safe external links. Mercado Pago account lookup/card removed only from Sistema; Pagos unchanged. No added Stripe account section.
+
+TypeScript, scoped ESLint (next/core-web-vitals), production build from apps/web without DATABASE_URL, and diff checks passed. Remote-main readback is recorded after merge in PHDK_DELIVERY_EVIDENCE.json. No browser/runtime acceptance or live credential checks performed; UAT NOT RUN.
+
+---
+
 Verificación v1.6.79: typecheck, ESLint de archivos modificados (sin errores ni advertencias), build de producción sin DATABASE_URL y git diff --check pasaron. No se ejecutó UAT ni se convirtieron mensajes reales.
 
 # Navigation follow-up — v1.6.79
