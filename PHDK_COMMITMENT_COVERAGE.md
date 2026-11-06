@@ -1,3 +1,9 @@
+# Contact-only leads — v1.6.80
+
+Current request removes box type, quantity and occasion from lead creation. Shared NewLeadForm, admin POST validation and message-lead-draft extraction implement this for manual/message conversion paths. Notes, original message linking, admin authorization and duplicate protection remain. Quote rules/minimums and historical records are unchanged. Quoting is an unchecked optional next step. Source/diff review and static checks cover the change; no runtime UAT. Final main/PR proof is recorded locally after merge.
+
+---
+
 # Navigation follow-up — v1.6.79
 
 Current scope: visible Mensajes sidebar entry after Pedidos, using the existing /admin/service route, icon, title and accessible label. Source review confirms one inbox entry, available to both existing admin navigation variants; no authorization policy changes. Message conversion adds a protected prefilled review form, conservative deterministic extraction and an atomic lead/message link. Already linked messages return the existing lead; conditional linking rolls back concurrent duplicate creation. Original message text remains intact, no provider call or automatic message send is added. TypeScript, scoped ESLint and diff validation are the applicable static checks. Runtime UAT not run. Final remote proof is recorded after merge in PHDK_DELIVERY_EVIDENCE.json.

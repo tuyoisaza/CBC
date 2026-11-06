@@ -3,8 +3,6 @@ export type MessageLeadDraft = {
   contactName?: string
   email?: string
   whatsapp?: string
-  boxType?: 'prensa' | 'moka' | 'mix'
-  quantity?: number
   message: string
 }
 
@@ -24,17 +22,11 @@ export function messageLeadDraft(message: { from: string; body: string; platform
   const labelled = (label: string) => body.match(new RegExp(`(?:^|\\n)\\s*(?:${label})\\s*:\\s*([^\\n]+)`, 'i'))?.[1].trim()
   const email = message.from.match(emailPattern)?.[0] ?? signature?.find(part => emailPattern.test(part))?.match(emailPattern)?.[0] ?? body.match(emailPattern)?.[0]
   const whatsapp = phone(message.from) ?? signature?.map(phone).find(Boolean) ?? phone(labelled('whatsapp|teléfono|telefono|tel|celular') ?? '')
-  const quantityText = labelled('cantidad') ?? body.match(/\b(\d{1,6})\s*(?:cajas|kits|piezas)\b/i)?.[1]
-  const quantity = quantityText && /^\d+$/.test(quantityText) ? Number(quantityText) : undefined
-  const prensa = /\bprensa\b/i.test(body)
-  const moka = /\bmoka\b/i.test(body)
   return {
     companyName: labelled('empresa|compañía|compania')?.slice(0, 100),
     contactName: (signature?.[0] ?? labelled('nombre|contacto'))?.slice(0, 100),
     email,
     whatsapp,
-    boxType: prensa && moka ? 'mix' : prensa ? 'prensa' : moka ? 'moka' : undefined,
-    quantity: quantity && quantity <= 100000 ? quantity : undefined,
     message: body.slice(0, 1000),
   }
 }

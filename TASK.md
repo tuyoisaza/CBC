@@ -1,3 +1,11 @@
+# TASK — Leads solo de contacto (2026-11-05)
+
+- [x] Quitar tipo de caja, cantidad y ocasión de ambos formularios de lead, extracción y validación admin.
+- [x] Dejar cotización como paso opcional posterior, sin cambiar mínimos ni precios.
+- Verificación y entrega: evidencia local posterior al merge; sin UAT ni cambios de datos históricos.
+
+---
+
 # TASK — Acceso Mensajes (2026-11-05)
 
 - [x] Mostrar Mensajes en el menú izquierdo, después de Pedidos, enlazado a /admin/service.

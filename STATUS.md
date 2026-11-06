@@ -1,3 +1,9 @@
+Validación v1.6.80: typecheck, ESLint de los tres archivos de código cambiados y git diff --check pasaron. Revisión de fuente: solo eliminación de campos de alta/extracción y cambio de selección inicial; sin cambios de dependencias, esquema o cotizador. No se ejecutó build completo ni UAT para este ajuste acotado.
+
+## 2026-11-05 — Leads solo de contacto (v1.6.80)
+
+- Nuevo lead y conversión desde Mensajes piden empresa, contacto, correo, WhatsApp y notas. Tipo de caja, cantidad y ocasión ya no se solicitan ni se extraen al crear el lead. Cotizar queda como siguiente paso opcional.
+
 Verificación v1.6.79: typecheck, ESLint de archivos modificados (sin errores ni advertencias), build de producción sin DATABASE_URL y git diff --check pasaron. No se ejecutó UAT ni se convirtieron mensajes reales.
 
 ## 2026-11-05 — Mensajes en navegación (v1.6.79)
@@ -126,7 +132,7 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.79
+v1.6.80
 
 ## Completed Slices
 - Carrusel sutil de imágenes B2B: miniaturas automáticas de 88 × 66 px, sin textos ni botones, con soporte de movimiento reducido (v1.6.73).

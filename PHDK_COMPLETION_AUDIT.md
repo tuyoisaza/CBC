@@ -1,3 +1,11 @@
+Validación v1.6.80: typecheck, ESLint de los tres archivos de código cambiados y git diff --check pasaron. Revisión de fuente: solo eliminación de campos de alta/extracción y cambio de selección inicial; sin cambios de dependencias, esquema o cotizador. No se ejecutó build completo ni UAT para este ajuste acotado.
+
+# Contact-only leads — v1.6.80
+
+Current request removes box type, quantity and occasion from lead creation. Shared NewLeadForm, admin POST validation and message-lead-draft extraction implement this for manual/message conversion paths. Notes, original message linking, admin authorization and duplicate protection remain. Quote rules/minimums and historical records are unchanged. Quoting is an unchecked optional next step. Source/diff review and static checks cover the change; no runtime UAT. Final main/PR proof is recorded locally after merge.
+
+---
+
 Verificación v1.6.79: typecheck, ESLint de archivos modificados (sin errores ni advertencias), build de producción sin DATABASE_URL y git diff --check pasaron. No se ejecutó UAT ni se convirtieron mensajes reales.
 
 # Navigation follow-up — v1.6.79

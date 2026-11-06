@@ -1,3 +1,7 @@
+## v1.6.80 — 2026-11-05
+
+- Keep manual and message-converted leads contact-only: remove box type, quantity and occasion from the form, extraction and admin creation schema. Quoting is an optional next step, unchecked by default. Existing quote rules and historical data remain intact.
+
 ## v1.6.79 — 2026-11-05
 
 - Show Mensajes directly after Pedidos in the admin sidebar, linking to the existing inbox.
