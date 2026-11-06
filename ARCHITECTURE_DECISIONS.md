@@ -143,3 +143,8 @@ These integrations were added because CBC's business requires them. They are doc
 ## 2026-11-05 — Cotizaciones desde CRM
 
 El admin reutiliza CotizadorWizard y calculateQuoteForSave para preparar productos, extras y entrega sobre un lead existente. La ruta admin deriva customerId del lead en servidor, exige acceso admin vigente y guarda cotización/cambio de estado en una transacción. No usa el formulario público para crear otra oportunidad. El envío es una acción explícita separada a través del proveedor de correo ya configurado; utiliza el snapshot guardado, registra sentAt solo tras aceptación del proveedor y conserva el estado comercial. No añade servicios, credenciales ni cambios de esquema.
+
+
+## 2026-11-05 — Conversión de mensajes a leads
+
+La extracción de contactos es determinista y revisable, sin IA ni servicios externos. El formulario protegido recibe solo el ID del mensaje en la URL; lee el origen en servidor. Guardar crea el lead y vincula el mensaje en una transacción con actualización condicional, preservando texto/estado del mensaje y evitando duplicados por conversión concurrente.

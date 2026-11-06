@@ -1,3 +1,11 @@
+Verificación v1.6.79: typecheck, ESLint de archivos modificados (sin errores ni advertencias), build de producción sin DATABASE_URL y git diff --check pasaron. No se ejecutó UAT ni se convirtieron mensajes reales.
+
+# Navigation follow-up — v1.6.79
+
+Current scope: visible Mensajes sidebar entry after Pedidos, using the existing /admin/service route, icon, title and accessible label. Source review confirms one inbox entry, available to both existing admin navigation variants; no authorization policy changes. Message conversion adds a protected prefilled review form, conservative deterministic extraction and an atomic lead/message link. Already linked messages return the existing lead; conditional linking rolls back concurrent duplicate creation. Original message text remains intact, no provider call or automatic message send is added. TypeScript, scoped ESLint and diff validation are the applicable static checks. Runtime UAT not run. Final remote proof is recorded after merge in PHDK_DELIVERY_EVIDENCE.json.
+
+---
+
 # Completion audit — v1.6.78
 
 Reviewed the complete scoped source diff and newly added routes/components against PHDK_COMMITMENT_COVERAGE.md. The public quote path remains the default; only authenticated admin mode uses the existing-lead endpoint. All new writes check fresh admin access. Customer identity is server-derived for quotes, totals are recalculated using existing rules, HTML values are escaped, and email failure does not mark a quote as sent. Existing commercial states and historical prices are preserved.

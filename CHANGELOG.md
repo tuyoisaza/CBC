@@ -1,3 +1,8 @@
+## v1.6.79 — 2026-11-05
+
+- Show Mensajes directly after Pedidos in the admin sidebar, linking to the existing inbox.
+- Convert inbound messages into reviewed lead drafts with recognized contact/request fields, original-message context and transactional linking that prevents duplicate conversions.
+
 ## v1.6.78 — 2026-11-05
 
 - Dashboard: shared count/list filters for open leads, active real orders and unread nondeleted messages; explicit leads/orders navigation and total message counts.
