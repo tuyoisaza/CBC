@@ -1,3 +1,10 @@
+Verificación v1.6.79: typecheck, ESLint de archivos modificados (sin errores ni advertencias), build de producción sin DATABASE_URL y git diff --check pasaron. No se ejecutó UAT ni se convirtieron mensajes reales.
+
+## 2026-11-05 — Mensajes en navegación (v1.6.79)
+
+- Convertir en lead prepara datos reconocibles para revisión manual y vincula el mensaje al guardar; mensajes vinculados abren el lead existente. No usa IA externa ni envía mensajes.
+- Acceso Mensajes inmediatamente después de Pedidos, hacia /admin/service. Reutiliza la bandeja y sustituye la etiqueta ambigua Servicio.
+
 ## 2026-11-05 — Dashboard, leads y cotizaciones (v1.6.78)
 
 - El dashboard y las listas de destino comparten filtros. Leads/pedidos tienen navegación explícita; Servicio distingue mensajes totales, no leídos y respondidos sin limitar el contador a 50 registros.
@@ -119,7 +126,7 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.78
+v1.6.79
 
 ## Completed Slices
 - Carrusel sutil de imágenes B2B: miniaturas automáticas de 88 × 66 px, sin textos ni botones, con soporte de movimiento reducido (v1.6.73).

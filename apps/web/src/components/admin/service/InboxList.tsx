@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Phone, Send, Sparkles, Check, ExternalLink, Trash2 } from 'lucide-react'
 
 interface Message {
@@ -166,7 +167,8 @@ export function InboxList({ messages, emptyMessage = 'Sin mensajes todavía.' }:
               </p>
               <p className="text-xs text-muted-foreground">{selected.from}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {!selected.lead && <Link href={`/admin/sales/leads/new?message=${encodeURIComponent(selected.id)}`} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90">Convertir en lead</Link>}
               {selected.lead && (
                 <a
                   href={`/admin/sales/leads/${selected.lead.id}`}

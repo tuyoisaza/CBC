@@ -1,3 +1,11 @@
+# TASK — Acceso Mensajes (2026-11-05)
+
+- [x] Mostrar Mensajes en el menú izquierdo, después de Pedidos, enlazado a /admin/service.
+- [x] Convertir mensajes entrantes en formulario prellenado revisable; conservar original y evitar duplicados al vincular.
+- Validación y entrega: ver evidencia local posterior al merge; no UAT ni envíos reales.
+
+---
+
 # TASK — Dashboard, leads y cotizaciones (2026-11-05)
 
 ## Solicitud actual
@@ -10,7 +18,7 @@ Corregir las discrepancias del dashboard y sus enlaces, aclarar mensajes sin lee
 - [x] Reutilizar el cotizador con lead existente, importes calculados en servidor y guardado sin enviar correo automáticamente.
 - [x] Enviar la cotización guardada al correo del cliente mediante acción explícita, con validación, resultado de proveedor y registro de fecha/auditoría.
 - [x] Typecheck, lint de archivos cambiados y build de producción completados.
-- [ ] Entrega por PR a main; el resultado final se registra en PHDK_DELIVERY_EVIDENCE.json después del merge.
+- [x] Entregado en main por PR #12, commit 6800f47, v1.6.78.
 
 ## Límites de evidencia
 No se consultaron registros de clientes en producción ni se enviaron mensajes reales. Los conteos exactos y el comportamiento desplegado siguen sin verificación de runtime. UAT NOT RUN. No se reanudan las solicitudes históricas siguientes.
