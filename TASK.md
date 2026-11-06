@@ -2,7 +2,25 @@
 
 - [x] Quitar tipo de caja, cantidad y ocasión de ambos formularios de lead, extracción y validación admin.
 - [x] Dejar cotización como paso opcional posterior, sin cambiar mínimos ni precios.
+- [x] Quitar Ver leads de Pedidos y permitir scroll horizontal de la tabla sin cambiar filtros.
 - Verificación y entrega: evidencia local posterior al merge; sin UAT ni cambios de datos históricos.
+
+---
+
+# TASK — Ayuda de configuración en Sistema (2026-11-05)
+
+## Solicitud actual
+Explicar qué es cada opción de Sistema, para qué se necesita y dónde obtenerla, tanto configurada como ausente; retirar la cuenta vinculada de Mercado Pago de Sistema y conservarla en Pagos.
+
+## Alcance y entrega
+- [x] Ayuda visible para las 12 opciones existentes y estado textual de presencia.
+- [x] Indicar obligatoriedad según función, origen y lugar de guardado; enlaces a guías oficiales disponibles.
+- [x] Aclarar que presencia no valida credenciales ni conectividad; no mostrar secretos.
+- [x] Eliminar tarjeta y consulta remota duplicadas de Mercado Pago; Pagos queda intacto.
+- [x] TypeScript, ESLint, build de producción y revisión completa del diff.
+- [ ] Entrega normal por rama/PR a main, versión v1.6.80; el resultado posterior al merge se registra en PHDK_DELIVERY_EVIDENCE.json.
+
+La solicitud actual autoriza esta entrega. No activa trabajos históricos, UAT, gasto nuevo ni cambios de configuración externa. El worktree original con cambios ajenos queda intacto. La evidencia posterior al merge se conserva localmente en PHDK_DELIVERY_EVIDENCE.json.
 
 ---
 

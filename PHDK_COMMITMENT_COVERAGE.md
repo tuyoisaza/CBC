@@ -1,6 +1,20 @@
-# Contact-only leads — v1.6.80
+Orders follow-up: remove redundant Ver leads link; horizontally scrollable, keyboard-focusable table retains access to Classification without changing query filters or records.
+
+# Contact-only leads — v1.6.81
 
 Current request removes box type, quantity and occasion from lead creation. Shared NewLeadForm, admin POST validation and message-lead-draft extraction implement this for manual/message conversion paths. Notes, original message linking, admin authorization and duplicate protection remain. Quote rules/minimums and historical records are unchanged. Quoting is an unchecked optional next step. Source/diff review and static checks cover the change; no runtime UAT. Final main/PR proof is recorded locally after merge.
+
+---
+
+# Coverage — v1.6.80
+
+| Current request | Source evidence |
+|---|---|
+| Explain every existing setting, including missing ones | CONFIGURATION_ITEMS has all 12 original keys, purpose/source text and applicable official guides; rendered for both states |
+| Explain where to configure each option | Provider console vs Railway variable guidance; superadmin configuration link retains its gate |
+| Remove duplicate linked Mercado Pago account | SystemPage no longer contains account fetch/card; payments page and payment-config.ts unchanged |
+
+Presence is not credential validation. No secrets rendered, settings changed, or provider requests executed for verification. UAT NOT RUN.
 
 ---
 

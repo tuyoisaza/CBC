@@ -1,8 +1,17 @@
-Validación v1.6.80: typecheck, ESLint de los tres archivos de código cambiados y git diff --check pasaron. Revisión de fuente: solo eliminación de campos de alta/extracción y cambio de selección inicial; sin cambios de dependencias, esquema o cotizador. No se ejecutó build completo ni UAT para este ajuste acotado.
+Validación v1.6.81: typecheck, ESLint de los archivos de código cambiados y git diff --check pasaron. Revisión de fuente: eliminación de campos de alta/extracción, selección inicial y scroll/enlace de Pedidos; sin cambios de dependencias, esquema o cotizador. No se ejecutó build completo ni UAT para este ajuste acotado.
 
-## 2026-11-05 — Leads solo de contacto (v1.6.80)
+## 2026-11-05 — Leads solo de contacto y tabla de Pedidos (v1.6.81)
+
+- Pedidos elimina Ver leads y añade scroll horizontal accesible por teclado para llegar a Clasificación, sin cambiar filtros ni datos.
 
 - Nuevo lead y conversión desde Mensajes piden empresa, contacto, correo, WhatsApp y notas. Tipo de caja, cantidad y ocasión ya no se solicitan ni se extraen al crear el lead. Cotizar queda como siguiente paso opcional.
+
+## 2026-11-05 — Ayuda de configuración de Sistema (v1.6.80)
+
+- Cada una de las 12 opciones incluye propósito, cuándo se necesita, origen y lugar de guardado. Las guías oficiales están enlazadas cuando corresponde.
+- El estado distingue presencia de validación real; Brevo/Resend se describen como alternativas y Sentry requiere integración técnica además del DSN.
+- La cuenta vinculada y la consulta a Mercado Pago se retiran sólo de Sistema; Pagos conserva la información de proveedores.
+- Verificación: TypeScript, ESLint con next/core-web-vitals y build de producción con Node desde apps/web, sin DATABASE_URL, pasaron; git diff --check pasó. Los intentos iniciales encontraron un error transitorio de Google Fonts y una invocación desde el directorio incorrecto; el build final pasó sin modificar fuentes ni configuración. Entrega por PR; evidencia remota posterior al merge en PHDK_DELIVERY_EVIDENCE.json. UAT NOT RUN.
 
 Verificación v1.6.79: typecheck, ESLint de archivos modificados (sin errores ni advertencias), build de producción sin DATABASE_URL y git diff --check pasaron. No se ejecutó UAT ni se convirtieron mensajes reales.
 
@@ -132,7 +141,7 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.80
+v1.6.81
 
 ## Completed Slices
 - Carrusel sutil de imágenes B2B: miniaturas automáticas de 88 × 66 px, sin textos ni botones, con soporte de movimiento reducido (v1.6.73).

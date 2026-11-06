@@ -1,6 +1,14 @@
-## v1.6.80 — 2026-11-05
+## v1.6.81 — 2026-11-05
+
+- Remove the redundant Ver leads link from Orders and enable keyboard-accessible horizontal table scrolling so Classification remains reachable. Order filters and data are unchanged.
 
 - Keep manual and message-converted leads contact-only: remove box type, quantity and occasion from the form, extraction and admin creation schema. Quoting is an optional next step, unchecked by default. Existing quote rules and historical data remain intact.
+
+## v1.6.80 — Ayuda de configuración en Sistema
+
+- Explicar las 12 opciones de configuración: propósito, necesidad, dónde obtenerlas y dónde guardarlas, con guías oficiales.
+- Mostrar “Sin configurar” y aclarar que una clave presente no confirma validez ni conectividad.
+- Retirar de Sistema la cuenta vinculada de Mercado Pago y su consulta duplicada; conservarla en Pagos.
 
 ## v1.6.79 — 2026-11-05
 
