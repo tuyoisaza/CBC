@@ -1,3 +1,7 @@
+## 2026-11-05 — Una sola versión en admin (v1.6.82)
+
+- La versión flotante inferior no aparece en /admin; se conserva la superior junto a CBC Admin y los controles de diagnóstico.
+
 Validación v1.6.81: typecheck, ESLint de los archivos de código cambiados y git diff --check pasaron. Revisión de fuente: eliminación de campos de alta/extracción, selección inicial y scroll/enlace de Pedidos; sin cambios de dependencias, esquema o cotizador. No se ejecutó build completo ni UAT para este ajuste acotado.
 
 ## 2026-11-05 — Leads solo de contacto y tabla de Pedidos (v1.6.81)
@@ -141,7 +145,7 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.81
+v1.6.82
 
 ## Completed Slices
 - Carrusel sutil de imágenes B2B: miniaturas automáticas de 88 × 66 px, sin textos ni botones, con soporte de movimiento reducido (v1.6.73).

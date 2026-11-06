@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { getDebugDump } from '@/lib/debug-capture'
 
 export function VersionBadge({ version }: { version: string }) {
+  const pathname = usePathname()
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
@@ -15,6 +17,9 @@ export function VersionBadge({ version }: { version: string }) {
       // clipboard unavailable — ignore silently
     }
   }
+
+  // The admin shell already shows its version beside CBC Admin.
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) return null
 
   return (
     <button
