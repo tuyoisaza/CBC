@@ -1,3 +1,15 @@
+# Coverage — v1.6.80
+
+| Current request | Source evidence |
+|---|---|
+| Explain every existing setting, including missing ones | CONFIGURATION_ITEMS has all 12 original keys, purpose/source text and applicable official guides; rendered for both states |
+| Explain where to configure each option | Provider console vs Railway variable guidance; superadmin configuration link retains its gate |
+| Remove duplicate linked Mercado Pago account | SystemPage no longer contains account fetch/card; payments page and payment-config.ts unchanged |
+
+Presence is not credential validation. No secrets rendered, settings changed, or provider requests executed for verification. UAT NOT RUN.
+
+---
+
 # Navigation follow-up — v1.6.79
 
 Current scope: visible Mensajes sidebar entry after Pedidos, using the existing /admin/service route, icon, title and accessible label. Source review confirms one inbox entry, available to both existing admin navigation variants; no authorization policy changes. Message conversion adds a protected prefilled review form, conservative deterministic extraction and an atomic lead/message link. Already linked messages return the existing lead; conditional linking rolls back concurrent duplicate creation. Original message text remains intact, no provider call or automatic message send is added. TypeScript, scoped ESLint and diff validation are the applicable static checks. Runtime UAT not run. Final remote proof is recorded after merge in PHDK_DELIVERY_EVIDENCE.json.

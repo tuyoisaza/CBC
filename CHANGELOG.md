@@ -1,3 +1,9 @@
+## v1.6.80 — Ayuda de configuración en Sistema
+
+- Explicar las 12 opciones de configuración: propósito, necesidad, dónde obtenerlas y dónde guardarlas, con guías oficiales.
+- Mostrar “Sin configurar” y aclarar que una clave presente no confirma validez ni conectividad.
+- Retirar de Sistema la cuenta vinculada de Mercado Pago y su consulta duplicada; conservarla en Pagos.
+
 ## v1.6.79 — 2026-11-05
 
 - Show Mensajes directly after Pedidos in the admin sidebar, linking to the existing inbox.
