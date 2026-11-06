@@ -1,3 +1,22 @@
+# TASK — Dashboard, leads y cotizaciones (2026-11-05)
+
+## Solicitud actual
+Corregir las discrepancias del dashboard y sus enlaces, aclarar mensajes sin leer en Servicio, reparar el 404 de Nuevo lead y conectar creación de cotizaciones y envío por correo desde el mismo lead.
+
+## Implementación
+- [x] Compartir filtros entre contadores y listas; excluir leads archivados y pedidos de prueba/no concretados de los indicadores correspondientes.
+- [x] Accesos separados a leads/pedidos; mensajes totales y sin leer con paginación y estados visibles.
+- [x] Crear lead desde una ruta real y protegida; opción Crear lead y cotizar.
+- [x] Reutilizar el cotizador con lead existente, importes calculados en servidor y guardado sin enviar correo automáticamente.
+- [x] Enviar la cotización guardada al correo del cliente mediante acción explícita, con validación, resultado de proveedor y registro de fecha/auditoría.
+- [x] Typecheck, lint de archivos cambiados y build de producción completados.
+- [ ] Entrega por PR a main; el resultado final se registra en PHDK_DELIVERY_EVIDENCE.json después del merge.
+
+## Límites de evidencia
+No se consultaron registros de clientes en producción ni se enviaron mensajes reales. Los conteos exactos y el comportamiento desplegado siguen sin verificación de runtime. UAT NOT RUN. No se reanudan las solicitudes históricas siguientes.
+
+---
+
 # TASK — Estadísticas y programación social de noviembre de 2026
 
 ## Solicitud actual

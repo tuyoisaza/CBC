@@ -15,7 +15,8 @@ import { getDebugDump, downloadDebugDump } from '@/lib/debug-capture'
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
-  { href: '/admin/sales',     label: 'Ventas',      icon: ShoppingBag },
+  { href: '/admin/sales/leads', label: 'Leads', icon: ShoppingBag },
+  { href: '/admin/sales/orders', label: 'Pedidos', icon: Package },
   { href: '/admin/sales/products', label: 'Productos', icon: Package },
   { href: '/admin/sales/methods', label: 'Métodos', icon: Beaker },
   { href: '/admin/sales/extras', label: 'Extras', icon: Puzzle },

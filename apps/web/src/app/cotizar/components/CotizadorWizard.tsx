@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Check, ChevronLeft, ChevronRight, Plus, X, Package, Sparkles, Truck, FileText, CheckCircle, Minus } from 'lucide-react'
 import { catalogImages, saleUnit, requestedQuantity, deliveryDateAfter } from '@/lib/extra-catalog'
 import { submitQuote } from '../actions/submitQuote'
@@ -27,6 +29,7 @@ interface CalcResult {
 }
 
 interface WizardProps {
+  adminLead?: { id: string; companyName: string; contactName: string; email: string | null }
   methods: Method[]
   extras: Extra[]
   shippingZones: ShippingZone[]
@@ -92,7 +95,8 @@ const STEPS = [
   { id: 4, label: 'Listo', icon: CheckCircle },
 ]
 
-export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscounts, products, settings, preselectedProduct, preselectedExtra, preselectedMethod, initialQuantity }: WizardProps) {
+export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscounts, products, settings, preselectedProduct, preselectedExtra, preselectedMethod, initialQuantity, adminLead }: WizardProps) {
+  const router = useRouter()
   const minQty = Number(settings.MIN_QTY_PER_METHOD ?? 10)
   const markupPct = Number(settings.SINGLE_PURCHASE_MARKUP_PCT ?? 20)
   const ivaPct = Number(settings.IVA_PCT ?? 16)
@@ -199,7 +203,8 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
       if (items[0]) updateItem(0, 'qty', items[0].qty + minQty)
       return
     }
-    setItems([...items, { methodId: method.id, methodName: method.name, qty: minQty, unitPrice: method.unitPrice, lineTotal: method.unitPrice * minQty }])
+    const qty = adminLead && items.length === 0 ? requestedQuantity(String(initialQuantity), minQty) : minQty
+    setItems([...items, { methodId: method.id, methodName: method.name, qty, unitPrice: method.unitPrice, lineTotal: method.unitPrice * qty }])
   }
 
   function removeItem(i: number) {
@@ -263,16 +268,16 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
     if (step === 0) return items.every(item => item.qty >= minQty && item.qty <= 100000)
     if (step === 1) return validSelection
     if (step === 2) return validSelection && !!shippingZoneId && !!deliveryDate && deliveryDate >= minDeliveryDateString
-    if (step === 3) return validSelection && !!(companyName.trim() && contactName.trim() && isValidEmail(email) && isValidWhatsapp(whatsapp))
+    if (step === 3) return validSelection && (!!adminLead || !!(companyName.trim() && contactName.trim() && isValidEmail(email) && isValidWhatsapp(whatsapp)))
     return true
   })()
 
   async function handleSubmit() {
-    if (!calc || calcLoading || calcError || !validSelection) return
+    if (submitting || !calc || calcLoading || calcError || !validSelection) return
     setSubmitting(true)
     setSubmitError('')
     try {
-      const res = await submitQuote({
+      const payload = {
         companyName,
         contactName,
         email,
@@ -282,10 +287,19 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
         shippingZoneId,
         deliveryDate: deliveryDate || undefined,
         rush,
-      })
+      }
+      let res
+      if (adminLead) {
+        const response = await fetch(`/api/admin/leads/${encodeURIComponent(adminLead.id)}/quotes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        res = await response.json()
+        if (!response.ok) throw new Error(res.error || 'No se pudo guardar la cotización.')
+      } else {
+        res = await submitQuote(payload)
+      }
       setResult(res)
       setStep(4)
-      trackQuoteSubmission()
+      if (adminLead) router.refresh()
+      else trackQuoteSubmission()
     } catch (err: any) {
       setSubmitError(err.message || 'Error al enviar cotización')
     } finally {
@@ -344,7 +358,8 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                           if (existing) {
                             removeItem(items.indexOf(existing))
                           } else {
-                            setItems([...items, { methodId: method.id, methodName: method.name, qty: minQty, unitPrice: method.unitPrice, lineTotal: method.unitPrice * minQty }])
+                            const qty = adminLead && items.length === 0 ? requestedQuantity(String(initialQuantity), minQty) : minQty
+    setItems([...items, { methodId: method.id, methodName: method.name, qty, unitPrice: method.unitPrice, lineTotal: method.unitPrice * qty }])
                           }
                         }}
                         className={`text-left rounded-xl border p-4 transition-colors ${
@@ -617,7 +632,12 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
             </div>
 
             {/* Contact form */}
-            <div className="rounded-xl border border-gray-700 bg-cbc-black p-5" data-clarity-mask="True">
+            {adminLead ? <div className="rounded-xl border border-gray-700 bg-cbc-black p-5 text-cbc-cream">
+              <h3 className="font-semibold">Cliente de esta cotización</h3>
+              <p>{adminLead.companyName} · {adminLead.contactName}</p>
+              <p className="text-sm text-gray-400">{adminLead.email || 'Sin correo registrado'}</p>
+              <p className="mt-2 text-sm text-gray-400">Se guarda en este lead. El correo se envía después, desde su cotización guardada.</p>
+            </div> : <div className="rounded-xl border border-gray-700 bg-cbc-black p-5" data-clarity-mask="True">
               <h3 className="text-sm font-semibold text-cbc-cream mb-3">Tus datos</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -651,7 +671,7 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
                   )}
                 </div>
               </div>
-            </div>
+            </div>}
 
             {submitError && (
               <div className="rounded-lg bg-red-500/20 border border-red-500/50 px-4 py-3 text-sm text-red-400">
@@ -667,11 +687,12 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
             <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-500/20 mb-6">
               <CheckCircle className="h-8 w-8 text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold text-cbc-cream mb-2">¡Cotización enviada!</h2>
+            <h2 className="text-2xl font-bold text-cbc-cream mb-2">{adminLead ? 'Cotización guardada' : '¡Cotización enviada!'}</h2>
             <p className="text-gray-400 mb-2">Tu código de cotización es:</p>
             <p className="text-3xl font-bold text-cbc-yellow mb-6">{result.quoteCode}</p>
+            {adminLead && <Link href={`/admin/sales/leads/${adminLead.id}#cotizaciones`} className="mb-4 inline-block rounded-lg bg-cbc-yellow px-5 py-3 font-semibold text-black">Revisar y enviar por correo</Link>}
             <p className="text-sm text-gray-500 max-w-md mx-auto">
-              Recibirás una confirmación en tu correo electrónico. Nos pondremos en contacto pronto para confirmar los detalles.
+              {adminLead ? 'Revisa el detalle guardado y usa Enviar por correo para compartirlo con el cliente.' : 'Recibirás una confirmación en tu correo electrónico. Nos pondremos en contacto pronto para confirmar los detalles.'}
             </p>
           </div>
         )}
@@ -705,8 +726,8 @@ export function CotizadorWizard({ methods, extras, shippingZones, volumeDiscount
               disabled={!canContinue || submitting || !calc || calcLoading || !!calcError}
               className="flex items-center gap-2 rounded-lg bg-cbc-yellow text-black font-semibold px-6 py-2.5 text-sm hover:bg-cbc-yellow/90 disabled:opacity-50 transition-colors"
             >
-              {submitting ? 'Enviando...' : <Check className="h-4 w-4" />}
-              {submitting ? 'Enviando...' : 'Enviar cotización'}
+              <Check className="h-4 w-4" />
+              {submitting ? (adminLead ? 'Guardando...' : 'Enviando...') : adminLead ? 'Guardar cotización en este lead' : 'Enviar cotización'}
             </button>
           )}
         </div>

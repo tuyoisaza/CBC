@@ -1,3 +1,10 @@
+## 2026-11-05 — Dashboard, leads y cotizaciones (v1.6.78)
+
+- El dashboard y las listas de destino comparten filtros. Leads/pedidos tienen navegación explícita; Servicio distingue mensajes totales, no leídos y respondidos sin limitar el contador a 50 registros.
+- Nuevo lead cuenta con formulario y guardado admin. Crear lead y cotizar conduce al cotizador vinculado a la oportunidad existente.
+- Las cotizaciones se guardan antes de enviar; cada una muestra destinatario, botón de correo y fecha del último envío. Los importes enviados provienen del registro guardado, sin recalcular precios históricos.
+- Validación: Prisma Client, typecheck, ESLint de archivos modificados (0 errores; 3 advertencias preexistentes del cotizador), build de producción sin DATABASE_URL y git diff --check pasaron. La descarga inicial de Google Fonts falló transitoriamente; el build final pasó sin cambios de fuente. Publicación: consultar el registro local de entrega posterior al merge. No se enviaron correos reales ni se verificaron conteos de producción; UAT NOT RUN.
+
 ## 2026-10-25 — Base de redes y experimento de noviembre (v1.6.77)
 
 - Registrar resultados de Meta del 27 de septiembre al 24 de octubre, fuentes CSV y límites del análisis.
@@ -112,7 +119,7 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.73
+v1.6.78
 
 ## Completed Slices
 - Carrusel sutil de imágenes B2B: miniaturas automáticas de 88 × 66 px, sin textos ni botones, con soporte de movimiento reducido (v1.6.73).

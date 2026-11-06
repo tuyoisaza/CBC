@@ -138,3 +138,8 @@ These integrations were added because CBC's business requires them. They are doc
 - **PHDK Standard:** Never deploy from local CLI — GitHub push to `main` only
 - **Gap:** The current `deploy.yml` uses `railway up` which PHDK explicitly prohibits. Should be replaced with Railway's native GitHub integration.
 - **Status:** Railway IS connected to GitHub (the `railway.json` healthcheckPath confirms this), but the CI workflow also runs `railway up` as a secondary deploy path. The CI workflow should be removed.
+
+
+## 2026-11-05 — Cotizaciones desde CRM
+
+El admin reutiliza CotizadorWizard y calculateQuoteForSave para preparar productos, extras y entrega sobre un lead existente. La ruta admin deriva customerId del lead en servidor, exige acceso admin vigente y guarda cotización/cambio de estado en una transacción. No usa el formulario público para crear otra oportunidad. El envío es una acción explícita separada a través del proveedor de correo ya configurado; utiliza el snapshot guardado, registra sentAt solo tras aceptación del proveedor y conserva el estado comercial. No añade servicios, credenciales ni cambios de esquema.

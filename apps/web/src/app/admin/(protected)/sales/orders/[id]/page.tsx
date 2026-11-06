@@ -35,7 +35,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center gap-4">
-        <Link href="/admin/sales/leads" className="text-muted-foreground hover:text-foreground">
+        <Link href="/admin/sales/orders" className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">

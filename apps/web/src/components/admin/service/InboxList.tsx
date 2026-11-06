@@ -27,27 +27,29 @@ const QUICK_REPLIES = [
   { label: 'Catálogo',    text: 'Con gusto te enviamos el catálogo. ¿Me puedes dar tu nombre y el nombre de tu empresa?' },
 ]
 
-export function InboxList({ messages }: { messages: Message[] }) {
-  const [selected, setSelected]   = useState<Message | null>(messages[0] ?? null)
+export function InboxList({ messages, emptyMessage = 'Sin mensajes todavía.' }: { messages: Message[]; emptyMessage?: string }) {
+  const [selected, setSelected]   = useState<Message | null>(null)
+  const [error, setError] = useState('')
   const [reply, setReply]         = useState('')
   const [sending, setSending]     = useState(false)
   const [deleting, setDeleting] = useState(false)
   const router = useRouter()
 
-  function useDraft() {
+  function applyDraft() {
     if (selected?.aiDraft) setReply(selected.aiDraft)
   }
 
-  function useQuickReply(text: string) {
+  function applyQuickReply(text: string) {
     setReply(text)
   }
 
   async function sendReply() {
     if (!reply.trim() || !selected) return
     setSending(true)
+    setError('')
 
     try {
-      await fetch('/api/admin/messages', {
+      const response = await fetch('/api/admin/messages', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -57,14 +59,19 @@ export function InboxList({ messages }: { messages: Message[] }) {
           inReplyToId: selected.id,
         }),
       })
+      if (!response.ok) throw new Error('No se pudo enviar la respuesta. El mensaje sigue pendiente.')
       setReply('')
       // Mark message as replied
-      await fetch(`/api/admin/messages?id=${selected.id}`, {
+      const update = await fetch(`/api/admin/messages?id=${selected.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'replied' }),
       })
+      if (!update.ok) throw new Error('Respuesta enviada, pero no se pudo actualizar el estado del mensaje.')
+      setSelected(current => current?.id === selected.id ? { ...current, status: 'replied' } : current)
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'No se pudo enviar la respuesta.')
     } finally {
       setSending(false)
     }
@@ -73,20 +80,23 @@ export function InboxList({ messages }: { messages: Message[] }) {
   async function deleteMessage() {
     if (!selected || selected.status === 'unread' || !window.confirm('¿Eliminar este mensaje?')) return
     setDeleting(true)
+    setError('')
     try {
       const response = await fetch(`/api/admin/messages?id=${selected.id}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('No se pudo eliminar el mensaje')
-      setSelected(messages.find((message) => message.id !== selected.id) ?? null)
+      setSelected(null)
       router.refresh()
+    } catch {
+      setError('No se pudo eliminar el mensaje.')
     } finally {
       setDeleting(false)
     }
   }
 
-  if (messages.length === 0) {
+  if (messages.length === 0 && !selected) {
     return (
       <div className="rounded-xl border border-dashed border-border p-12 text-center">
-        <p className="text-muted-foreground">Sin mensajes todavía.</p>
+        <p className="text-muted-foreground">{emptyMessage}</p>
         <p className="text-sm text-muted-foreground mt-1">
           Los mensajes de WhatsApp aparecerán aquí cuando lleguen.
         </p>
@@ -95,6 +105,8 @@ export function InboxList({ messages }: { messages: Message[] }) {
   }
 
   return (
+    <div>
+      {error && <p role="alert" className="mb-3 text-sm text-red-500">{error}</p>}
     <div className="flex gap-4 h-[calc(100vh-12rem)]">
       {/* Message list */}
       <div className="w-72 shrink-0 overflow-y-auto space-y-2 pr-1">
@@ -102,11 +114,17 @@ export function InboxList({ messages }: { messages: Message[] }) {
           <button
             key={msg.id}
             onClick={async () => {
+              setError('')
               setSelected(msg)
               if (msg.status === 'unread') {
-                await fetch(`/api/admin/messages?id=${msg.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'read' }) })
-                setSelected({ ...msg, status: 'read' })
-                router.refresh()
+                try {
+                  const response = await fetch(`/api/admin/messages?id=${msg.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'read' }) })
+                  if (!response.ok) throw new Error('No se pudo marcar el mensaje como leído.')
+                  setSelected(current => current?.id === msg.id ? { ...current, status: 'read' } : current)
+                  router.refresh()
+                } catch {
+                  setError('No se pudo marcar el mensaje como leído.')
+                }
               }
             }}
             className={`w-full text-left rounded-xl border p-4 transition-all ${
@@ -126,6 +144,7 @@ export function InboxList({ messages }: { messages: Message[] }) {
               )}
             </div>
             <p className="text-xs text-muted-foreground line-clamp-2">{msg.body}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{msg.status === 'unread' ? 'Sin leer' : msg.status === 'replied' ? 'Respondido' : 'Leído'}</p>
             <p className="text-xs text-muted-foreground mt-2">
               {new Date(msg.createdAt).toLocaleString('es-MX', {
                 day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
@@ -136,6 +155,7 @@ export function InboxList({ messages }: { messages: Message[] }) {
       </div>
 
       {/* Message detail + reply */}
+      {!selected && <p className="p-5 text-sm text-muted-foreground">Selecciona un mensaje para leerlo.</p>}
       {selected && (
         <div className="flex-1 flex flex-col rounded-xl border border-border bg-card overflow-hidden">
           {/* Header */}
@@ -185,7 +205,7 @@ export function InboxList({ messages }: { messages: Message[] }) {
                 </div>
                 <p className="text-sm text-foreground">{selected.aiDraft}</p>
                 <button
-                  onClick={useDraft}
+                  onClick={applyDraft}
                   className="mt-3 text-xs text-primary hover:underline"
                 >
                   Usar este borrador →
@@ -201,7 +221,7 @@ export function InboxList({ messages }: { messages: Message[] }) {
               {QUICK_REPLIES.map((qr) => (
                 <button
                   key={qr.label}
-                  onClick={() => useQuickReply(qr.text)}
+                  onClick={() => applyQuickReply(qr.text)}
                   className="rounded-full border border-border px-3 py-1 text-xs text-foreground hover:bg-muted transition-colors"
                 >
                   {qr.label}
@@ -233,6 +253,7 @@ export function InboxList({ messages }: { messages: Message[] }) {
           </div>
         </div>
       )}
+    </div>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { openLeadsWhere } from '@/lib/admin-filters'
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import { Plus, Archive } from 'lucide-react'
@@ -19,10 +20,11 @@ export default async function LeadsPage({
 }: {
   searchParams: { view?: string }
 }) {
+  const showOpen = searchParams.view === 'open'
   const showArchived = searchParams.view === 'archived'
 
   const leads = await db.lead.findMany({
-    where: { archivedAt: showArchived ? { not: null } : null },
+    where: showOpen ? openLeadsWhere : { archivedAt: showArchived ? { not: null } : null },
     include: { customer: true, quotes: { orderBy: { createdAt: 'desc' }, take: 1 } },
     orderBy: showArchived ? { archivedAt: 'desc' } : { createdAt: 'desc' },
   })
@@ -44,11 +46,13 @@ export default async function LeadsPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            {showArchived ? 'Leads archivados' : 'Pipeline de Ventas'}
+            {showArchived ? 'Leads archivados' : showOpen ? 'Leads abiertos' : 'Pipeline de Ventas'}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">{leads.length} leads</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/admin/sales/orders" className="text-sm text-primary hover:underline">Pedidos</Link>
+          {showOpen && <Link href="/admin/sales/leads" className="text-sm text-primary hover:underline">Todos los leads</Link>}
           {showArchived ? (
             <Link
               href="/admin/sales/leads"
@@ -82,7 +86,7 @@ export default async function LeadsPage({
           )}
         </div>
       ) : (
-        <LeadsKanban stages={STAGES} leads={kanbanLeads} />
+        <LeadsKanban key={leads.map(lead => `${lead.id}:${lead.status}`).join('|')} stages={STAGES} leads={kanbanLeads} />
       )}
     </div>
   )
