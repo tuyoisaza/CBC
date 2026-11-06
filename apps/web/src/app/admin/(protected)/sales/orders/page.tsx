@@ -1,3 +1,4 @@
+import { activeOrdersWhere } from '@/lib/admin-filters'
 import { quoteSaleUnits } from '@/lib/quote-records'
 import { db } from '@/lib/db'
 import Link from 'next/link'
@@ -11,15 +12,23 @@ const STATUS_LABEL: Record<string, string> = {
   ready: 'Listo', shipped: 'En camino', delivered: 'Entregado', cancelled: 'Cancelado',
 }
 
-export default async function OrdersPage() {
+export default async function OrdersPage({ searchParams }: { searchParams: { view?: string } }) {
+  const showActive = searchParams.view === 'active'
   const orders = await db.order.findMany({
+    where: showActive ? activeOrdersWhere : {},
     include: { customer: true, quote: true },
     orderBy: { createdAt: 'desc' },
   })
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Pedidos</h1>
+      <h1 className="text-2xl font-bold text-foreground">{showActive ? 'Pedidos activos' : 'Pedidos'}</h1>
+      <p className="text-sm text-muted-foreground">{orders.length} pedidos{showActive ? ' en proceso, sin pruebas ni ventas no concretadas' : ''}</p>
+      <div className="flex gap-4 text-sm text-primary">
+        <Link href="/admin/sales/orders?view=active" className="hover:underline">Activos</Link>
+        <Link href="/admin/sales/orders" className="hover:underline">Todos los pedidos</Link>
+        <Link href="/admin/sales/leads" className="hover:underline">Ver leads</Link>
+      </div>
       <p className="text-sm text-muted-foreground">Marca las pruebas o ventas no concretadas para excluirlas de ingresos. Archivar una oportunidad solo la oculta del Kanban.</p>
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <table className="w-full text-sm">
@@ -31,6 +40,7 @@ export default async function OrdersPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
+            {orders.length === 0 && <tr><td colSpan={7} className="px-4 py-6 text-muted-foreground">No hay pedidos en esta vista.</td></tr>}
             {orders.map(o => (
               <tr key={o.id} className="hover:bg-muted/20 transition-colors">
                 <td className="px-4 py-3">

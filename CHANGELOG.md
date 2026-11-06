@@ -1,3 +1,10 @@
+## v1.6.78 — 2026-11-05
+
+- Dashboard: shared count/list filters for open leads, active real orders and unread nondeleted messages; explicit leads/orders navigation and total message counts.
+- Service: paginated inbox with global unread count, visible read/replied state and error handling that does not claim failed sends succeeded.
+- Restore the missing New lead page and authenticated creation endpoint, with a direct Create lead and quote option.
+- Create catalog quotes against the existing lead using server-side prices, quantities, extras, shipping and discount rules. Save first, then explicitly email the saved quote with provider feedback, sent timestamp and audit record.
+
 ## v1.6.77 — 2026-10-25
 
 - Agregar docs/stats con la base de rendimiento de Facebook e Instagram, CSV originales y metodología reproducible.

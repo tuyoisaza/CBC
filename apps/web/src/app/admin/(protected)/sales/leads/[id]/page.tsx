@@ -10,6 +10,7 @@ import { LeadArchiveButton } from '@/components/admin/sales/LeadArchiveButton'
 import { CreateOrderPaymentButton } from '@/components/admin/sales/CreateOrderPaymentButton'
 import { getPaymentConfig } from '@/lib/payment-config'
 import { OrderRevenueClassification } from '@/components/admin/sales/OrderRevenueClassification'
+import { QuoteEmailButton } from '@/components/admin/sales/QuoteEmailButton'
 import { QuoteDetails } from '@/components/admin/sales/QuoteDetails'
 
 export const metadata = { title: 'Lead' }
@@ -60,10 +61,12 @@ export default async function LeadDetailPage({
           {/* Quotes */}
           <section id="cotizaciones" className="rounded-xl border border-border bg-card p-5 scroll-mt-6">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Lo que cotizó el cliente
+              Cotizaciones de este lead
             </h2>
+            <Link href={`/admin/sales/leads/${lead.id}/quotes/new`} className="mb-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><Plus className="h-4 w-4" /> Crear cotización para este lead</Link>
+            <p className="mb-4 text-sm text-muted-foreground">1. Crea la cotización. 2. Revisa productos e importes. 3. Envíala al correo del cliente con el botón de la cotización.</p>
             {lead.quotes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin cotizaciones</p>
+              <p className="text-sm text-muted-foreground">Aún no hay cotizaciones. Usa “Crear cotización para este lead” para preparar la propuesta del cliente.</p>
             ) : (
               <div className="space-y-6">
                 {lead.quotes.map((q) => (
@@ -89,6 +92,7 @@ export default async function LeadDetailPage({
                        q.status === 'rejected' ? 'Rechazada' : q.status}
                     </span>
                     <QuoteDetails quote={q} />
+                    <QuoteEmailButton quoteId={q.id} email={customer.email} sentAt={q.sentAt?.toISOString() ?? null} />
                     {q.order && <Link href={`/admin/sales/orders/${q.order.id}`} className="mt-2 block text-xs text-primary hover:underline">Ver pedido</Link>}
                     {q.order && <div className="mt-3"><OrderRevenueClassification orderId={q.order.id} reason={q.order.revenueExclusionReason} /></div>}
                     {(!q.order || q.order.channel === 'b2b') && !['Cancelada', 'rejected', 'cancelled'].includes(q.status) && (!q.order || q.order.status === 'pending_payment' || q.order.payments.length === 0 || q.order.payments[0]?.status === 'pending') && q.order?.status !== 'cancelled' && (
@@ -196,10 +200,10 @@ export default async function LeadDetailPage({
             <div className="space-y-2">
               <a href="#cotizaciones" className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"><FileText className="h-4 w-4" /> Ver cotizaciones guardadas</a>
               <Link
-                href="/cotizar"
+                href={`/admin/sales/leads/${lead.id}/quotes/new`}
                 className="flex items-center gap-2 w-full rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <Plus className="h-4 w-4" /> Nueva cotización
+                <Plus className="h-4 w-4" /> Crear cotización para este lead
               </Link>
               {customer.whatsapp && (
                 <a
