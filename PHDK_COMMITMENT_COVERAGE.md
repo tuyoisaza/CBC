@@ -1,3 +1,11 @@
+Orders follow-up: remove redundant Ver leads link; horizontally scrollable, keyboard-focusable table retains access to Classification without changing query filters or records.
+
+# Contact-only leads — v1.6.81
+
+Current request removes box type, quantity and occasion from lead creation. Shared NewLeadForm, admin POST validation and message-lead-draft extraction implement this for manual/message conversion paths. Notes, original message linking, admin authorization and duplicate protection remain. Quote rules/minimums and historical records are unchanged. Quoting is an unchecked optional next step. Source/diff review and static checks cover the change; no runtime UAT. Final main/PR proof is recorded locally after merge.
+
+---
+
 # Coverage — v1.6.80
 
 | Current request | Source evidence |

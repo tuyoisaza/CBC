@@ -1,3 +1,12 @@
+# TASK — Leads solo de contacto (2026-11-05)
+
+- [x] Quitar tipo de caja, cantidad y ocasión de ambos formularios de lead, extracción y validación admin.
+- [x] Dejar cotización como paso opcional posterior, sin cambiar mínimos ni precios.
+- [x] Quitar Ver leads de Pedidos y permitir scroll horizontal de la tabla sin cambiar filtros.
+- Verificación y entrega: evidencia local posterior al merge; sin UAT ni cambios de datos históricos.
+
+---
+
 # TASK — Ayuda de configuración en Sistema (2026-11-05)
 
 ## Solicitud actual

@@ -148,3 +148,8 @@ El admin reutiliza CotizadorWizard y calculateQuoteForSave para preparar product
 ## 2026-11-05 — Conversión de mensajes a leads
 
 La extracción de contactos es determinista y revisable, sin IA ni servicios externos. El formulario protegido recibe solo el ID del mensaje en la URL; lee el origen en servidor. Guardar crea el lead y vincula el mensaje en una transacción con actualización condicional, preservando texto/estado del mensaje y evitando duplicados por conversión concurrente.
+
+
+## 2026-11-05 — Lead centrado en contacto
+
+Por decisión del propietario, el alta manual y desde mensajes captura contacto y notas, sin tipo de caja, cantidad ni ocasión. La cotización sigue como paso separado y opcional con sus reglas vigentes. Las columnas históricas y los flujos públicos existentes no se migran ni se borran.

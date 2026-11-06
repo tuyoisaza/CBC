@@ -1,3 +1,13 @@
+Orders follow-up: remove redundant Ver leads link; horizontally scrollable, keyboard-focusable table retains access to Classification without changing query filters or records.
+
+Validación v1.6.81: typecheck, ESLint de los archivos de código cambiados y git diff --check pasaron. Revisión de fuente: eliminación de campos de alta/extracción, selección inicial y scroll/enlace de Pedidos; sin cambios de dependencias, esquema o cotizador. No se ejecutó build completo ni UAT para este ajuste acotado.
+
+# Contact-only leads — v1.6.81
+
+Current request removes box type, quantity and occasion from lead creation. Shared NewLeadForm, admin POST validation and message-lead-draft extraction implement this for manual/message conversion paths. Notes, original message linking, admin authorization and duplicate protection remain. Quote rules/minimums and historical records are unchanged. Quoting is an unchecked optional next step. Source/diff review and static checks cover the change; no runtime UAT. Final main/PR proof is recorded locally after merge.
+
+---
+
 # Completion audit — v1.6.80
 
 Source review covers all three requested explanations for all 12 options, preserved secret handling and configuration authorization, text status independent of icons/color, wrapping variable names and safe external links. Mercado Pago account lookup/card removed only from Sistema; Pagos unchanged. No added Stripe account section.

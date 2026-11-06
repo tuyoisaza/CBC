@@ -1,3 +1,11 @@
+Validación v1.6.81: typecheck, ESLint de los archivos de código cambiados y git diff --check pasaron. Revisión de fuente: eliminación de campos de alta/extracción, selección inicial y scroll/enlace de Pedidos; sin cambios de dependencias, esquema o cotizador. No se ejecutó build completo ni UAT para este ajuste acotado.
+
+## 2026-11-05 — Leads solo de contacto y tabla de Pedidos (v1.6.81)
+
+- Pedidos elimina Ver leads y añade scroll horizontal accesible por teclado para llegar a Clasificación, sin cambiar filtros ni datos.
+
+- Nuevo lead y conversión desde Mensajes piden empresa, contacto, correo, WhatsApp y notas. Tipo de caja, cantidad y ocasión ya no se solicitan ni se extraen al crear el lead. Cotizar queda como siguiente paso opcional.
+
 ## 2026-11-05 — Ayuda de configuración de Sistema (v1.6.80)
 
 - Cada una de las 12 opciones incluye propósito, cuándo se necesita, origen y lugar de guardado. Las guías oficiales están enlazadas cuando corresponde.
@@ -133,7 +141,7 @@ The existing task file and product backlog remain unchanged and inactive; this s
 not resume earlier implementation work or establish production behavior.
 
 ## Current Version
-v1.6.80
+v1.6.81
 
 ## Completed Slices
 - Carrusel sutil de imágenes B2B: miniaturas automáticas de 88 × 66 px, sin textos ni botones, con soporte de movimiento reducido (v1.6.73).

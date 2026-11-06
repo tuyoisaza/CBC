@@ -16,9 +16,6 @@ const schema = z.object({
   contactName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(120),
   whatsapp: z.string().trim().regex(/^\+?[0-9]{8,15}$/, 'Usa de 8 a 15 dígitos, con código de país y sin espacios.'),
-  boxType: z.enum(['prensa', 'moka', 'mix']),
-  quantity: z.number().int().min(1).max(100000),
-  occasion: z.enum(['fin-de-ano', 'dia-del-amor', 'dia-del-trabajo', 'onboarding', 'cliente', 'otro']),
   message: z.string().trim().max(1000).optional(),
 })
 

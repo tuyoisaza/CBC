@@ -27,11 +27,10 @@ export default async function OrdersPage({ searchParams }: { searchParams: { vie
       <div className="flex gap-4 text-sm text-primary">
         <Link href="/admin/sales/orders?view=active" className="hover:underline">Activos</Link>
         <Link href="/admin/sales/orders" className="hover:underline">Todos los pedidos</Link>
-        <Link href="/admin/sales/leads" className="hover:underline">Ver leads</Link>
       </div>
       <p className="text-sm text-muted-foreground">Marca las pruebas o ventas no concretadas para excluirlas de ingresos. Archivar una oportunidad solo la oculta del Kanban.</p>
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-sm">
+      <div role="region" aria-label="Tabla de pedidos, desplazamiento horizontal" tabIndex={0} className="max-w-full overflow-x-auto rounded-xl border border-border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+        <table className="w-full min-w-[900px] text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
               {['Código','Empresa','Unidades de venta','Total MXN','Estado','Fecha','Clasificación'].map(h => (
