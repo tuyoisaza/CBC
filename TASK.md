@@ -1,3 +1,10 @@
+# TASK — Versión única en admin (2026-11-05)
+
+- [x] Ocultar badge inferior en rutas admin y conservar la versión de cabecera.
+- Verificación y entrega: controles estáticos y evidencia local posterior al merge; sin UAT.
+
+---
+
 # TASK — Leads solo de contacto (2026-11-05)
 
 - [x] Quitar tipo de caja, cantidad y ocasión de ambos formularios de lead, extracción y validación admin.

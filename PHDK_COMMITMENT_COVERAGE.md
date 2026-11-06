@@ -1,3 +1,9 @@
+# Admin version badge — v1.6.82
+
+Current request: remove duplicate bottom-left version in admin. VersionBadge uses the current pathname to return null for /admin and descendants. AdminNav version and diagnostic controls remain intact; public routes retain their existing badge. Source review, scoped lint and TypeScript are applicable checks; no full build or runtime UAT for this presentation-only conditional. Remote delivery proof follows in local PHDK_DELIVERY_EVIDENCE.json.
+
+---
+
 Orders follow-up: remove redundant Ver leads link; horizontally scrollable, keyboard-focusable table retains access to Classification without changing query filters or records.
 
 # Contact-only leads — v1.6.81

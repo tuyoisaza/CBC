@@ -1,3 +1,7 @@
+## v1.6.82 — 2026-11-05
+
+- Hide the floating bottom-left version badge on admin routes; retain the version beside CBC Admin and its diagnostic controls.
+
 ## v1.6.81 — 2026-11-05
 
 - Remove the redundant Ver leads link from Orders and enable keyboard-accessible horizontal table scrolling so Classification remains reachable. Order filters and data are unchanged.
