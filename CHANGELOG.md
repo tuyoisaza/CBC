@@ -1,3 +1,7 @@
+## v1.6.83 — 2026-11-12
+
+- Add the official transparent logo and document its location and use in the brand book.
+
 ## v1.6.82 — 2026-11-05
 
 - Hide the floating bottom-left version badge on admin routes; retain the version beside CBC Admin and its diagnostic controls.

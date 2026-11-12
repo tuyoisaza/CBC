@@ -1,3 +1,7 @@
+## 2026-11-12 — Logo oficial de marca (v1.6.83)
+
+- El PNG oficial transparente y su guía de uso están en [docs/brand](docs/brand/brand-book.md#logo-usage-rules).
+
 ## 2026-11-05 — Una sola versión en admin (v1.6.82)
 
 - La versión flotante inferior no aparece en /admin; se conserva la superior junto a CBC Admin y los controles de diagnóstico.
