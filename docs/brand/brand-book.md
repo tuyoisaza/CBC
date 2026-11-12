@@ -127,6 +127,8 @@ The symbol represents: care, cultivation, patience, and the craft behind every c
 
 ## Logo Usage Rules
 
+The [official Coffee Bunn Café logo](assets/logo-cbc-oficial.png) lives at `docs/brand/assets/logo-cbc-oficial.png`. This transparent PNG contains the full white-and-gold lockup. Use it over a dark, uncluttered background such as Deep Black (#262626) so the white lettering remains legible. Preserve the original proportions, colors, and transparency when placing it in digital materials.
+
 | Rule | Detail |
 |------|--------|
 | Preferred background | Deep Black (#262626) — the logo lives on dark substrates |
